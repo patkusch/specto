@@ -314,6 +314,60 @@ def test_ocr_text_goes_right_after_the_image_only_for_frames_that_have_it(tmp_pa
     assert "ocr" not in json.dumps(analysis.model_dump()).lower()
 
 
+def test_change_region_and_crop_follow_the_frame_image(tmp_path: Path) -> None:
+    from specto.model import ChangedRegion
+
+    recording = make_recording(tmp_path)
+    # Frame 1: a small change in the lower right with a close-up on disk.
+    recording.keyframes[1].change_from_previous = ChangedRegion(x=24, y=18, w=6, h=4, fraction=0.03)
+    Image.new("RGB", (640, 400), (10, 10, 10)).save(tmp_path / "frames" / "crop_0001.jpg", "JPEG")
+    # Frame 2: the whole screen changed, no close-up written.
+    recording.keyframes[2].change_from_previous = ChangedRegion(x=0, y=0, w=32, h=24, fraction=0.97)
+    caller = FakeCaller()
+
+    read_chunks(recording, tmp_path, caller, frames_per_call=4, log=lambda _: None)
+
+    blocks = caller.calls[0]["content_blocks"]
+    assert "where it differs from the previous frame" in blocks[0]["text"]
+
+    def after_image(frame: int) -> int:
+        marker = blocks.index({"type": "text", "text": f"Frame {frame} at {format_time(10.0 * frame)}"})
+        assert blocks[marker + 1]["type"] == "image"
+        return marker + 2
+
+    i = after_image(1)
+    assert blocks[i] == {"type": "text", "text": "Compared with frame 0, the change is in the lower right (3% of the screen)."}
+    assert blocks[i + 1] == {"type": "text", "text": "Close-up of the changed area:"}
+    assert blocks[i + 2]["type"] == "image"
+    assert base64.b64decode(blocks[i + 2]["source"]["data"])[:2] == b"\xff\xd8"
+    assert blocks[i + 3]["text"].startswith("Transcript while frame 1 was showing:")
+
+    i = after_image(2)
+    assert blocks[i] == {"type": "text", "text": "Compared with frame 1, the change is in the whole screen (97% of the screen)."}
+    assert blocks[i + 1]["text"].startswith("Transcript while frame 2 was showing:")
+
+    for frame in (0, 3):  # no region: the transcript follows the image directly
+        assert blocks[after_image(frame)]["text"].startswith(f"Transcript while frame {frame} was showing:")
+    assert "Compared with frame" not in text_of(caller.calls[1]["content_blocks"])
+    assert "Compared with frame" not in text_of(caller.calls[2]["content_blocks"])
+
+
+def test_ocr_text_comes_after_the_change_blocks(tmp_path: Path) -> None:
+    from specto.model import ChangedRegion
+
+    recording = make_recording(tmp_path)
+    recording.keyframes[1].change_from_previous = ChangedRegion(x=2, y=2, w=6, h=4, fraction=0.03)
+    caller = FakeCaller()
+    read_chunks(recording, tmp_path, caller, frames_per_call=4, ocr_text={1: "Postcode SW1A 1AA"}, log=lambda _: None)
+    blocks = caller.calls[0]["content_blocks"]
+    marker = blocks.index({"type": "text", "text": f"Frame 1 at {format_time(10.0)}"})
+    kinds = [b["type"] for b in blocks[marker : marker + 5]]
+    assert kinds == ["text", "image", "text", "text", "text"]
+    assert blocks[marker + 2]["text"].startswith("Compared with frame 0, the change is in the top left")
+    assert blocks[marker + 3]["text"].startswith("Text read from frame 1")
+    assert blocks[marker + 4]["text"].startswith("Transcript while frame 1")
+
+
 def test_no_ocr_text_leaves_the_chunk_content_unchanged(tmp_path: Path) -> None:
     recording = make_recording(tmp_path)
     plain, empty = FakeCaller(), FakeCaller()

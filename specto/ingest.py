@@ -16,6 +16,7 @@ import imageio_ffmpeg
 from PIL import Image
 
 from specto.align import build_moments
+from specto.diff import annotate_recording  # change regions between consecutive stills
 from specto.model import Keyframe, Recording, TranscriptSegment
 from specto.transcript import parse_transcript, transcribe
 
@@ -406,6 +407,9 @@ def ingest(
         moments=moments,
         transcript_source=transcript_source,
     )
+    # --- specto.diff: where each still differs from the previous one, plus close-ups
+    recording = annotate_recording(recording, out_dir)
+    # ---
     recording_json.write_text(recording.model_dump_json(indent=2), encoding="utf-8")
     print(f"ingest: wrote {recording_json}")
     return recording
