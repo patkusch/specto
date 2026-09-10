@@ -52,6 +52,13 @@ What to avoid
 - Repeating the transcript back as a requirement. A requirement is a rule or
   a capability, not a description of what the expert did with the mouse.
 
+Some frames are followed by a block "Text read from frame N (may contain OCR
+errors)". That is the text a text-reading tool found on the image, one screen
+row per line, there to help you read small labels, table headers and values
+that are hard to make out in the picture. Where it and the image disagree,
+the image wins. It is what was on the screen, not what the expert said: never
+treat it as the expert's words or use it as a source_quote or context_quote.
+
 If nothing was said for a frame, the transcript line reads "(nothing said)";
 then only what is visible counts.
 """

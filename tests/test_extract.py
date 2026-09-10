@@ -11,7 +11,7 @@ import pytest
 from PIL import Image
 
 from specto import extract as extract_module
-from specto.extract import ChunkReading, ClaudeCaller, extract, read_chunks
+from specto.extract import ChunkReading, ClaudeCaller, extract, format_time, read_chunks
 from specto.fake import FakeCaller
 from specto.model import Analysis, Keyframe, Moment, Recording, TranscriptSegment
 
@@ -265,3 +265,59 @@ def test_long_transcript_splits_consolidation(tmp_path: Path, monkeypatch: pytes
     assert [c.requirement_id for c in analysis.acceptance_criteria] == ["R001", "R001", "R002"]
     assert analysis.title == "Fake walkthrough"
     assert analysis.usage is not None and analysis.usage.calls == 4
+
+
+def test_ocr_text_goes_right_after_the_image_only_for_frames_that_have_it(tmp_path: Path) -> None:
+    recording = make_recording(tmp_path)
+    caller = FakeCaller()
+    ocr_text = {
+        1: "Customer Details\nPostcode *  SW1A 1AA\nDate of birth  12/03/1980",
+        2: "   ",  # whitespace only counts as no text
+        3: "Order ID  Status  Amount\n" + "x" * 5000,  # far over the per-frame cap
+    }
+
+    readings = read_chunks(recording, tmp_path, caller, frames_per_call=4, ocr_text=ocr_text, log=lambda _: None)
+
+    assert len(readings) == 3
+    blocks = caller.calls[0]["content_blocks"]
+    assert "then the text read from the image by OCR" in blocks[0]["text"]
+
+    def after_image(frame: int) -> dict:
+        marker = blocks.index({"type": "text", "text": f"Frame {frame} at {format_time(10.0 * frame)}"})
+        assert blocks[marker + 1]["type"] == "image"
+        return blocks[marker + 2]
+
+    # Frame 1 has text: the OCR block sits between the image and the transcript.
+    ocr_block = after_image(1)
+    assert ocr_block["type"] == "text"
+    assert ocr_block["text"].startswith("Text read from frame 1 (may contain OCR errors):\n")
+    assert "Postcode *  SW1A 1AA" in ocr_block["text"]
+    assert "Date of birth  12/03/1980" in ocr_block["text"]
+    following = blocks[blocks.index(ocr_block) + 1]
+    assert following["text"].startswith("Transcript while frame 1 was showing:")
+
+    # Frames 0 and 2 have none: the transcript follows the image directly.
+    for frame in (0, 2):
+        assert after_image(frame)["text"].startswith(f"Transcript while frame {frame} was showing:")
+
+    # Frame 3 is cut to about the cap and says so.
+    long_block = after_image(3)
+    assert long_block["text"].startswith("Text read from frame 3")
+    assert len(long_block["text"]) < extract_module.OCR_TEXT_MAX_CHARS + 150
+    assert "cut:" in long_block["text"]
+    assert "Text read from frame" not in text_of(caller.calls[1]["content_blocks"])
+
+    # The same text still reaches the model through extract(), and Analysis stores nothing new.
+    caller = FakeCaller()
+    analysis = extract(recording, tmp_path, caller=caller, frames_per_call=4, ocr_text=ocr_text, log=lambda _: None)
+    assert "Text read from frame 1" in text_of(caller.calls[0]["content_blocks"])
+    assert "ocr" not in json.dumps(analysis.model_dump()).lower()
+
+
+def test_no_ocr_text_leaves_the_chunk_content_unchanged(tmp_path: Path) -> None:
+    recording = make_recording(tmp_path)
+    plain, empty = FakeCaller(), FakeCaller()
+    read_chunks(recording, tmp_path, plain, frames_per_call=4, log=lambda _: None)
+    read_chunks(recording, tmp_path, empty, frames_per_call=4, ocr_text={}, log=lambda _: None)
+    assert [c["content_blocks"] for c in plain.calls] == [c["content_blocks"] for c in empty.calls]
+    assert "OCR" not in text_of(plain.calls[0]["content_blocks"])

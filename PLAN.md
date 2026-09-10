@@ -48,18 +48,36 @@ a re-run after a crash or a prompt tweak skips the finished stages.
 - Tests in CI with no API key and no network: a synthetic recording is built
   with Pillow + ffmpeg inside the test.
 
-## Later (not in this pass)
+## Roadmap
 
-- **Live mode**: a `specto live` command that grabs the shared screen every
-  few seconds (macOS `screencapture`) and records the microphone, then feeds
-  the same pipeline in rolling windows so the questions list grows during the
-  call and can be asked before the expert leaves.
-- Speaker labels (who said what) when the transcript carries them.
-- OCR fallback for text on screen when the frame is too small to read.
-- Jira / Azure DevOps export of the requirements and criteria.
+Three things need a person: an API key in the shell, mic and screen permission
+on the Mac for live mode, and real recordings from real experts. Everything
+else can be built and checked without them.
 
-## Agent split for the build
+### Phase 1: prove it on realistic input, no key needed
+- A realistic example recording in `examples/onboarding/`: a small fake
+  onboarding web app rendered in a browser, screenshotted step by step, encoded
+  to video, narrated with the Mac's text-to-speech so it has real audio, plus
+  the script as a `.vtt`.
+- Local speech-to-text checked end to end on that audio.
+- Screen-change detection by image hash (catches colour-only changes) with the
+  ffmpeg brightness detector kept as an option.
+- Optional text reading (OCR) of each frame, fed to the model with the image,
+  and a no-model "text seen on screen" fallback.
+- `specto score`: compare an output with a hand-written expected result, so
+  prompt changes can be measured.
 
-Three agents build the three stages in parallel against the shared data model
-in `specto/model.py`. The integrator wires the CLI, runs the end-to-end test,
-writes the README and pushes to GitHub.
+### Phase 2: first real run (needs the key)
+Run the example through Claude Opus 5, record the cost, tune the prompts
+against the score, save the output as the reference result. Compare Sonnet 5.
+
+### Phase 3: live mode
+`specto live`: screenshot every few seconds, mic to text in rolling windows,
+the questions list growing during the call. Built with a replay mode first.
+
+### Phase 4: where the output goes
+Jira and Azure DevOps import files, speaker labels, a review page where the
+analyst edits and ticks rows before export.
+
+### Phase 5: hardening
+Three to five real recordings, a cost line per run, one-command install.
