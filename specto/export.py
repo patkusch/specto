@@ -16,6 +16,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
+from specto.lint import format_findings, lint_analysis, summarize
 from specto.model import Analysis, Recording, TranscriptSegment
 from specto.timefmt import mmss
 
@@ -177,6 +178,7 @@ def export_xlsx(analysis: Analysis, recording: Recording, out_dir: Path, filenam
     names = screen_names(analysis)
     criteria = criteria_by_requirement(analysis)
     requirement_text = {r.id: r.statement for r in analysis.requirements}
+    checks = lint_analysis(analysis)
 
     wb = Workbook()
     wb.remove(wb.active)
@@ -224,18 +226,20 @@ def export_xlsx(analysis: Analysis, recording: Recording, out_dir: Path, filenam
     write_sheet(
         wb, "Requirements",
         ["Id", "Statement", "Kind", "Priority", "Confidence", "Screen", "Rationale", "Source quote",
-         "Time", "Frame", "Acceptance criteria"],
+         "Time", "Frame", "Acceptance criteria", "Writing check"],
         [[r.id, r.statement, r.kind, r.priority, r.confidence, _name(names, r.screen_id), r.rationale,
           r.source_quote, mmss(r.timestamp), FrameRef(r.keyframe_index, r.timestamp),
-          ", ".join(ac.id for ac in criteria.get(r.id, []))] for r in analysis.requirements],
+          ", ".join(ac.id for ac in criteria.get(r.id, [])),
+          format_findings(checks.get(r.id, []))] for r in analysis.requirements],
         recording,
     )
 
     write_sheet(
         wb, "Acceptance Criteria",
-        ["Id", "Requirement id", "Requirement", "Given", "When", "Then", "Time", "Frame"],
+        ["Id", "Requirement id", "Requirement", "Given", "When", "Then", "Time", "Frame", "Writing check"],
         [[ac.id, ac.requirement_id, requirement_text.get(ac.requirement_id, ""), ac.given, ac.when, ac.then,
-          mmss(ac.timestamp), FrameRef(ac.keyframe_index, ac.timestamp)] for ac in analysis.acceptance_criteria],
+          mmss(ac.timestamp), FrameRef(ac.keyframe_index, ac.timestamp),
+          format_findings(checks.get(ac.id, []))] for ac in analysis.acceptance_criteria],
         recording,
     )
 
@@ -276,6 +280,7 @@ def summary_rows(analysis: Analysis, recording: Recording) -> list[tuple[str, An
         ("Requirements", len(analysis.requirements)),
         ("Acceptance criteria", len(analysis.acceptance_criteria)),
         ("Questions", len(analysis.questions)),
+        ("Writing check", summarize(lint_analysis(analysis))),
     ]
     if analysis.usage is not None:
         u = analysis.usage
@@ -304,6 +309,7 @@ def export_markdown(analysis: Analysis, recording: Recording, out_dir: Path, fil
     out_dir.mkdir(parents=True, exist_ok=True)
     names = screen_names(analysis)
     criteria = criteria_by_requirement(analysis)
+    checks = lint_analysis(analysis)
     fields_by_screen = {s.id: [f for f in analysis.fields if f.screen_id == s.id] for s in analysis.screens}
     actions_by_screen = {s.id: [a for a in analysis.actions if a.screen_id == s.id] for s in analysis.screens}
 
@@ -359,12 +365,16 @@ def export_markdown(analysis: Analysis, recording: Recording, out_dir: Path, fil
         if r.rationale:
             lines.append(f"- Why: {r.rationale}")
         lines.append(f'- The expert said: "{r.source_quote}"')
+        if checks.get(r.id):
+            lines.append(f"- *Writing check: {format_findings(checks[r.id])}*")
         lines += ["", "Acceptance criteria:", ""]
         acs = criteria.get(r.id, [])
         if not acs:
             lines.append("- None yet.")
         for ac in acs:
             lines.append(f"- {ac.id}: Given {ac.given}, when {ac.when}, then {ac.then}. {link(ac.keyframe_index, ac.timestamp)}")
+            if checks.get(ac.id):
+                lines.append(f"  - *Writing check: {format_findings(checks[ac.id])}*")
         lines.append("")
 
     lines += ["## Questions for the expert", ""]
