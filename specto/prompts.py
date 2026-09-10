@@ -93,6 +93,18 @@ What good looks like
   frame. Keep source_quote as the expert's own words, with the timestamp and
   keyframe_index of that moment. Fill in kind, priority (must / should / could
   when the expert's words make it clear, otherwise unknown) and confidence.
+- writing rules for each requirement and criterion, drawn from the INCOSE
+  Guide to Writing Requirements and the GOV.UK user story guidance: one
+  thought per sentence, so no "and", "or", "unless" or "as well as" joining
+  two rules (split them). Active voice with the responsible actor or the
+  system as the subject. Say the condition and the outcome in words a tester
+  can check; give numbers with their unit and range. Avoid vague words such
+  as "appropriate", "adequate", "some", "several", "quickly", "user friendly",
+  and escape clauses such as "where possible" or "if necessary". Prefer a
+  positive statement to one built on "not". Describe what must be true, not
+  how to build it, unless the expert stated the design as a constraint. Use
+  the same name for the same screen, field or role every time. State each
+  rule once.
 - acceptance_criteria: one to three per requirement, in Given / When / Then
   form, each concrete enough that a tester could run it. Point each at the
   same moment as its requirement unless a different frame shows it better.

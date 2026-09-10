@@ -81,3 +81,25 @@ analyst edits and ticks rows before export.
 
 ### Phase 5: hardening
 Three to five real recordings, a cost line per run, one-command install.
+
+## What we reuse from elsewhere, and what we checked and kept our own
+
+Looked at on 2026-09-10 (stars and dates from GitHub that day).
+
+| Piece | Candidate | Decision |
+|---|---|---|
+| Screen-change detection | PySceneDetect (5.2k stars, BSD) | **Kept our own.** Its `HashDetector` turns every frame grey before hashing, and its `ContentDetector` averages over the whole frame, so both miss the two cases our detector is tested on: a colour-only change and a few typed values on a white form. |
+| Near-duplicate frames | imagehash (3.9k, BSD) | Not needed; our fingerprint already does this. |
+| Speech-to-text | faster-whisper (in use); stable-ts (2.3k, MIT) for word-level timestamps | **Later.** Word times would let a sentence that spans two screens be split at the right word. Today sentences are placed by their midpoint, which is fine for the example. |
+| Speaker labels | whisperX (24k, BSD) + pyannote (10.5k, MIT code, gated model) | **Phase 4.** Needs a Hugging Face account for the diarization model. |
+| Transcript files | webvtt-py, srt | Not adopted; our parser handles .vtt, .srt, timestamped .txt and meeting-tool .json with ten tests. Zoom, Teams and Loom all export .vtt. |
+| OCR | rapidocr-onnxruntime | **Adopted** (pip only, models bundled, runs on CPU). |
+| Live capture | screenpipe (21.5k stars; now a commercial licence, free only for personal use), rem (unmaintained), openrecall (AGPL) | **Design reference only.** screenpipe's local search API (frames + OCR + transcript by time window) is the shape `specto live` should expose. Licence rules it out as a dependency for work use. |
+| Step-by-step guides from a browser session | Mimik (773 stars, MIT), OpenAdapt (1.7k, MIT) | **Idea only.** Both record live browser or desktop sessions with click positions; neither reads a video file or audio. Their per-step output shape is a good model for the Journey sheet. |
+| Requirements from transcripts | a handful of small prompt demos | Nothing to adopt. |
+| Jira / Azure DevOps | both import CSV natively; pycontribs/jira and azure-devops-python-api for API push | **Phase 4:** write their CSV import format first, no library needed. |
+
+Searched and found nothing usable: an open-source tool that goes from a
+video with narration to requirements; a Scribe or Tango equivalent that works
+on a recorded file; a maintained parser for Zoom, Teams or Loom JSON exports;
+a screen-change detector tuned for mostly-static screen shares.
