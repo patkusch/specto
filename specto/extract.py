@@ -17,6 +17,7 @@ import json
 from pathlib import Path
 from typing import Callable, Optional, Protocol
 
+from PIL import Image
 from pydantic import BaseModel
 
 from specto.model import (
@@ -25,6 +26,7 @@ from specto.model import (
     Analysis,
     DataField,
     JourneyStep,
+    Keyframe,
     Moment,
     Question,
     Recording,
@@ -32,6 +34,7 @@ from specto.model import (
     Screen,
     Usage,
 )
+from specto.diff import crop_path_for, describe_region
 from specto.prompts import SYSTEM_PROMPT_CONSOLIDATE, SYSTEM_PROMPT_READ
 from specto.timefmt import mmss
 
@@ -224,6 +227,45 @@ def _ocr_block(keyframe_index: int, text: str) -> dict:
     }
 
 
+def _percent(fraction: float) -> str:
+    """0.0052 -> '0.5', 0.98 -> '98', 0.0003 -> 'under 0.1'."""
+    text = f"{fraction * 100:.1f}".rstrip("0").rstrip(".")
+    return text if text != "0" else "under 0.1"
+
+
+def _change_blocks(recording: Recording, keyframe: Keyframe, out_dir: Path) -> list[dict]:
+    """Where this frame differs from the previous one, plus the close-up if there is one."""
+    region = keyframe.change_from_previous
+    if region is None:
+        return []
+    position = keyframe.index - 1
+    for earlier_frame, this_frame in zip(recording.keyframes, recording.keyframes[1:]):
+        if this_frame.index == keyframe.index:
+            position = earlier_frame.index
+            break
+    width, height = keyframe.width, keyframe.height
+    if not (width and height):
+        with Image.open(out_dir / keyframe.path) as img:
+            width, height = img.size
+    where = describe_region(region, width, height)
+    if not where.startswith("the "):
+        where = f"the {where}"
+    blocks = [
+        {
+            "type": "text",
+            "text": (
+                f"Compared with frame {position}, the change is in {where} "
+                f"({_percent(region.fraction)}% of the screen)."
+            ),
+        }
+    ]
+    crop = crop_path_for(keyframe.path)
+    if (out_dir / crop).exists():
+        blocks.append({"type": "text", "text": "Close-up of the changed area:"})
+        blocks.append(_image_block(out_dir, crop))
+    return blocks
+
+
 def build_chunk_content(
     recording: Recording,
     moments: list[Moment],
@@ -237,14 +279,20 @@ def build_chunk_content(
 
     `ocr_text` maps keyframe_index to the text read off that frame; when a
     frame has some, it goes in a text block right after the frame's image.
+    A frame with `change_from_previous` set gets a line saying where it
+    differs from the previous frame, and a close-up image of that area when
+    one was saved, between the image and any OCR text.
     """
     first, last = moments[0], moments[-1]
     ocr_text = ocr_text or {}
+    keyframes = {k.index: k for k in recording.keyframes}
+    has_changes = any(keyframes[m.keyframe_index].change_from_previous is not None for m in moments)
     header = (
         f"Recording: {recording.source} ({format_time(recording.duration)} long). "
         f"This is chunk {chunk_number} of {chunk_count}: frames {first.keyframe_index} to "
         f"{last.keyframe_index}, covering {format_time(first.start)} to {format_time(last.end)}. "
         "Each frame is introduced by a line 'Frame N at mm:ss', then the image, "
+        + ("then where it differs from the previous frame and a close-up of that area where there is one, " if has_changes else "")
         + ("then the text read from the image by OCR where there is any, " if ocr_text else "")
         + "then what the expert said while it was showing."
     )
@@ -252,13 +300,13 @@ def build_chunk_content(
         {"type": "text", "text": header},
         {"type": "text", "text": _known_screens_block(earlier)},
     ]
-    keyframes = {k.index: k for k in recording.keyframes}
     for moment in moments:
         keyframe = keyframes[moment.keyframe_index]
         blocks.append(
             {"type": "text", "text": f"Frame {keyframe.index} at {format_time(keyframe.timestamp)}"}
         )
         blocks.append(_image_block(out_dir, keyframe.path))
+        blocks.extend(_change_blocks(recording, keyframe, out_dir))
         frame_text = ocr_text.get(keyframe.index, "")
         if frame_text and frame_text.strip():
             blocks.append(_ocr_block(keyframe.index, frame_text))

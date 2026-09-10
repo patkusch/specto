@@ -59,6 +59,14 @@ that are hard to make out in the picture. Where it and the image disagree,
 the image wins. It is what was on the screen, not what the expert said: never
 treat it as the expert's words or use it as a source_quote or context_quote.
 
+Some frames are followed by a line "Compared with frame N, the change is in
+the ..." and, sometimes, "Close-up of the changed area:" with a second image.
+The close-up is a cut-out of the part of the same frame that changed since the
+previous frame, enlarged so small labels, typed values and pressed buttons can
+be read. It is the same moment as the full frame, not a new frame. Use it to
+read what the full frame shows too small; when you cite where something came
+from, always give the frame number of the full frame, never the close-up.
+
 If nothing was said for a frame, the transcript line reads "(nothing said)";
 then only what is visible counts.
 """
