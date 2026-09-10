@@ -1,0 +1,40 @@
+{
+  "screens": [
+    "customer search",
+    "customer details",
+    "identity check",
+    "approvals queue",
+    "dashboard"
+  ],
+  "fields": [
+    {"screen": "customer search", "label": "postcode"},
+    {"screen": "customer search", "label": "surname"},
+    {"screen": "customer details", "label": "first name"},
+    {"screen": "customer details", "label": "date of birth"},
+    {"screen": "customer details", "label": "email"},
+    {"screen": "identity check", "label": "id document"},
+    {"screen": "identity check", "label": "verification result|check result"},
+    {"screen": "approvals queue", "label": "status"}
+  ],
+  "actions": [
+    ["new customer"],
+    ["save"],
+    ["upload"],
+    ["submit"],
+    ["approve"]
+  ],
+  "requirements": [
+    ["search", "postcode|surname"],
+    ["email", "valid|format|reject"],
+    ["scan|document", "attach|upload"],
+    ["approvals queue|manager approves"],
+    ["audit log|audit trail"]
+  ],
+  "questions": [
+    ["match", "new customer|create"],
+    ["email", "mandatory|required|optional"],
+    ["document", "type|size|accept"],
+    ["approve", "away|deputy|who"],
+    ["password", "reset"]
+  ]
+}
