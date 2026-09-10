@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Northwind Onboarding - Documents</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>Jo Patel</b> &middot; Onboarding Officer</div></header>
+<div class="layout">
+<nav><div class="section">Onboarding</div>
+<a class="done" href="search.html"><span class="step">1</span>Customer Search</a>
+<a class="done" href="details.html"><span class="step">2</span>Customer Details</a>
+<a class="active" href="documents.html"><span class="step">3</span>Documents</a>
+<a class="" href="review.html"><span class="step">4</span>Review &amp; Submit</a>
+<a class="" href="queue.html"><span class="step">5</span>Approval Queue</a>
+<a class="" href="confirmation.html"><span class="step">6</span>Confirmation</a>
+<div class="section" style="margin-top:18px">Other</div><a href="#"><span class="step">&middot;</span>Reports</a><a href="#"><span class="step">&middot;</span>Settings</a></nav>
+<main>
+<div class="crumbs">Onboarding &rsaquo; New customer &rsaquo; Documents</div>
+<h1>Documents</h1>
+<p class="subtitle">Upload proof of identity for Priya Shah.</p>
+<div class="card">
+  <h2>Upload ID document</h2>
+  <div class="grid three">
+    <div class="field"><label>ID document<span class="req">*</span></label><input type="file"><div class="hint">PDF, JPG or PNG, up to 10 MB</div></div>
+    <div class="field"><label>Document type<span class="req">*</span></label><select><option>Passport</option><option>Driving licence</option><option>National ID card</option></select></div>
+    <div class="field"><label>&nbsp;</label><a class="btn primary" href="#">Upload</a></div>
+  </div>
+</div>
+<div class="card">
+  <h2>Uploaded documents</h2>
+  <table>
+    <tr><th>File</th><th>Document type</th><th>Uploaded</th><th>Uploaded by</th><th>Status</th></tr>
+    <tr><td>passport_pshah.jpg</td><td>Passport</td><td>10/09/2026 09:41</td><td>Jo Patel</td><td><span class="pill pending">Pending check</span></td></tr>
+    <tr><td>council_tax_2026.pdf</td><td>Proof of address</td><td>10/09/2026 09:43</td><td>Jo Patel</td><td><span class="pill verified">Verified</span></td></tr>
+  </table>
+  <div class="actions"><a class="btn" href="details.html">Back</a><a class="btn primary" href="review.html">Continue to review</a></div>
+</div>
+</main>
+</div><footer>Northwind Onboarding v4.2 &middot; Internal use only &middot; Help: ext. 4410</footer></body></html>

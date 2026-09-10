@@ -1,0 +1,57 @@
+WEBVTT
+
+1
+00:00:00.800 --> 00:00:07.190
+<v Expert>So this is Northwind Onboarding, the tool we use to set up new customers. The first screen is Customer Search.
+
+2
+00:00:07.790 --> 00:00:14.620
+<v Expert>You put in the postcode and the surname and hit Search, and it lists anyone we already have, so you don't create a duplicate.
+
+3
+00:00:15.220 --> 00:00:25.000
+<v Expert>If they're new, you go to Customer Details. First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.
+
+4
+00:00:25.600 --> 00:00:32.800
+<v Expert>The postcode has to be a valid UK format, otherwise the system won't let you save. The address lines and the town are optional.
+
+5
+00:00:33.400 --> 00:00:42.870
+<v Expert>Account type is a dropdown, personal or business, and the marketing consent box only gets ticked if the customer actually said yes. Then you press Save and continue.
+
+6
+00:00:43.470 --> 00:00:51.810
+<v Expert>Next is Documents. We upload a photo of their ID, usually a passport or a driving licence, and pick the document type from the dropdown.
+
+7
+00:00:52.410 --> 00:01:01.510
+<v Expert>The status column shows pending until the document has been checked. Someone checks them, I'm honestly not sure who, it just changes to verified at some point.
+
+8
+00:01:02.110 --> 00:01:08.820
+<v Expert>Review and Submit is a summary of everything so far. You read it through, and if it all looks right you press Submit for approval.
+
+9
+00:01:09.420 --> 00:01:16.090
+<v Expert>Once you submit, the record locks and you can't edit it any more. You'd have to ask a team lead to send it back, I think.
+
+10
+00:01:16.690 --> 00:01:25.420
+<v Expert>This is the Approval Queue. Every submitted customer sits here with a status, and it shows who it's assigned to, though I've never worked out how it picks the person.
+
+11
+00:01:26.020 --> 00:01:32.530
+<v Expert>Only team leads can approve. The Approve button doesn't show for the rest of us, and it says team leads only at the top.
+
+12
+00:01:33.130 --> 00:01:38.980
+<v Expert>When it's approved, you get the Confirmation screen with a reference number. We give that reference to the customer.
+
+13
+00:01:39.580 --> 00:01:47.160
+<v Expert>A welcome email goes out automatically to the address we entered. If the email bounces it just sort of sits there, nobody gets told.
+
+14
+00:01:47.760 --> 00:01:50.920
+<v Expert>And that's the whole onboarding process, start to finish.
