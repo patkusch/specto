@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "specto"
+version = "0.1.0"
+description = "Watch a recorded expert walkthrough of a system and write down what the system must do."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "anthropic>=1.5",
+  "openpyxl>=3.1",
+  "pillow>=10",
+  "imageio-ffmpeg>=0.5",
+  "pydantic>=2",
+]
+
+[project.optional-dependencies]
+whisper = ["faster-whisper>=1.0"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+specto = "specto.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["specto*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
