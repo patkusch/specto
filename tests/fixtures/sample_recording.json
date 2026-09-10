@@ -1,0 +1,245 @@
+{
+  "source": "onboarding_walkthrough.mp4",
+  "duration": 300.0,
+  "keyframes": [
+    {
+      "index": 0,
+      "timestamp": 0.0,
+      "path": "frames/frame_0000.jpg",
+      "phash": "a1b2c3d4e5f60001",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "index": 1,
+      "timestamp": 45.0,
+      "path": "frames/frame_0001.jpg",
+      "phash": "a1b2c3d4e5f60002",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "index": 2,
+      "timestamp": 100.0,
+      "path": "frames/frame_0002.jpg",
+      "phash": "a1b2c3d4e5f60003",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "index": 3,
+      "timestamp": 150.0,
+      "path": "frames/frame_0003.jpg",
+      "phash": "a1b2c3d4e5f60004",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "index": 4,
+      "timestamp": 210.0,
+      "path": "frames/frame_0004.jpg",
+      "phash": "a1b2c3d4e5f60005",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "index": 5,
+      "timestamp": 260.0,
+      "path": "frames/frame_0005.jpg",
+      "phash": "a1b2c3d4e5f60006",
+      "width": 1280,
+      "height": 720
+    }
+  ],
+  "segments": [
+    {
+      "start": 2.0,
+      "end": 12.0,
+      "text": "OK so this is the customer search screen. Before we do anything we search by postcode and surname.",
+      "speaker": "Expert"
+    },
+    {
+      "start": 14.0,
+      "end": 22.0,
+      "text": "We always search first, otherwise we end up with duplicates.",
+      "speaker": "Expert"
+    },
+    {
+      "start": 24.0,
+      "end": 40.0,
+      "text": "If nothing comes up, we press New customer up here.",
+      "speaker": "Expert"
+    },
+    {
+      "start": 48.0,
+      "end": 62.0,
+      "text": "This is the details screen. Title, first name, last name, date of birth, email.",
+      "speaker": "Expert"
+    },
+    {
+      "start": 66.0,
+      "end": 72.0,
+      "text": "Is the email always filled in?",
+      "speaker": "Analyst"
+    },
+    {
+      "start": 74.0,
+      "end": 80.0,
+      "text": "Most of the time we have one. Sometimes not.",
+      "speaker": "Expert"
+    },
+    {
+      "start": 105.0,
+      "end": 140.0,
+      "text": "Once everything is filled in we press Save. It checks the email looks right and that they're over eighteen; if not it just won't save.",
+      "speaker": "Expert"
+    },
+    {
+      "start": 155.0,
+      "end": 172.0,
+      "text": "Now the identity check. We upload the scan of their passport or driving licence here.",
+      "speaker": "Expert"
+    },
+    {
+      "start": 174.0,
+      "end": 195.0,
+      "text": "Then we pick the result, pass or fail, and press Submit.",
+      "speaker": "Expert"
+    },
+    {
+      "start": 212.0,
+      "end": 230.0,
+      "text": "That drops them into the approvals queue. Nothing happens until a manager approves.",
+      "speaker": "Expert"
+    },
+    {
+      "start": 240.0,
+      "end": 255.0,
+      "text": "Usually Dave does the approvals. If he's off, well, it waits.",
+      "speaker": "Expert"
+    },
+    {
+      "start": 262.0,
+      "end": 290.0,
+      "text": "And once it's approved the status changes to Active and that's the customer onboarded.",
+      "speaker": "Expert"
+    }
+  ],
+  "moments": [
+    {
+      "keyframe_index": 0,
+      "start": 0.0,
+      "end": 45.0,
+      "segments": [
+        {
+          "start": 2.0,
+          "end": 12.0,
+          "text": "OK so this is the customer search screen. Before we do anything we search by postcode and surname.",
+          "speaker": "Expert"
+        },
+        {
+          "start": 14.0,
+          "end": 22.0,
+          "text": "We always search first, otherwise we end up with duplicates.",
+          "speaker": "Expert"
+        },
+        {
+          "start": 24.0,
+          "end": 40.0,
+          "text": "If nothing comes up, we press New customer up here.",
+          "speaker": "Expert"
+        }
+      ]
+    },
+    {
+      "keyframe_index": 1,
+      "start": 45.0,
+      "end": 100.0,
+      "segments": [
+        {
+          "start": 48.0,
+          "end": 62.0,
+          "text": "This is the details screen. Title, first name, last name, date of birth, email.",
+          "speaker": "Expert"
+        },
+        {
+          "start": 66.0,
+          "end": 72.0,
+          "text": "Is the email always filled in?",
+          "speaker": "Analyst"
+        },
+        {
+          "start": 74.0,
+          "end": 80.0,
+          "text": "Most of the time we have one. Sometimes not.",
+          "speaker": "Expert"
+        }
+      ]
+    },
+    {
+      "keyframe_index": 2,
+      "start": 100.0,
+      "end": 150.0,
+      "segments": [
+        {
+          "start": 105.0,
+          "end": 140.0,
+          "text": "Once everything is filled in we press Save. It checks the email looks right and that they're over eighteen; if not it just won't save.",
+          "speaker": "Expert"
+        }
+      ]
+    },
+    {
+      "keyframe_index": 3,
+      "start": 150.0,
+      "end": 210.0,
+      "segments": [
+        {
+          "start": 155.0,
+          "end": 172.0,
+          "text": "Now the identity check. We upload the scan of their passport or driving licence here.",
+          "speaker": "Expert"
+        },
+        {
+          "start": 174.0,
+          "end": 195.0,
+          "text": "Then we pick the result, pass or fail, and press Submit.",
+          "speaker": "Expert"
+        }
+      ]
+    },
+    {
+      "keyframe_index": 4,
+      "start": 210.0,
+      "end": 260.0,
+      "segments": [
+        {
+          "start": 212.0,
+          "end": 230.0,
+          "text": "That drops them into the approvals queue. Nothing happens until a manager approves.",
+          "speaker": "Expert"
+        },
+        {
+          "start": 240.0,
+          "end": 255.0,
+          "text": "Usually Dave does the approvals. If he's off, well, it waits.",
+          "speaker": "Expert"
+        }
+      ]
+    },
+    {
+      "keyframe_index": 5,
+      "start": 260.0,
+      "end": 300.0,
+      "segments": [
+        {
+          "start": 262.0,
+          "end": 290.0,
+          "text": "And once it's approved the status changes to Active and that's the customer onboarded.",
+          "speaker": "Expert"
+        }
+      ]
+    }
+  ],
+  "transcript_source": "file"
+}

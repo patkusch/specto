@@ -1,0 +1,455 @@
+{
+  "title": "Customer onboarding walkthrough",
+  "summary": "An onboarding clerk creates a new customer in the CRM. They first search for an existing customer, then enter personal details, attach a scanned ID document and record the identity check result. The new customer waits in an approvals queue until a team manager approves it, after which the customer becomes active.",
+  "actors": [
+    "Onboarding clerk",
+    "Team manager"
+  ],
+  "screens": [
+    {
+      "id": "S01",
+      "name": "Customer search",
+      "purpose": "Find an existing customer before a new one is created.",
+      "keyframe_indexes": [
+        0
+      ],
+      "first_seen": 0.0,
+      "field_ids": [
+        "F001",
+        "F002"
+      ],
+      "action_ids": [
+        "A001"
+      ]
+    },
+    {
+      "id": "S02",
+      "name": "Customer details",
+      "purpose": "Enter the new customer's personal details.",
+      "keyframe_indexes": [
+        1,
+        2
+      ],
+      "first_seen": 45.0,
+      "field_ids": [
+        "F003",
+        "F004",
+        "F005",
+        "F006",
+        "F007"
+      ],
+      "action_ids": [
+        "A002"
+      ]
+    },
+    {
+      "id": "S03",
+      "name": "Identity check",
+      "purpose": "Attach the customer's ID document and record whether the check passed.",
+      "keyframe_indexes": [
+        3
+      ],
+      "first_seen": 150.0,
+      "field_ids": [
+        "F008",
+        "F009"
+      ],
+      "action_ids": [
+        "A003",
+        "A004"
+      ]
+    },
+    {
+      "id": "S04",
+      "name": "Approvals queue",
+      "purpose": "Hold new customers until a team manager approves them.",
+      "keyframe_indexes": [
+        4,
+        5
+      ],
+      "first_seen": 210.0,
+      "field_ids": [
+        "F010"
+      ],
+      "action_ids": [
+        "A005"
+      ]
+    }
+  ],
+  "fields": [
+    {
+      "id": "F001",
+      "screen_id": "S01",
+      "label": "Postcode",
+      "field_type": "text",
+      "required": true,
+      "example_value": "SW1A 1AA",
+      "source": "both",
+      "timestamp": 8.0,
+      "keyframe_index": 0,
+      "notes": null
+    },
+    {
+      "id": "F002",
+      "screen_id": "S01",
+      "label": "Surname",
+      "field_type": "text",
+      "required": true,
+      "example_value": null,
+      "source": "both",
+      "timestamp": 8.0,
+      "keyframe_index": 0,
+      "notes": null
+    },
+    {
+      "id": "F003",
+      "screen_id": "S02",
+      "label": "Title",
+      "field_type": "dropdown",
+      "required": null,
+      "example_value": "Ms",
+      "source": "seen on screen",
+      "timestamp": 50.0,
+      "keyframe_index": 1,
+      "notes": "Options seen: Mr, Mrs, Ms, Dr"
+    },
+    {
+      "id": "F004",
+      "screen_id": "S02",
+      "label": "First name",
+      "field_type": "text",
+      "required": true,
+      "example_value": "Jane",
+      "source": "both",
+      "timestamp": 52.0,
+      "keyframe_index": 1,
+      "notes": null
+    },
+    {
+      "id": "F005",
+      "screen_id": "S02",
+      "label": "Last name",
+      "field_type": "text",
+      "required": true,
+      "example_value": "Doe",
+      "source": "both",
+      "timestamp": 52.0,
+      "keyframe_index": 1,
+      "notes": null
+    },
+    {
+      "id": "F006",
+      "screen_id": "S02",
+      "label": "Date of birth",
+      "field_type": "date",
+      "required": true,
+      "example_value": "12/03/1988",
+      "source": "both",
+      "timestamp": 55.0,
+      "keyframe_index": 1,
+      "notes": "Customer must be 18 or over"
+    },
+    {
+      "id": "F007",
+      "screen_id": "S02",
+      "label": "Email",
+      "field_type": "text",
+      "required": null,
+      "example_value": "jane.doe@example.com",
+      "source": "both",
+      "timestamp": 58.0,
+      "keyframe_index": 1,
+      "notes": "Expert said it is sometimes missing"
+    },
+    {
+      "id": "F008",
+      "screen_id": "S03",
+      "label": "ID document",
+      "field_type": "file",
+      "required": true,
+      "example_value": null,
+      "source": "both",
+      "timestamp": 160.0,
+      "keyframe_index": 3,
+      "notes": "Passport or driving licence scan"
+    },
+    {
+      "id": "F009",
+      "screen_id": "S03",
+      "label": "Verification result",
+      "field_type": "dropdown",
+      "required": true,
+      "example_value": "Pass",
+      "source": "both",
+      "timestamp": 180.0,
+      "keyframe_index": 3,
+      "notes": "Options seen: Pass, Fail"
+    },
+    {
+      "id": "F010",
+      "screen_id": "S04",
+      "label": "Status",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "Pending approval",
+      "source": "seen on screen",
+      "timestamp": 215.0,
+      "keyframe_index": 4,
+      "notes": null
+    }
+  ],
+  "actions": [
+    {
+      "id": "A001",
+      "screen_id": "S01",
+      "description": "Presses New customer",
+      "control": "button",
+      "leads_to_screen_id": "S02",
+      "timestamp": 30.0,
+      "keyframe_index": 0
+    },
+    {
+      "id": "A002",
+      "screen_id": "S02",
+      "description": "Presses Save",
+      "control": "button",
+      "leads_to_screen_id": "S03",
+      "timestamp": 110.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "A003",
+      "screen_id": "S03",
+      "description": "Uploads the ID scan",
+      "control": "button",
+      "leads_to_screen_id": null,
+      "timestamp": 162.0,
+      "keyframe_index": 3
+    },
+    {
+      "id": "A004",
+      "screen_id": "S03",
+      "description": "Presses Submit",
+      "control": "button",
+      "leads_to_screen_id": "S04",
+      "timestamp": 190.0,
+      "keyframe_index": 3
+    },
+    {
+      "id": "A005",
+      "screen_id": "S04",
+      "description": "Presses Approve",
+      "control": "button",
+      "leads_to_screen_id": null,
+      "timestamp": 265.0,
+      "keyframe_index": 5
+    }
+  ],
+  "journey": [
+    {
+      "order": 1,
+      "screen_id": "S01",
+      "description": "The clerk searches by postcode and surname to check the customer does not already exist.",
+      "actor": "Onboarding clerk",
+      "timestamp": 10.0,
+      "keyframe_index": 0
+    },
+    {
+      "order": 2,
+      "screen_id": "S02",
+      "description": "The clerk fills in the customer's personal details.",
+      "actor": "Onboarding clerk",
+      "timestamp": 60.0,
+      "keyframe_index": 1
+    },
+    {
+      "order": 3,
+      "screen_id": "S02",
+      "description": "The clerk presses Save; the system checks the email and the date of birth.",
+      "actor": "Onboarding clerk",
+      "timestamp": 120.0,
+      "keyframe_index": 2
+    },
+    {
+      "order": 4,
+      "screen_id": "S03",
+      "description": "The clerk uploads a scan of the customer's ID and records the verification result.",
+      "actor": "Onboarding clerk",
+      "timestamp": 165.0,
+      "keyframe_index": 3
+    },
+    {
+      "order": 5,
+      "screen_id": "S04",
+      "description": "A team manager reviews the new customer in the approvals queue and approves it.",
+      "actor": "Team manager",
+      "timestamp": 240.0,
+      "keyframe_index": 5
+    }
+  ],
+  "requirements": [
+    {
+      "id": "R001",
+      "statement": "The system must search for an existing customer by postcode and surname before a new customer record can be created.",
+      "rationale": "Duplicate customer records cause problems downstream.",
+      "source_quote": "We always search first, otherwise we end up with duplicates.",
+      "timestamp": 15.0,
+      "keyframe_index": 0,
+      "screen_id": "S01",
+      "kind": "workflow",
+      "priority": "must",
+      "confidence": "high"
+    },
+    {
+      "id": "R002",
+      "statement": "The system must reject a customer record when the email address is not a valid format or the date of birth shows the customer is under 18.",
+      "rationale": "Customers under 18 cannot be onboarded.",
+      "source_quote": "It checks the email looks right and that they're over eighteen; if not it just won't save.",
+      "timestamp": 125.0,
+      "keyframe_index": 2,
+      "screen_id": "S02",
+      "kind": "validation",
+      "priority": "must",
+      "confidence": "high"
+    },
+    {
+      "id": "R003",
+      "statement": "As an onboarding clerk, I need to attach a scanned ID document to the customer, so that the identity check has evidence.",
+      "rationale": null,
+      "source_quote": "We upload the scan of their passport or driving licence here.",
+      "timestamp": 160.0,
+      "keyframe_index": 3,
+      "screen_id": "S03",
+      "kind": "data",
+      "priority": "must",
+      "confidence": "medium"
+    },
+    {
+      "id": "R004",
+      "statement": "New customers must wait in an approvals queue until a team manager approves them.",
+      "rationale": "A second person checks every new customer before they become active.",
+      "source_quote": "Nothing happens until a manager approves.",
+      "timestamp": 220.0,
+      "keyframe_index": 4,
+      "screen_id": "S04",
+      "kind": "workflow",
+      "priority": "should",
+      "confidence": "high"
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC001",
+      "requirement_id": "R001",
+      "given": "a clerk is on the customer search screen",
+      "when": "they enter a postcode and surname and search",
+      "then": "matching customers are listed before a new one can be created",
+      "timestamp": 15.0,
+      "keyframe_index": 0
+    },
+    {
+      "id": "AC002",
+      "requirement_id": "R001",
+      "given": "a clerk has searched and found no match",
+      "when": "they press New customer",
+      "then": "the customer details screen opens",
+      "timestamp": 30.0,
+      "keyframe_index": 0
+    },
+    {
+      "id": "AC003",
+      "requirement_id": "R002",
+      "given": "the email field contains text without an @ sign",
+      "when": "the clerk presses Save",
+      "then": "the record is not saved and the email field shows an error",
+      "timestamp": 125.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "AC004",
+      "requirement_id": "R002",
+      "given": "the date of birth is less than 18 years ago",
+      "when": "the clerk presses Save",
+      "then": "the record is not saved and the date of birth field shows an error",
+      "timestamp": 130.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "AC005",
+      "requirement_id": "R003",
+      "given": "a clerk is on the identity check screen",
+      "when": "they upload a scanned document",
+      "then": "the document is attached to the customer and its name is shown",
+      "timestamp": 162.0,
+      "keyframe_index": 3
+    },
+    {
+      "id": "AC006",
+      "requirement_id": "R004",
+      "given": "a clerk has submitted the identity check",
+      "when": "the submission succeeds",
+      "then": "the customer appears in the approvals queue with status Pending approval",
+      "timestamp": 215.0,
+      "keyframe_index": 4
+    },
+    {
+      "id": "AC007",
+      "requirement_id": "R004",
+      "given": "a customer is in the approvals queue",
+      "when": "a team manager presses Approve",
+      "then": "the customer's status changes to Active",
+      "timestamp": 265.0,
+      "keyframe_index": 5
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q001",
+      "question": "When the search finds a possible match, does the clerk have to use it, or can they still create a new customer?",
+      "why_it_matters": "Decides whether the duplicate check blocks the clerk or only warns them.",
+      "context_quote": "If nothing comes up, we press New customer up here.",
+      "timestamp": 26.0,
+      "keyframe_index": 0,
+      "screen_id": "S01",
+      "category": "ambiguity"
+    },
+    {
+      "id": "Q002",
+      "question": "Is the email address mandatory, or can a customer be onboarded without one?",
+      "why_it_matters": "Changes whether the Email field is required and what the validation does when it is empty.",
+      "context_quote": "Most of the time we have one. Sometimes not.",
+      "timestamp": 74.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "category": "missing information"
+    },
+    {
+      "id": "Q003",
+      "question": "Which document types are accepted for the ID upload, and is there a file size limit?",
+      "why_it_matters": "Needed to build the upload control and its error messages.",
+      "context_quote": "We upload the scan of their passport or driving licence here.",
+      "timestamp": 158.0,
+      "keyframe_index": 3,
+      "screen_id": "S03",
+      "category": "validation rule"
+    },
+    {
+      "id": "Q004",
+      "question": "Who can approve a new customer when the team manager is away?",
+      "why_it_matters": "Decides which roles need the Approve permission and whether there is a deputy rule.",
+      "context_quote": "Usually Dave does the approvals. If he's off, well, it waits.",
+      "timestamp": 242.0,
+      "keyframe_index": 4,
+      "screen_id": "S04",
+      "category": "permissions"
+    }
+  ],
+  "usage": {
+    "model": "claude-opus-5",
+    "calls": 3,
+    "input_tokens": 48210,
+    "output_tokens": 6120,
+    "cache_read_input_tokens": 30000,
+    "cache_creation_input_tokens": 9000
+  }
+}
