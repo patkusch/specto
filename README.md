@@ -41,18 +41,25 @@ downloads a speech model). Most meeting tools export a `.vtt` or `.srt`, and
 those are faster and usually more accurate.
 
 To check the pipeline without spending anything, `--fake` runs it with a
-stand-in model:
+stand-in model. There is a ready-made example recording in the repo, a
+two-minute narrated walkthrough of a fake onboarding tool:
 
 ```bash
-specto run walkthrough.mp4 --transcript walkthrough.vtt --fake
+specto run examples/onboarding/walkthrough.mp4 --transcript examples/onboarding/walkthrough.vtt --fake
 ```
+
+With `pip install -e ".[ocr]"` the text on each frame is also read and given
+to the model next to the image, so small labels and values are not lost when
+the frame is scaled down. It is on by default when installed; `--no-ocr` turns
+it off.
 
 ## How it works
 
-1. **Ingest.** ffmpeg finds the moments the screen changed and saves a still
-   image for each. Near-identical images are dropped. The transcript is read
-   (or made), and each sentence is matched to the image that was showing when
-   it was said.
+1. **Ingest.** One frame per second is compared with the last kept frame
+   using an image fingerprint that notices colour and typed text, and a still
+   is saved whenever the screen changed. The transcript is read (or made),
+   and each sentence is matched to the image that was showing when it was
+   said. If OCR is installed, the text on each still is read too.
 2. **Extract.** Claude reads the images and the words in batches of eight
    frames and writes down the screens, fields, actions and candidate
    requirements it sees, keeping the same screen names across batches. One
@@ -76,10 +83,28 @@ extraction, and a workbook layout change re-runs only the export
 | `--effort` | how hard the model thinks: low, medium, high, xhigh, max | `high` |
 | `--frames-per-call N` | images per model call | 8 |
 | `--max-frames N` | cap on still images kept | 120 |
-| `--scene-threshold X` | how big a change counts as a new screen, 0 to 1 | 0.3 |
+| `--detect hash|scene` | find screen changes by image fingerprint, or by ffmpeg brightness | `hash` |
+| `--hash-distance N` | how different a frame must be to count as new; lower catches typed text | 8 |
+| `--sample-fps X` | frames looked at per second in hash mode | 1 |
+| `--scene-threshold X` | brightness change that counts as a new screen, scene mode only | 0.3 |
+| `--ocr / --no-ocr` | read the text on each frame for the model | on |
 | `--ingest-only` | stop after frames and transcript | |
 | `--fake` | stand-in model, no key needed | |
 | `--force` | redo every stage | |
+
+## Checking the output against an answer key
+
+`examples/onboarding/expected.json` lists what a good analysis of the example
+must contain: screen names, field labels, and keyword groups for actions,
+requirements and questions. After a run, the score command reports how much
+of it was found and what was missed:
+
+```bash
+specto score out/walkthrough examples/onboarding/expected.json --min 0.7
+```
+
+This is how a prompt change is judged: run, score, compare. Write an answer
+key for your own recording the same way.
 
 ## What it costs
 
@@ -99,9 +124,12 @@ that further.
 - Small text on a high-resolution screen may be unreadable at 1280 pixels
   wide; raise `max_width` in `specto/ingest.py` if fields are being missed.
 - Speaker names appear only when the transcript file carries them.
-- Screen changes are spotted by a change in brightness. Two screens with the
-  same layout and brightness but different colours can be missed; lower
-  `--scene-threshold` if that happens.
+- Screen changes are found by taking one still a second and keeping it when
+  its layout, text or colour differs from the last one kept by more than
+  `--hash-distance` (default 8; lower it to catch smaller changes, raise it
+  to ignore a ticking clock or a moving cursor); `--detect scene` switches to
+  ffmpeg's brightness detector, which misses a page that only changes colour
+  or gains typed text.
 
 ## Development
 

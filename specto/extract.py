@@ -38,6 +38,7 @@ from specto.timefmt import mmss
 DEFAULT_MODEL = "claude-opus-5"
 DEFAULT_MAX_TOKENS = 16000
 LONG_TRANSCRIPT_CHARS = 150_000  # above this, consolidation is split into two calls
+OCR_TEXT_MAX_CHARS = 1500  # per frame; a screen full of table rows is cut here
 
 USAGE_KEYS = (
     "input_tokens",
@@ -212,6 +213,17 @@ def _known_screens_block(readings: list[ChunkReading]) -> str:
     return "Screens identified so far (reuse these ids when the screen reappears):\n" + "\n".join(lines)
 
 
+def _ocr_block(keyframe_index: int, text: str) -> dict:
+    """The OCR text for one frame, cut to OCR_TEXT_MAX_CHARS so a busy screen stays cheap."""
+    text = text.strip()
+    if len(text) > OCR_TEXT_MAX_CHARS:
+        text = text[:OCR_TEXT_MAX_CHARS].rstrip() + "\n[cut: the frame has more text than shown here]"
+    return {
+        "type": "text",
+        "text": f"Text read from frame {keyframe_index} (may contain OCR errors):\n{text}",
+    }
+
+
 def build_chunk_content(
     recording: Recording,
     moments: list[Moment],
@@ -219,15 +231,22 @@ def build_chunk_content(
     chunk_number: int,
     chunk_count: int,
     earlier: list[ChunkReading],
+    ocr_text: Optional[dict[int, str]] = None,
 ) -> list[dict]:
-    """The user message for one chunk: header, known screens, then frame by frame."""
+    """The user message for one chunk: header, known screens, then frame by frame.
+
+    `ocr_text` maps keyframe_index to the text read off that frame; when a
+    frame has some, it goes in a text block right after the frame's image.
+    """
     first, last = moments[0], moments[-1]
+    ocr_text = ocr_text or {}
     header = (
         f"Recording: {recording.source} ({format_time(recording.duration)} long). "
         f"This is chunk {chunk_number} of {chunk_count}: frames {first.keyframe_index} to "
         f"{last.keyframe_index}, covering {format_time(first.start)} to {format_time(last.end)}. "
-        "Each frame is introduced by a line 'Frame N at mm:ss', then the image, then what the "
-        "expert said while it was showing."
+        "Each frame is introduced by a line 'Frame N at mm:ss', then the image, "
+        + ("then the text read from the image by OCR where there is any, " if ocr_text else "")
+        + "then what the expert said while it was showing."
     )
     blocks: list[dict] = [
         {"type": "text", "text": header},
@@ -240,6 +259,9 @@ def build_chunk_content(
             {"type": "text", "text": f"Frame {keyframe.index} at {format_time(keyframe.timestamp)}"}
         )
         blocks.append(_image_block(out_dir, keyframe.path))
+        frame_text = ocr_text.get(keyframe.index, "")
+        if frame_text and frame_text.strip():
+            blocks.append(_ocr_block(keyframe.index, frame_text))
         spoken = moment.text or "(nothing said)"
         blocks.append({"type": "text", "text": f"Transcript while frame {keyframe.index} was showing: {spoken}"})
     return blocks
@@ -255,10 +277,13 @@ def read_chunks(
     frames_per_call: int = 8,
     usage: Optional[Usage] = None,
     log: Callable[[str], None] = print,
+    ocr_text: Optional[dict[int, str]] = None,
 ) -> list[ChunkReading]:
     """Walk the moments in chunks and ask the model what each chunk shows.
 
     Token counts go into `usage` when one is given. One line is logged per call.
+    `ocr_text` (keyframe_index -> text read off the frame) is passed through to
+    each chunk's content when given.
     """
     out_dir = Path(out_dir)
     moments = recording.moments
@@ -267,7 +292,9 @@ def read_chunks(
     chunks = [moments[i : i + frames_per_call] for i in range(0, len(moments), frames_per_call)]
     readings: list[ChunkReading] = []
     for number, chunk in enumerate(chunks, start=1):
-        content = build_chunk_content(recording, chunk, out_dir, number, len(chunks), readings)
+        content = build_chunk_content(
+            recording, chunk, out_dir, number, len(chunks), readings, ocr_text=ocr_text
+        )
         parsed, call_usage = caller(SYSTEM_PROMPT_READ, content, ChunkReading)
         reading = ChunkReading.model_validate(parsed.model_dump())
         readings.append(reading)
@@ -430,10 +457,13 @@ def extract(
     force: bool = False,
     frames_per_call: int = 8,
     log: Callable[[str], None] = print,
+    ocr_text: Optional[dict[int, str]] = None,
 ) -> Analysis:
     """Run both passes and write analysis.json; reuse it on a re-run unless force.
 
     Also writes chunk_readings.json, which is handy when a prompt needs tuning.
+    `ocr_text` (keyframe_index -> text read off the frame, see specto.ocr) is
+    shown to the model next to each frame; it is not stored in the Analysis.
     """
     out_dir = Path(out_dir)
     analysis_path = out_dir / "analysis.json"
@@ -443,7 +473,9 @@ def extract(
 
     caller = caller or ClaudeCaller()
     usage = Usage(model=getattr(caller, "model", "unknown"))
-    readings = read_chunks(recording, out_dir, caller, frames_per_call=frames_per_call, usage=usage, log=log)
+    readings = read_chunks(
+        recording, out_dir, caller, frames_per_call=frames_per_call, usage=usage, log=log, ocr_text=ocr_text
+    )
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "chunk_readings.json").write_text(
         json.dumps([r.model_dump() for r in readings], indent=2)
