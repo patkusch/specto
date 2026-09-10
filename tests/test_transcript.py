@@ -8,11 +8,12 @@ from __future__ import annotations
 import builtins
 import json
 import sys
+from types import SimpleNamespace
 from pathlib import Path
 
 import pytest
 
-from specto.transcript import parse_timestamp, parse_transcript, transcribe
+from specto.transcript import _segment_from_whisper, parse_timestamp, parse_transcript, transcribe
 
 VTT_WITH_VOICES = """WEBVTT - Zoom style export
 Kind: captions
@@ -177,3 +178,18 @@ def test_transcribe_explains_missing_dependency(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(builtins, "__import__", fake_import)
     with pytest.raises(ImportError, match="--transcript"):
         transcribe(tmp_path / "anything.mp4")
+
+
+def test_segment_from_whisper_strips_word_spaces_and_tolerates_no_words():
+    """The shape both faster-whisper and stable-ts hand back, with no model run."""
+    raw = [SimpleNamespace(start=0.5, end=0.9, word=" So"), SimpleNamespace(start=0.9, end=1.2, word=" this"), SimpleNamespace(start=1.2, end=1.2, word="  ")]
+    seg = _segment_from_whisper(0.5, 1.2, " So this", raw)
+    assert seg.text == "So this"
+    assert [(w.start, w.end, w.text) for w in seg.words] == [(0.5, 0.9, "So"), (0.9, 1.2, "this")]
+    assert _segment_from_whisper(2.0, 3.0, " later ", None).words == []
+
+
+def test_file_parsers_leave_words_empty(tmp_path: Path):
+    path = tmp_path / "talk.vtt"
+    path.write_text(VTT_WITH_VOICES, encoding="utf-8")
+    assert all(s.words == [] for s in parse_transcript(path))

@@ -18,6 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 whisper = ["faster-whisper>=1.0"]
+whisper-precise = ["faster-whisper>=1.0", "stable-ts>=2.19"]  # word timings ~3x closer; pulls in torch (~600 MB)
 ocr = ["rapidocr-onnxruntime>=1.2"]
 dev = ["pytest>=8"]
 

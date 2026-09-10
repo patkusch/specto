@@ -14,11 +14,28 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------- stage 1: ingest
 
 
+class Word(BaseModel):
+    start: float
+    end: float
+    text: str
+
+
 class TranscriptSegment(BaseModel):
     start: float
     end: float
     text: str
     speaker: Optional[str] = None
+    words: list[Word] = Field(default_factory=list, description="Word-level timings when the transcriber gives them; empty otherwise")
+
+
+class ChangedRegion(BaseModel):
+    """Where a still differs from the previous still, in pixels of the saved frame."""
+
+    x: int
+    y: int
+    w: int
+    h: int
+    fraction: float = Field(description="Share of the frame area that changed, 0 to 1")
 
 
 class Keyframe(BaseModel):
@@ -28,6 +45,7 @@ class Keyframe(BaseModel):
     phash: Optional[str] = Field(default=None, description="Perceptual hash, hex, used for near-duplicate removal")
     width: Optional[int] = None
     height: Optional[int] = None
+    change_from_previous: Optional[ChangedRegion] = Field(default=None, description="None for the first frame or when nothing measurable changed")
 
 
 class Moment(BaseModel):

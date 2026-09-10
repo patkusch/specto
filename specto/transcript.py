@@ -12,7 +12,7 @@ import re
 from pathlib import Path
 from typing import Any, Optional
 
-from specto.model import TranscriptSegment
+from specto.model import TranscriptSegment, Word
 
 # `HH:MM:SS.mmm`, `MM:SS.mmm`, `MM:SS`, `SS.s`, with `,` or `.` before the fraction.
 _TIMESTAMP_RE = re.compile(r"^(?:(\d{1,2}):)?(?:(\d{1,2}):)?(\d{1,2}(?:[.,]\d+)?)$")
@@ -77,29 +77,67 @@ def parse_transcript(path: str | Path) -> list[TranscriptSegment]:
 
 
 def transcribe(video_path: str | Path, model_size: str = "base") -> list[TranscriptSegment]:
-    """Run faster-whisper on the recording's audio and return timed segments.
+    """Run local speech-to-text on the recording's audio and return timed segments.
 
-    faster-whisper is optional and heavy, so it is imported here rather than at
-    module load. The first run downloads the model; later runs use the cache.
+    Every segment comes back with word-level timings. faster-whisper does the
+    recognition; when stable-ts is also installed it is used on top, because it
+    re-times the words against the audio and lands them about three times
+    closer to where they were really spoken (measured on the example recording).
+
+    Both libraries are optional and heavy, so they are imported here rather than
+    at module load. The first run downloads the model; later runs use the cache.
     """
     try:
-        from faster_whisper import WhisperModel
+        from faster_whisper import WhisperModel, decode_audio
     except ImportError as exc:
         raise ImportError(
             "faster-whisper is not installed, so specto cannot transcribe the audio itself. "
             "Either `pip install faster-whisper` or pass a transcript file with --transcript."
         ) from exc
+    try:
+        import stable_whisper
+    except ImportError:
+        stable_whisper = None
 
-    print(f"transcript: transcribing {Path(video_path).name} with whisper '{model_size}' (this can take a while)")
-    model = WhisperModel(model_size)
-    raw_segments, info = model.transcribe(str(video_path), vad_filter=True)
-    segments = [
-        TranscriptSegment(start=float(seg.start), end=float(seg.end), text=seg.text.strip())
-        for seg in raw_segments
-        if seg.text.strip()
-    ]
-    print(f"transcript: {len(segments)} segments transcribed (language {getattr(info, 'language', '?')})")
+    engine = "stable-ts on faster-whisper" if stable_whisper else "faster-whisper"
+    print(f"transcript: transcribing {Path(video_path).name} with whisper '{model_size}' via {engine} (this can take a while)")
+
+    if stable_whisper is not None:
+        # stable-ts shells out to a bare `ffmpeg` when given a path, which this
+        # project does not have; handing it the decoded audio avoids that.
+        audio = decode_audio(str(video_path), sampling_rate=16000)
+        model = stable_whisper.load_faster_whisper(model_size)
+        result = model.transcribe(audio, vad=False, vad_filter=True, verbose=None)
+        raw_segments = result.segments
+        language = getattr(result, "language", "?")
+    else:
+        model = WhisperModel(model_size)
+        raw_segments, info = model.transcribe(str(video_path), word_timestamps=True, vad_filter=True)
+        language = getattr(info, "language", "?")
+
+    segments = []
+    for seg in raw_segments:
+        segment = _segment_from_whisper(seg.start, seg.end, seg.text, getattr(seg, "words", None))
+        if segment.text:
+            segments.append(segment)
+    with_words = sum(1 for s in segments if s.words)
+    print(f"transcript: {len(segments)} segments transcribed, {with_words} with word timings (language {language})")
     return segments
+
+
+def _segment_from_whisper(start: float, end: float, text: str, raw_words: Any) -> TranscriptSegment:
+    """Build a segment from what faster-whisper or stable-ts gives back.
+
+    Both report each word with `.start`, `.end` and `.word`, where `.word`
+    carries the leading space whisper tokenises with; that space is dropped.
+    Empty words are skipped, so `words` is empty rather than junk.
+    """
+    words = [
+        Word(start=float(w.start), end=float(w.end), text=w.word.strip())
+        for w in (raw_words or [])
+        if w.word.strip()
+    ]
+    return TranscriptSegment(start=float(start), end=float(end), text=text.strip(), words=words)
 
 
 # ------------------------------------------------------------------ helpers
