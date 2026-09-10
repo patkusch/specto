@@ -48,6 +48,15 @@ def draw_screen(title: str, background: tuple[int, int, int], rows: int, size=(6
     return img
 
 
+def form_screen(values: list[str]) -> Image.Image:
+    """A white form page with three input boxes, holding `values` typed into the first boxes."""
+    img = draw_screen("Customer Details", (245, 245, 245), 3)
+    draw = ImageDraw.Draw(img)
+    for i, value in enumerate(values[:3]):
+        draw.text((186, 153 + i * 36), value, fill=(20, 20, 20), font=_font(18))
+    return img
+
+
 def encode_frames(frame_dir: Path, out_file: Path, fps: int = FPS) -> Path:
     """Encode `frame_dir/img_%04d.png` into an mp4; libx264 if present, else mpeg4."""
     exe = imageio_ffmpeg.get_ffmpeg_exe()
@@ -88,3 +97,44 @@ def static_video(tmp_path_factory: pytest.TempPathFactory) -> Path:
     for n in range(FPS * 25):
         img.save(frame_dir / f"img_{n:04d}.png")
     return encode_frames(frame_dir, work / "static.mp4")
+
+
+@pytest.fixture(scope="session")
+def colour_only_video(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A 9 second mp4: the same layout in mid-green, mid-red, then mid-blue.
+
+    Every page has the same brightness, so ffmpeg's scene score sees no change.
+    """
+    work = tmp_path_factory.mktemp("colour_only")
+    frame_dir = work / "png"
+    frame_dir.mkdir()
+    n = 0
+    for background in ((60, 160, 60), (160, 60, 60), (60, 60, 160)):
+        img = draw_screen("Approval Queue", background, 3)
+        for _ in range(FPS * SECONDS_PER_SCREEN):
+            img.save(frame_dir / f"img_{n:04d}.png")
+            n += 1
+    return encode_frames(frame_dir, work / "colour_only.mp4")
+
+
+@pytest.fixture(scope="session")
+def typed_form_video(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A 9 second mp4: an empty white form, the same form with three values typed, then the queue.
+
+    Typing into three boxes barely moves the page's brightness, so the scene
+    detector misses the second screen.
+    """
+    work = tmp_path_factory.mktemp("typed_form")
+    frame_dir = work / "png"
+    frame_dir.mkdir()
+    n = 0
+    screens = [
+        form_screen([]),
+        form_screen(["Jane Smith", "SW1A 1AA", "07700 900123"]),
+        draw_screen("Approval Queue", (30, 120, 60), 3),
+    ]
+    for img in screens:
+        for _ in range(FPS * SECONDS_PER_SCREEN):
+            img.save(frame_dir / f"img_{n:04d}.png")
+            n += 1
+    return encode_frames(frame_dir, work / "typed_form.mp4")

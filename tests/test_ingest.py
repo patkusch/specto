@@ -8,7 +8,9 @@ import json
 from pathlib import Path
 
 from specto.align import build_moments
-from specto.ingest import dhash, extract_keyframes, hamming, ingest, probe_duration
+import pytest
+
+from specto.ingest import content_hash, dhash, extract_keyframes, hamming, ingest, probe_duration
 from specto.model import Keyframe, Recording, TranscriptSegment
 
 VTT = """WEBVTT
@@ -60,8 +62,12 @@ def test_extract_keyframes_respects_max_frames(synthetic_video: Path, tmp_path: 
 
 def test_extract_keyframes_min_gap_drops_close_frames(synthetic_video: Path, tmp_path: Path):
     # Screens change at 3, 6 and 9 s. With a 4 s gap, 3 s is too close to 0, 9 s too close to 6.
-    frames = extract_keyframes(synthetic_video, tmp_path, min_gap=4.0)
+    frames = extract_keyframes(synthetic_video, tmp_path / "scene", detect="scene", min_gap=4.0)
     assert [round(f.timestamp) for f in frames] == [0, 6]
+    # Hash mode compares each sample with the last kept frame, so the screen that
+    # changed at 3 s is still picked up, one sample later, once the gap allows it.
+    frames = extract_keyframes(synthetic_video, tmp_path / "hash", detect="hash", min_gap=4.0)
+    assert [round(f.timestamp) for f in frames] == [0, 4, 8]
 
 
 def test_extract_keyframes_removes_near_duplicates(tmp_path: Path, capsys):
@@ -83,7 +89,7 @@ def test_extract_keyframes_removes_near_duplicates(tmp_path: Path, capsys):
             n += 1
     video = encode_frames(png, tmp_path / "toggle.mp4")
 
-    frames = extract_keyframes(video, tmp_path / "out", scene_threshold=0.005)
+    frames = extract_keyframes(video, tmp_path / "out", detect="scene", scene_threshold=0.005)
     out = capsys.readouterr().out
     assert "scene detection found 3 frames" in out
     assert "removed 1 near-duplicates" in out
@@ -91,8 +97,10 @@ def test_extract_keyframes_removes_near_duplicates(tmp_path: Path, capsys):
     assert sorted(p.name for p in (tmp_path / "out" / "frames").iterdir()) == ["frame_0000.jpg", "frame_0001.jpg"]
 
 
-def test_static_video_falls_back_to_sampling(static_video: Path, tmp_path: Path):
-    frames = extract_keyframes(static_video, tmp_path, fallback_interval=5)
+@pytest.mark.parametrize("detect", ["hash", "scene"])
+def test_static_video_falls_back_to_sampling(static_video: Path, tmp_path: Path, detect: str, capsys):
+    frames = extract_keyframes(static_video, tmp_path, detect=detect, fallback_interval=5)
+    assert "static screen, sampled" in capsys.readouterr().out
     assert len(frames) >= 4
     assert abs(frames[0].timestamp) < 0.6
     gaps = [b.timestamp - a.timestamp for a, b in zip(frames, frames[1:])]
@@ -112,6 +120,99 @@ def test_dhash_is_stable_and_discriminates(tmp_path: Path):
     b.save(tmp_path / "b.jpg")
     assert hamming(dhash(tmp_path / "a.jpg"), dhash(tmp_path / "a_small.jpg")) <= 6
     assert hamming(dhash(tmp_path / "a.jpg"), dhash(tmp_path / "b.jpg")) > 6
+
+
+def _screen_starts_found(frames, starts, tolerance=0.6):
+    return [s for s in starts if any(abs(f.timestamp - s) < tolerance for f in frames)]
+
+
+def test_hash_mode_sees_colour_only_change(colour_only_video: Path, tmp_path: Path, capsys):
+    """Same layout in green, red, then blue: hash mode finds all three, the brightness detector none."""
+    hashed = extract_keyframes(colour_only_video, tmp_path / "hash", detect="hash")
+    assert _screen_starts_found(hashed, [0.0, 3.0, 6.0]) == [0.0, 3.0, 6.0], [f.timestamp for f in hashed]
+    assert len(hashed) == 3
+
+    capsys.readouterr()
+    scene = extract_keyframes(colour_only_video, tmp_path / "scene", detect="scene")
+    out = capsys.readouterr().out
+    assert "scene detection found 1 frames" in out  # only frame 0, which is always kept
+    assert len(_screen_starts_found(scene, [3.0, 6.0])) < 2  # the contrast the hash detector exists for
+
+
+def test_hash_mode_sees_text_typed_into_form(typed_form_video: Path, tmp_path: Path, capsys):
+    """An empty form, then the same form with three values typed, then another screen."""
+    hashed = extract_keyframes(typed_form_video, tmp_path / "hash", detect="hash")
+    assert _screen_starts_found(hashed, [0.0, 3.0, 6.0]) == [0.0, 3.0, 6.0], [f.timestamp for f in hashed]
+    assert len(hashed) == 3
+
+    capsys.readouterr()
+    scene = extract_keyframes(typed_form_video, tmp_path / "scene", detect="scene")
+    out = capsys.readouterr().out
+    assert "scene detection found 2 frames" in out  # frame 0 and the jump to the green queue at 6 s
+    assert 3.0 not in _screen_starts_found(scene, [3.0])  # the typed form is missed
+
+
+def test_both_modes_agree_on_four_screens(synthetic_video: Path, tmp_path: Path):
+    hashed = extract_keyframes(synthetic_video, tmp_path / "hash", detect="hash")
+    scene = extract_keyframes(synthetic_video, tmp_path / "scene", detect="scene")
+    assert [f.timestamp for f in hashed] == [f.timestamp for f in scene] == [0.0, 3.0, 6.0, 9.0]
+    assert [(f.index, f.path, f.width, f.height) for f in hashed] == [(f.index, f.path, f.width, f.height) for f in scene]
+
+
+def test_hash_mode_timestamps_follow_the_sample_grid(synthetic_video: Path, tmp_path: Path, capsys):
+    frames = extract_keyframes(synthetic_video, tmp_path, detect="hash", sample_fps=2.0, min_gap=0.0)
+    out = capsys.readouterr().out
+    assert "looked at 24 samples (2 per second) and kept 4" in out
+    timestamps = [f.timestamp for f in frames]
+    assert timestamps == sorted(timestamps)
+    assert timestamps[0] == 0.0
+    assert all(abs(t * 2 - round(t * 2)) < 1e-9 for t in timestamps), timestamps  # multiples of 0.5 s
+    assert timestamps == [0.0, 3.0, 6.0, 9.0]
+    for i, frame in enumerate(frames):
+        assert frame.index == i and frame.path == f"frames/frame_{i:04d}.jpg"
+        assert (tmp_path / frame.path).exists()
+
+
+def test_hash_mode_deletes_samples_it_did_not_keep(synthetic_video: Path, tmp_path: Path):
+    frames = extract_keyframes(synthetic_video, tmp_path, detect="hash", sample_fps=1.0)
+    names = sorted(p.name for p in (tmp_path / "frames").iterdir())
+    assert names == [f"frame_{i:04d}.jpg" for i in range(len(frames))]  # 12 samples in, 4 files left
+    assert not list(tmp_path.glob("**/sample_*.jpg"))
+    # The same holds when max_frames thins the kept ones further.
+    frames = extract_keyframes(synthetic_video, tmp_path, detect="hash", max_frames=2)
+    assert [f.timestamp for f in frames] == [0.0, 9.0]
+    assert sorted(p.name for p in (tmp_path / "frames").iterdir()) == ["frame_0000.jpg", "frame_0001.jpg"]
+
+
+def test_hash_distance_can_be_raised_to_ignore_small_changes(typed_form_video: Path, tmp_path: Path, capsys):
+    """A high threshold turns the typed values back into 'same screen'; the queue page still counts."""
+    extract_keyframes(typed_form_video, tmp_path, detect="hash", hash_distance=64)
+    out = capsys.readouterr().out
+    assert "looked at 9 samples (1 per second) and kept 2 (distance over 64)" in out
+    assert "static screen" in out  # two screens is below the three that count as a moving recording
+
+
+def test_unknown_detector_is_refused(synthetic_video: Path, tmp_path: Path):
+    with pytest.raises(ValueError, match="detect must be"):
+        extract_keyframes(synthetic_video, tmp_path, detect="magic")
+
+
+def test_content_hash_sees_colour_and_text_but_not_noise(tmp_path: Path):
+    from conftest import draw_screen, form_screen
+
+    green = draw_screen("Approval Queue", (60, 160, 60), 3)
+    red = draw_screen("Approval Queue", (160, 60, 60), 3)
+    empty = form_screen([])
+    typed = form_screen(["Jane Smith", "SW1A 1AA", "07700 900123"])
+    for name, img in (("green", green), ("red", red), ("empty", empty), ("typed", typed)):
+        img.save(tmp_path / f"{name}.jpg", quality=85)
+    empty.save(tmp_path / "empty_again.jpg", quality=60)  # same picture, heavier compression
+    h = {p.stem: content_hash(p) for p in tmp_path.glob("*.jpg")}
+    assert all(len(v) == 168 for v in h.values())
+    assert hamming(h["green"], h["red"]) > 8
+    assert hamming(h["empty"], h["typed"]) > 8
+    assert hamming(h["empty"], h["empty_again"]) <= 2
+    assert hamming(dhash(tmp_path / "green.jpg"), dhash(tmp_path / "red.jpg")) <= 6  # the old hash cannot tell them apart
 
 
 def _kf(index: int, t: float) -> Keyframe:
