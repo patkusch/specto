@@ -1,0 +1,49 @@
+{
+  "_note": "Hand-written answer key for the onboarding example. Matching is case-insensitive substring; a group written as 'a|b' matches when any alternative is present; an item matches when every group in it is present. Only things the narration or the screens actually contain are listed.",
+  "screens": [
+    "customer search",
+    "customer details",
+    "documents",
+    "review",
+    "approval queue",
+    "confirmation"
+  ],
+  "fields": [
+    {"screen": "customer search", "label": "postcode"},
+    {"screen": "customer search", "label": "surname"},
+    {"screen": "customer details", "label": "first name"},
+    {"screen": "customer details", "label": "last name"},
+    {"screen": "customer details", "label": "date of birth"},
+    {"screen": "customer details", "label": "email"},
+    {"screen": "customer details", "label": "phone"},
+    {"screen": "customer details", "label": "postcode"},
+    {"screen": "customer details", "label": "account type"},
+    {"screen": "customer details", "label": "marketing consent"},
+    {"screen": "documents", "label": "document type"},
+    {"screen": "documents", "label": "status"},
+    {"screen": "approval queue", "label": "assigned to"},
+    {"screen": "confirmation", "label": "reference"}
+  ],
+  "actions": [
+    ["search"],
+    ["save", "continue"],
+    ["submit", "approval"],
+    ["approve"]
+  ],
+  "requirements": [
+    ["postcode", "uk|format|valid"],
+    ["postcode", "mandatory|required|must"],
+    ["date of birth", "mandatory|required|must"],
+    ["team lead", "approve"],
+    ["submit", "lock|edit"],
+    ["marketing", "tick|yes|consent"],
+    ["email", "automatic|sent|goes out"]
+  ],
+  "questions": [
+    ["document", "check|review|who"],
+    ["email", "bounce"],
+    ["assign", "how|who"],
+    ["back|unlock|edit", "team lead|who|how"],
+    ["passport|driving licence|document type", "accept|which|allowed|other"]
+  ]
+}

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Northwind Onboarding - Customer Search</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>Jo Patel</b> &middot; Onboarding Officer</div></header>
+<div class="layout">
+<nav><div class="section">Onboarding</div>
+<a class="active" href="search.html"><span class="step">1</span>Customer Search</a>
+<a class="" href="details.html"><span class="step">2</span>Customer Details</a>
+<a class="" href="documents.html"><span class="step">3</span>Documents</a>
+<a class="" href="review.html"><span class="step">4</span>Review &amp; Submit</a>
+<a class="" href="queue.html"><span class="step">5</span>Approval Queue</a>
+<a class="" href="confirmation.html"><span class="step">6</span>Confirmation</a>
+<div class="section" style="margin-top:18px">Other</div><a href="#"><span class="step">&middot;</span>Reports</a><a href="#"><span class="step">&middot;</span>Settings</a></nav>
+<main>
+<div class="crumbs">Onboarding &rsaquo; Customer Search</div>
+<h1>Customer Search</h1>
+<p class="subtitle">Check whether the customer already exists before creating a new record.</p>
+<div class="card">
+  <div class="grid three">
+    <div class="field"><label for="pc">Postcode</label><input type="text" id="pc" value="SW1A 1AA"></div>
+    <div class="field"><label for="sn">Surname</label><input type="text" id="sn" value="Shah"></div>
+    <div class="field"><label>&nbsp;</label><a class="btn primary" href="#">Search</a> <a class="btn" href="#">Clear</a></div>
+  </div>
+</div>
+<div class="card">
+  <h2>Results (3 matches)</h2>
+  <table>
+    <tr><th>Customer ID</th><th>Name</th><th>Date of birth</th><th>Postcode</th><th>Account type</th><th>Status</th><th></th></tr>
+    <tr><td>C-104221</td><td>Rohan Shah</td><td>12/03/1979</td><td>SW1A 1AA</td><td>Personal</td><td><span class="pill approved">Active</span></td><td><a class="btn small" href="#">Open</a></td></tr>
+    <tr><td>C-098774</td><td>Meera Shah</td><td>30/11/1985</td><td>SW1A 1AB</td><td>Business</td><td><span class="pill approved">Active</span></td><td><a class="btn small" href="#">Open</a></td></tr>
+    <tr><td>C-071930</td><td>Anil Shah</td><td>04/07/1962</td><td>SW1A 1AA</td><td>Personal</td><td><span class="pill rejected">Closed</span></td><td><a class="btn small" href="#">Open</a></td></tr>
+  </table>
+  <div class="actions"><a class="btn primary" href="details.html">Create new customer</a></div>
+</div>
+</main>
+</div><footer>Northwind Onboarding v4.2 &middot; Internal use only &middot; Help: ext. 4410</footer></body></html>

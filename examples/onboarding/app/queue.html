@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Northwind Onboarding - Approval Queue</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>Jo Patel</b> &middot; Onboarding Officer</div></header>
+<div class="layout">
+<nav><div class="section">Onboarding</div>
+<a class="done" href="search.html"><span class="step">1</span>Customer Search</a>
+<a class="done" href="details.html"><span class="step">2</span>Customer Details</a>
+<a class="done" href="documents.html"><span class="step">3</span>Documents</a>
+<a class="done" href="review.html"><span class="step">4</span>Review &amp; Submit</a>
+<a class="active" href="queue.html"><span class="step">5</span>Approval Queue</a>
+<a class="" href="confirmation.html"><span class="step">6</span>Confirmation</a>
+<div class="section" style="margin-top:18px">Other</div><a href="#"><span class="step">&middot;</span>Reports</a><a href="#"><span class="step">&middot;</span>Settings</a></nav>
+<main>
+<div class="crumbs">Onboarding &rsaquo; Approval Queue</div>
+<h1>Approval Queue</h1>
+<p class="subtitle">Customers submitted for approval, oldest first.</p>
+<div class="notice"><b>Team leads only.</b> The Approve action is shown to users in the Team Lead role. Other users can view the queue but cannot approve.</div>
+<div class="card">
+  <table>
+    <tr><th>Reference</th><th>Customer</th><th>Submitted</th><th>Submitted by</th><th>Status</th><th>Assigned to</th><th>Action</th></tr>
+    <tr><td>NW-2026-04412</td><td>Tomasz Nowak</td><td>09/09/2026 16:20</td><td>Sam Okafor</td><td><span class="pill awaiting">Awaiting approval</span></td><td>Lena Fischer</td><td><a class="btn small success" href="confirmation.html">Approve</a></td></tr>
+    <tr><td>NW-2026-04415</td><td>Grace Adeyemi</td><td>10/09/2026 08:05</td><td>Jo Patel</td><td><span class="pill awaiting">Awaiting approval</span></td><td>Lena Fischer</td><td><a class="btn small success" href="confirmation.html">Approve</a></td></tr>
+    <tr><td>NW-2026-04417</td><td>Priya Shah</td><td>10/09/2026 09:52</td><td>Jo Patel</td><td><span class="pill awaiting">Awaiting approval</span></td><td>Unassigned</td><td><a class="btn small success" href="confirmation.html">Approve</a></td></tr>
+    <tr><td>NW-2026-04409</td><td>Ben Carter</td><td>08/09/2026 11:14</td><td>Sam Okafor</td><td><span class="pill approved">Approved</span></td><td>Lena Fischer</td><td class="muted">&mdash;</td></tr>
+  </table>
+</div>
+</main>
+</div><footer>Northwind Onboarding v4.2 &middot; Internal use only &middot; Help: ext. 4410</footer></body></html>

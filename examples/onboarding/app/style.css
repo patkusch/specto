@@ -1,0 +1,65 @@
+/* Northwind Onboarding: a fake internal tool used only for the specto example. */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 14px; color: #1f2933; background: #f3f5f7;
+  display: flex; flex-direction: column; height: 720px; width: 1280px; overflow: hidden;
+}
+header {
+  height: 52px; background: #1e3a5f; color: #fff; display: flex; align-items: center;
+  padding: 0 20px; flex: 0 0 auto;
+}
+header .brand { font-weight: 700; font-size: 18px; letter-spacing: 0.2px; }
+header .brand span { display: inline-block; width: 22px; height: 22px; border-radius: 4px; background: #f6a623; margin-right: 10px; vertical-align: -4px; }
+header .env { margin-left: 16px; font-size: 11px; background: #2f5687; padding: 2px 8px; border-radius: 10px; }
+header .user { margin-left: auto; font-size: 13px; opacity: 0.9; }
+header .user b { font-weight: 600; }
+.layout { display: flex; flex: 1 1 auto; min-height: 0; }
+nav {
+  width: 220px; background: #fff; border-right: 1px solid #dfe3e8; padding: 16px 0; flex: 0 0 auto;
+}
+nav .section { font-size: 11px; text-transform: uppercase; color: #7b8794; padding: 6px 20px; letter-spacing: 0.6px; }
+nav a { display: block; padding: 9px 20px; color: #334e68; text-decoration: none; border-left: 3px solid transparent; }
+nav a.active { background: #eef3f8; border-left-color: #1e3a5f; color: #1e3a5f; font-weight: 600; }
+nav a .step { display: inline-block; width: 20px; height: 20px; border-radius: 50%; background: #dfe3e8; color: #52606d; font-size: 11px; text-align: center; line-height: 20px; margin-right: 10px; }
+nav a.active .step { background: #1e3a5f; color: #fff; }
+nav a.done .step { background: #2e8b57; color: #fff; }
+main { flex: 1 1 auto; padding: 22px 32px; overflow: hidden; }
+.crumbs { font-size: 12px; color: #7b8794; margin-bottom: 6px; }
+h1 { font-size: 22px; margin: 0 0 4px; font-weight: 600; }
+.subtitle { color: #52606d; margin: 0 0 14px; }
+.card { background: #fff; border: 1px solid #dfe3e8; border-radius: 6px; padding: 16px 24px; margin-bottom: 12px; }
+.card h2 { font-size: 15px; margin: 0 0 14px; color: #1e3a5f; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 28px; }
+.grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.field label { display: block; font-size: 12px; font-weight: 600; color: #3e4c59; margin-bottom: 3px; }
+.field label .req { color: #d64545; margin-left: 2px; }
+.field input[type=text], .field input[type=email], .field input[type=tel], .field input[type=date], .field select, .field input[type=file] {
+  width: 100%; height: 34px; border: 1px solid #b8c2cc; border-radius: 4px; padding: 0 10px; font-size: 14px; background: #fff; color: #1f2933; font-family: inherit;
+}
+.field input[type=file] { padding: 6px 10px; }
+.field .hint { font-size: 11px; color: #7b8794; margin-top: 3px; }
+.check { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.check input { width: 16px; height: 16px; }
+.actions { display: flex; gap: 10px; margin-top: 16px; }
+.btn { display: inline-block; height: 36px; line-height: 36px; padding: 0 18px; border-radius: 4px; border: 1px solid #b8c2cc; background: #fff; color: #334e68; font-size: 14px; font-weight: 600; text-decoration: none; }
+.btn.primary { background: #1e3a5f; border-color: #1e3a5f; color: #fff; }
+.btn.success { background: #2e8b57; border-color: #2e8b57; color: #fff; }
+.btn.small { height: 28px; line-height: 28px; padding: 0 12px; font-size: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; color: #7b8794; padding: 8px 10px; border-bottom: 2px solid #dfe3e8; }
+td { padding: 9px 10px; border-bottom: 1px solid #e4e7eb; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.pill.pending { background: #fff3cd; color: #8a6100; }
+.pill.verified, .pill.approved { background: #d4edda; color: #1e6b36; }
+.pill.awaiting { background: #dbeafe; color: #1e40af; }
+.pill.rejected { background: #f8d7da; color: #8b1c1c; }
+.notice { background: #fff8e1; border: 1px solid #f0d78c; color: #6b5400; padding: 8px 12px; border-radius: 4px; font-size: 12px; margin-bottom: 12px; }
+.info { background: #eef3f8; border: 1px solid #c9d6e3; color: #1e3a5f; padding: 8px 12px; border-radius: 4px; font-size: 12px; margin-bottom: 12px; }
+.summary td:first-child { width: 220px; color: #52606d; font-weight: 600; }
+.ref { font-size: 30px; font-weight: 700; color: #1e3a5f; letter-spacing: 1px; margin: 8px 0 4px; font-family: "SF Mono", Menlo, Consolas, monospace; }
+.tick { width: 56px; height: 56px; border-radius: 50%; background: #2e8b57; color: #fff; font-size: 30px; text-align: center; line-height: 56px; margin-bottom: 14px; }
+.muted { color: #7b8794; }
+footer { height: 28px; font-size: 11px; color: #9aa5b1; padding: 0 32px; line-height: 28px; border-top: 1px solid #e4e7eb; background: #fff; flex: 0 0 auto; }
