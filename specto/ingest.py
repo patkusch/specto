@@ -86,6 +86,63 @@ def hamming(hash_a: str, hash_b: str) -> int:
     return bin(int(hash_a, 16) ^ int(hash_b, 16)).count("1")
 
 
+CONTENT_GRID = 24  # luma dhash grid for content_hash: 24x24 cells, 576 bits
+COLOUR_GRID = 4  # colour signature grid: 4x4 cells, 6 bits each, 96 bits
+COLOUR_MARGIN = 8  # one channel must beat another by this much (0-255) to count as a different hue
+
+
+def content_hash(image_path: str | Path) -> str:
+    """A 672-bit hash of what is on a screen: layout, text and colour. 168 hex chars.
+
+    Two parts, concatenated:
+
+    1. A difference hash of the greyscale picture on a 24x24 grid (576 bits),
+       the same idea as `dhash` but three times finer in each direction. The
+       8x8 version describes a page layout well but cannot see three typed
+       values in a form: measured on the test fixture they flip 3 bits, the
+       same as encoder noise. At 24x24 they flip about 16 bits while noise
+       between two samples of a static screen stays at 0 to 2 and a moving
+       mouse cursor at about 4.
+
+    2. A colour signature on a 4x4 grid (96 bits): for each cell, for each
+       pair of channels (red/green, green/blue, red/blue), two bits saying
+       whether the first channel is clearly above the second and whether the
+       second is clearly above the first, "clearly" meaning by more than
+       COLOUR_MARGIN. A mid-green page turning mid-red flips four bits in
+       every cell, 64 in all; a grey or white page stays at all zeros, so
+       JPEG chroma noise cannot flip anything.
+
+    Why not a dhash per colour channel: with white text on a coloured
+    background every channel has the same "text brighter than background"
+    gradients, so green and red pages hash the same. The colour signature
+    compares channels against each other instead, which is what hue is.
+
+    Distances are Hamming distances (`hamming`). Same-screen noise is 0 to 2
+    bits, so a threshold near 8 separates "same screen" from "something
+    changed" with room on both sides.
+    """
+    with Image.open(image_path) as img:
+        rgb = img.convert("RGB")
+    grid = CONTENT_GRID
+    grey = rgb.convert("L").resize((grid + 1, grid), Image.Resampling.BOX).tobytes()
+    value = 0
+    for row in range(grid):
+        for col in range(grid):
+            value = (value << 1) | int(grey[row * (grid + 1) + col] < grey[row * (grid + 1) + col + 1])
+    colours = rgb.resize((COLOUR_GRID, COLOUR_GRID), Image.Resampling.BOX).tobytes()  # RGB triples, row by row
+    for cell in range(COLOUR_GRID * COLOUR_GRID):
+        r, g, b = colours[cell * 3 : cell * 3 + 3]
+        for first, second in ((r, g), (g, b), (r, b)):
+            value = (value << 2) | (int(first > second + COLOUR_MARGIN) << 1) | int(second > first + COLOUR_MARGIN)
+    total_bits = grid * grid + COLOUR_GRID * COLOUR_GRID * 6
+    return f"{value:0{total_bits // 4}x}"
+
+
+def _clear(frames_dir: Path, pattern: str) -> None:
+    for old in frames_dir.glob(pattern):
+        old.unlink()
+
+
 def _grab_frames(video_path: str, frames_dir: Path, select_expr: str, max_width: int) -> list[tuple[Path, float]]:
     """Run ffmpeg once with a `select` filter and return (file, timestamp) pairs.
 
@@ -93,8 +150,7 @@ def _grab_frames(video_path: str, frames_dir: Path, select_expr: str, max_width:
     and the n-th line belongs to the n-th file ffmpeg writes. Scaling comes
     after both so the timestamps are the source frame's own.
     """
-    for old in frames_dir.glob("raw_*.jpg"):
-        old.unlink()
+    _clear(frames_dir, "raw_*.jpg")
     filters = f"select='{select_expr}',showinfo,scale=w='min(iw,{max_width})':h=-2"
     stderr = _run_ffmpeg(
         [
@@ -114,9 +170,112 @@ def _grab_frames(video_path: str, frames_dir: Path, select_expr: str, max_width:
     return list(zip(files, timestamps))
 
 
+def _sample_frames(video_path: str, frames_dir: Path, sample_fps: float, max_width: int) -> list[tuple[Path, float]]:
+    """Write one frame every 1/sample_fps seconds and return (file, timestamp) pairs.
+
+    ffmpeg's `fps` filter puts its output on an exact grid, so the n-th file
+    (counted from 0) is the frame at n / sample_fps seconds; no log parsing
+    needed. A one-hour recording at 1 fps is 3,600 small JPEGs on disk, which
+    is fine; only their paths are held in memory.
+    """
+    _clear(frames_dir, "sample_*.jpg")
+    filters = f"fps={sample_fps:g},scale=w='min(iw,{max_width})':h=-2"
+    _run_ffmpeg(
+        [
+            "-i", video_path,
+            "-vf", filters,
+            "-q:v", "3",
+            "-y",
+            str(frames_dir / "sample_%05d.jpg"),
+        ]
+    )
+    files = sorted(frames_dir.glob("sample_*.jpg"))
+    return [(path, index / sample_fps) for index, path in enumerate(files)]
+
+
+def _detect_scene(
+    video_path: str, frames_dir: Path, scene_threshold: float, min_gap: float, max_width: int
+) -> tuple[list[tuple[Path, float]], int]:
+    """ffmpeg scene detection (brightness change), then near-duplicate and gap removal.
+
+    Returns the kept (file, timestamp) pairs and how many frames the detector
+    found before thinning, which decides whether the screen counts as static.
+    Rejected files are deleted as we go.
+    """
+    scene_expr = f"gt(scene,{scene_threshold})+eq(n,0)"
+    grabbed = _grab_frames(video_path, frames_dir, scene_expr, max_width)
+    print(f"ingest: scene detection found {len(grabbed)} frames (threshold {scene_threshold})")
+    if len(grabbed) < 3:
+        return grabbed, len(grabbed)
+
+    kept: list[tuple[Path, float]] = []
+    duplicates = 0
+    too_close = 0
+    previous_hash: Optional[str] = None
+    previous_time = float("-inf")
+    for path, timestamp in grabbed:
+        digest = dhash(path)
+        if previous_hash is not None and hamming(digest, previous_hash) <= DUPLICATE_DISTANCE:
+            duplicates += 1
+            path.unlink()
+            continue
+        if timestamp - previous_time < min_gap:
+            too_close += 1
+            path.unlink()
+            continue
+        kept.append((path, timestamp))
+        previous_hash = digest
+        previous_time = timestamp
+    print(f"ingest: removed {duplicates} near-duplicates and {too_close} frames inside the {min_gap:g}s gap")
+    return kept, len(grabbed)
+
+
+def _detect_hash(
+    video_path: str, frames_dir: Path, sample_fps: float, hash_distance: int, min_gap: float, max_width: int
+) -> tuple[list[tuple[Path, float]], int]:
+    """Sample the video on a fixed grid and keep each frame that differs from the last kept one.
+
+    Walks the samples in time order, one image in memory at a time. A sample
+    is kept when its `content_hash` is more than `hash_distance` bits from
+    the last kept frame's hash and it is at least `min_gap` seconds later;
+    everything else is deleted straight away. Comparing with the last *kept*
+    frame, not the previous sample, means slow changes (text typed one
+    character a second) still add up to a new frame.
+
+    Returns the kept (file, timestamp) pairs and how many samples differed
+    from the last kept frame, gap or no gap: fewer than three of those means
+    the screen never really changed.
+    """
+    samples = _sample_frames(video_path, frames_dir, sample_fps, max_width)
+    kept: list[tuple[Path, float]] = []
+    changed = 0
+    previous_hash: Optional[str] = None
+    previous_time = float("-inf")
+    for path, timestamp in samples:
+        digest = content_hash(path)
+        if previous_hash is not None and hamming(digest, previous_hash) <= hash_distance:
+            path.unlink()
+            continue
+        changed += 1
+        if timestamp - previous_time < min_gap:
+            path.unlink()
+            continue
+        kept.append((path, timestamp))
+        previous_hash = digest
+        previous_time = timestamp
+    print(
+        f"ingest: hash detection looked at {len(samples)} samples ({sample_fps:g} per second) "
+        f"and kept {len(kept)} (distance over {hash_distance})"
+    )
+    return kept, changed
+
+
 def extract_keyframes(
     video_path: str | Path,
     out_dir: str | Path,
+    detect: str = "hash",
+    sample_fps: float = 1.0,
+    hash_distance: int = 8,
     scene_threshold: float = 0.3,
     min_gap: float = 1.5,
     max_frames: int = 120,
@@ -125,60 +284,57 @@ def extract_keyframes(
 ) -> list[Keyframe]:
     """Write one JPEG per screen change to `out_dir/frames/` and describe each.
 
-    Steps, in order: ffmpeg scene detection (frame 0 always kept); drop frames
-    whose picture hash is within DUPLICATE_DISTANCE of the previous kept one;
-    drop frames closer than `min_gap` seconds to the previous kept one; if still
-    more than `max_frames`, keep an even spread over time. A recording of a
-    screen that never changes gives fewer than three scene frames, so then we
-    sample one frame every `fallback_interval` seconds instead (no duplicate
-    removal, because those frames are meant to look alike).
+    Two detectors, chosen with `detect`:
+
+    - "hash" (default): take one frame every 1/`sample_fps` seconds, hash
+      each with `content_hash` (layout, text and colour) and keep a frame when
+      it is more than `hash_distance` bits from the last kept one. Sees a
+      green page turn red and text typed into a form, which the scene detector
+      cannot.
+    - "scene": ffmpeg scene detection, which scores brightness change only,
+      with `scene_threshold`; frames whose 8x8 `dhash` is within
+      DUPLICATE_DISTANCE of the previous kept one are dropped.
+
+    Both then drop frames closer than `min_gap` seconds to the previous kept
+    one (frame 0 is always kept) and, if still more than `max_frames`, keep an
+    even spread over time. A recording of a screen that never changes gives
+    fewer than three frames in either mode, so then we sample one frame every
+    `fallback_interval` seconds instead (no duplicate removal, because those
+    frames are meant to look alike). Frames end up as frames/frame_NNNN.jpg,
+    numbered contiguously from 0 in time order; everything else is deleted.
     """
     video_path = str(video_path)
     out_dir = Path(out_dir)
     frames_dir = out_dir / "frames"
     frames_dir.mkdir(parents=True, exist_ok=True)
+    for pattern in ("raw_*.jpg", "sample_*.jpg"):  # leftovers from a run that crashed part-way
+        _clear(frames_dir, pattern)
 
-    scene_expr = f"gt(scene,{scene_threshold})+eq(n,0)"
-    grabbed = _grab_frames(video_path, frames_dir, scene_expr, max_width)
-    print(f"ingest: scene detection found {len(grabbed)} frames (threshold {scene_threshold})")
-
-    if len(grabbed) < 3:
-        sample_expr = f"isnan(prev_selected_t)+gte(t-prev_selected_t,{fallback_interval})"
-        grabbed = _grab_frames(video_path, frames_dir, sample_expr, max_width)
-        print(f"ingest: static screen, sampled {len(grabbed)} frames every {fallback_interval:g}s instead")
-        kept = list(grabbed)
+    if detect == "hash":
+        kept, detected = _detect_hash(video_path, frames_dir, sample_fps, hash_distance, min_gap, max_width)
+    elif detect == "scene":
+        kept, detected = _detect_scene(video_path, frames_dir, scene_threshold, min_gap, max_width)
     else:
-        kept = []
-        duplicates = 0
-        too_close = 0
-        previous_hash: Optional[str] = None
-        previous_time = float("-inf")
-        for path, timestamp in grabbed:
-            digest = dhash(path)
-            if previous_hash is not None and hamming(digest, previous_hash) <= DUPLICATE_DISTANCE:
-                duplicates += 1
-                continue
-            if timestamp - previous_time < min_gap:
-                too_close += 1
-                continue
-            kept.append((path, timestamp))
-            previous_hash = digest
-            previous_time = timestamp
-        print(f"ingest: removed {duplicates} near-duplicates and {too_close} frames inside the {min_gap:g}s gap")
+        raise ValueError(f"detect must be 'hash' or 'scene', not {detect!r}")
+
+    if detected < 3:
+        for path, _ in kept:
+            path.unlink()
+        sample_expr = f"isnan(prev_selected_t)+gte(t-prev_selected_t,{fallback_interval})"
+        kept = _grab_frames(video_path, frames_dir, sample_expr, max_width)
+        print(f"ingest: static screen, sampled {len(kept)} frames every {fallback_interval:g}s instead")
 
     if len(kept) > max_frames:
         step = (len(kept) - 1) / (max_frames - 1) if max_frames > 1 else len(kept)
         chosen = sorted({round(i * step) for i in range(max_frames)})
+        chosen_set = set(chosen)
+        for i, (path, _) in enumerate(kept):
+            if i not in chosen_set:
+                path.unlink()
         kept = [kept[i] for i in chosen]
         print(f"ingest: thinned to {len(kept)} frames spread evenly over time (max {max_frames})")
 
-    keep_set = {path for path, _ in kept}
-    for path, _ in grabbed:
-        if path not in keep_set:
-            path.unlink()
-    for old in frames_dir.glob("frame_*.jpg"):
-        old.unlink()
-
+    _clear(frames_dir, "frame_*.jpg")
     keyframes: list[Keyframe] = []
     for index, (path, timestamp) in enumerate(kept):
         final = frames_dir / f"frame_{index:04d}.jpg"
@@ -211,7 +367,9 @@ def ingest(
 
     Transcript comes from `transcript_path` when given, otherwise from
     faster-whisper with `whisper_model`; pass `whisper_model=None` to go without
-    a transcript. Extra keyword arguments go to `extract_keyframes`. If the
+    a transcript. Extra keyword arguments go to `extract_keyframes` (`detect`,
+    `sample_fps`, `hash_distance`, `scene_threshold`, `min_gap`, `max_frames`,
+    `max_width`, `fallback_interval`). If the
     output already exists it is loaded and returned, unless `force` is set.
     """
     video_path = Path(video_path)
