@@ -37,8 +37,15 @@ folder, and the two JSON files the stages hand to each other.
 
 If you have no transcript file, leave `--transcript` off and specto transcribes
 the audio on your machine (needs `pip install -e ".[whisper]"`; the first run
-downloads a speech model). Most meeting tools export a `.vtt` or `.srt`, and
-those are faster and usually more accurate.
+downloads a speech model). Every word then gets its own start and end time, so
+a sentence that runs across a screen change is cut at the word and each screen
+only gets what was said while it was showing. Word times land within about a
+third of a second; `pip install -e ".[whisper-precise]"` adds stable-ts, which
+lands them about three times closer at the price of a 600 MB download.
+
+Transcript files from meeting tools (`.vtt`, `.srt`) carry no word times, so
+those sentences go with the screen showing at their midpoint. They are still
+the faster and usually more accurate route when you have them.
 
 To check the pipeline without spending anything, `--fake` runs it with a
 stand-in model. There is a ready-made example recording in the repo, a
@@ -59,14 +66,20 @@ it off.
    using an image fingerprint that notices colour and typed text, and a still
    is saved whenever the screen changed. The transcript is read (or made),
    and each sentence is matched to the image that was showing when it was
-   said. If OCR is installed, the text on each still is read too.
+   said. Each still is compared with the one before it to find where the
+   screen changed; a small change (a typed value, a pressed button) gets a
+   close-up crop so the model can read it. If OCR is installed, the text on
+   each still is read too.
 2. **Extract.** Claude reads the images and the words in batches of eight
    frames and writes down the screens, fields, actions and candidate
    requirements it sees, keeping the same screen names across batches. One
    final pass over the whole session merges those notes into requirements with
    acceptance criteria and a list of questions.
 3. **Export.** The notes become the workbook and the report, with every row
-   pointing at its frame.
+   pointing at its frame. Every requirement and criterion is checked against
+   plain writing rules (one thought per sentence, no vague words, no escape
+   clauses, a visible outcome) and the findings go in a "Writing check"
+   column, so a reader sees at a glance which rows need a rewrite.
 
 Each stage saves its result in the output folder. Running the same command
 again skips the stages already done, so a prompt change re-runs only the

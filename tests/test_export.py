@@ -25,8 +25,9 @@ HEADERS = {
     "Data Fields": ["Id", "Screen", "Label", "Type", "Required", "Example value", "Source", "Time", "Frame", "Notes"],
     "Actions": ["Id", "Screen", "Action", "Control", "Leads to", "Time", "Frame"],
     "Requirements": ["Id", "Statement", "Kind", "Priority", "Confidence", "Screen", "Rationale", "Source quote",
-                     "Time", "Frame", "Acceptance criteria"],
-    "Acceptance Criteria": ["Id", "Requirement id", "Requirement", "Given", "When", "Then", "Time", "Frame"],
+                     "Time", "Frame", "Acceptance criteria", "Writing check"],
+    "Acceptance Criteria": ["Id", "Requirement id", "Requirement", "Given", "When", "Then", "Time", "Frame",
+                            "Writing check"],
     "SME Questions": ["Id", "Question", "Why it matters", "Category", "Screen", "What was said", "Time", "Frame",
                       "Answer", "Status"],
     "Transcript": ["Time", "Speaker", "Text", "Frame"],
@@ -194,3 +195,43 @@ def test_export_all(analysis, recording, tmp_path):
     assert paths["xlsx"] == tmp_path / "analysis.xlsx"
     assert paths["markdown"] == tmp_path / "report.md"
     assert all(p.exists() for p in paths.values())
+
+
+# --------------------------------------------------------------- writing check
+
+
+def test_writing_check_column_on_requirements_and_criteria(workbook):
+    for sheet in ("Requirements", "Acceptance Criteria"):
+        assert header_row(workbook[sheet])[-1] == "Writing check", sheet
+
+
+def test_dirty_requirement_row_carries_a_finding(workbook):
+    ws = workbook["Requirements"]
+    col = header_row(ws).index("Writing check") + 1
+    by_id = {ws.cell(row=r, column=1).value: ws.cell(row=r, column=col).value
+             for r in range(2, ws.max_row + 1)}
+    # R002 joins two rules with "or"; R003 is a well-formed user story.
+    assert by_id["R002"].startswith('warn: "or" joins two thoughts')
+    assert by_id["R003"] in (None, "")
+
+
+def test_dirty_criterion_row_carries_a_finding(workbook):
+    ws = workbook["Acceptance Criteria"]
+    col = header_row(ws).index("Writing check") + 1
+    by_id = {ws.cell(row=r, column=1).value: ws.cell(row=r, column=col).value for r in range(2, ws.max_row + 1)}
+    # AC003's "then" names two outcomes joined by "and"; AC007 is a single outcome.
+    assert 'in the "then" part' in by_id["AC003"]
+    assert by_id["AC007"] in (None, "")
+
+
+def test_summary_sheet_has_writing_check_line(workbook):
+    ws = workbook["Summary"]
+    items = {row[0].value: row[1].value for row in ws.iter_rows(min_row=2)}
+    assert items["Writing check"] == "1 requirement and 4 criteria have warnings; 3 notes"
+
+
+def test_markdown_puts_findings_in_italics(analysis, recording, tmp_path):
+    text = export_markdown(analysis, recording, tmp_path).read_text()
+    assert '- *Writing check: warn: "or" joins two thoughts' in text
+    assert '  - *Writing check: warn: "and" in the "then" part' in text
+    assert "- Writing check: 1 requirement and 4 criteria have warnings; 3 notes" in text

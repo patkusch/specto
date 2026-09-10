@@ -38,6 +38,7 @@ from typing import Any, Callable
 
 from pydantic import BaseModel, Field
 
+from .lint import lint_analysis
 from .model import Analysis
 
 CATEGORIES = ("screens", "fields", "actions", "requirements", "questions")
@@ -66,10 +67,19 @@ class Traceability(BaseModel):
                 + self.negative_keyframe_indexes)
 
 
+class WritingCheck(BaseModel):
+    """How many rows the plain-Python writing check (specto.lint) flagged; does not affect recall."""
+
+    requirements_with_warnings: int = 0
+    criteria_with_warnings: int = 0
+    rules_seen: list[str] = Field(default_factory=list, description="Rule ids that fired at least once, sorted")
+
+
 class ScoreReport(BaseModel):
     categories: dict[str, CategoryScore]
     overall_recall: float = Field(description="Mean recall over categories with at least one expected item")
     traceability: Traceability
+    writing: WritingCheck = Field(default_factory=WritingCheck)
 
 
 # --------------------------------------------------------------------- matching
@@ -158,6 +168,17 @@ def check_traceability(analysis: Analysis) -> Traceability:
     )
 
 
+def check_writing(analysis: Analysis) -> WritingCheck:
+    findings = lint_analysis(analysis)
+    criterion_ids = {ac.id for ac in analysis.acceptance_criteria}
+    warned = {item_id for item_id, fs in findings.items() if any(f.severity == "warn" for f in fs)}
+    return WritingCheck(
+        requirements_with_warnings=sum(1 for i in warned if i not in criterion_ids),
+        criteria_with_warnings=sum(1 for i in warned if i in criterion_ids),
+        rules_seen=sorted({f.rule for fs in findings.values() for f in fs}),
+    )
+
+
 def score(analysis: Analysis, expected: dict) -> ScoreReport:
     unknown = {k for k in expected if not k.startswith('_')} - set(CATEGORIES)
     if unknown:
@@ -178,7 +199,8 @@ def score(analysis: Analysis, expected: dict) -> ScoreReport:
     }
     scored = [c.recall for c in categories.values() if c.expected > 0]
     overall = sum(scored) / len(scored) if scored else 0.0
-    return ScoreReport(categories=categories, overall_recall=overall, traceability=check_traceability(analysis))
+    return ScoreReport(categories=categories, overall_recall=overall, traceability=check_traceability(analysis),
+                       writing=check_writing(analysis))
 
 
 # -------------------------------------------------------------------- reporting
@@ -205,6 +227,11 @@ def format_report(report: ScoreReport) -> str:
     lines.append(f"  requirements without source quote: {t.requirements_without_source_quote}")
     lines.append(f"  acceptance criteria with unknown requirement: {t.criteria_with_unknown_requirement}")
     lines.append(f"  negative keyframe indexes: {t.negative_keyframe_indexes}")
+    w = report.writing
+    lines.append("Writing:")
+    lines.append(f"  requirements with warnings: {w.requirements_with_warnings}")
+    lines.append(f"  acceptance criteria with warnings: {w.criteria_with_warnings}")
+    lines.append(f"  rules seen: {', '.join(w.rules_seen) if w.rules_seen else '(none)'}")
     lines.append(f"Overall recall: {report.overall_recall:.2f}")
     return "\n".join(lines)
 

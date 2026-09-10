@@ -171,3 +171,30 @@ def test_main_exit_codes(out_dir, capsys):
     out = capsys.readouterr().out
     assert "Overall recall: 0.88" in out
     assert "FAIL" in out
+
+
+# ------------------------------------------------------------- writing check
+
+
+def test_writing_section_counts_warned_rows(report):
+    w = report.writing
+    assert w.requirements_with_warnings == 1  # R002 joins two rules with "or"
+    assert w.criteria_with_warnings == 4  # AC001, AC003, AC004, AC005 join two thoughts with "and"
+    assert w.rules_seen == ["joined-clauses", "passive-voice"]
+
+
+def test_writing_does_not_change_recall_or_exit_code(analysis, expected, out_dir):
+    dirty = analysis.model_copy(deep=True)
+    dirty.requirements[2].statement = "The system must be reasonably fast where possible etc."
+    assert score(dirty, expected).overall_recall == pytest.approx(0.88)
+    (out_dir / "analysis.json").write_text(dirty.model_dump_json(), encoding="utf-8")
+    assert main([str(out_dir), str(FIXTURES / "sample_expected.json")]) == 0
+
+
+def test_format_report_has_writing_lines(report):
+    lines = format_report(report).splitlines()
+    assert "Writing:" in lines
+    assert "  requirements with warnings: 1" in lines
+    assert "  acceptance criteria with warnings: 4" in lines
+    assert "  rules seen: joined-clauses, passive-voice" in lines
+    assert lines.index("Writing:") > lines.index("Traceability:")
