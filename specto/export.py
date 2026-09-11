@@ -404,8 +404,13 @@ def export_markdown(analysis: Analysis, recording: Recording, out_dir: Path, fil
 
 
 def export_all(analysis: Analysis, recording: Recording, out_dir: Path) -> dict[str, Path]:
-    """Write the workbook and the report; return {"xlsx": path, "markdown": path}."""
-    return {
+    """Write every output: the workbook, the Markdown report, and the Jira and
+    Azure DevOps import files. Returns a name -> path dict."""
+    from .tickets import export_tickets
+
+    paths = {
         "xlsx": export_xlsx(analysis, recording, out_dir),
         "markdown": export_markdown(analysis, recording, out_dir),
     }
+    paths.update(export_tickets(analysis, recording, out_dir))
+    return paths
