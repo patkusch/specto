@@ -179,7 +179,7 @@ def test_main_exit_codes(out_dir, capsys):
 def test_writing_section_counts_warned_rows(report):
     w = report.writing
     assert w.requirements_with_warnings == 1  # R002 joins two rules with "or"
-    assert w.criteria_with_warnings == 4  # AC001, AC003, AC004, AC005 join two thoughts with "and"
+    assert w.criteria_with_warnings == 1  # only AC001 joins two thoughts with "and" in its When; "and" in a Then is a note
     assert w.rules_seen == ["joined-clauses", "passive-voice"]
 
 
@@ -195,6 +195,6 @@ def test_format_report_has_writing_lines(report):
     lines = format_report(report).splitlines()
     assert "Writing:" in lines
     assert "  requirements with warnings: 1" in lines
-    assert "  acceptance criteria with warnings: 4" in lines
+    assert "  acceptance criteria with warnings: 1" in lines
     assert "  rules seen: joined-clauses, passive-voice" in lines
     assert lines.index("Writing:") > lines.index("Traceability:")

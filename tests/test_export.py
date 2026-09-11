@@ -227,11 +227,11 @@ def test_dirty_criterion_row_carries_a_finding(workbook):
 def test_summary_sheet_has_writing_check_line(workbook):
     ws = workbook["Summary"]
     items = {row[0].value: row[1].value for row in ws.iter_rows(min_row=2)}
-    assert items["Writing check"] == "1 requirement and 4 criteria have warnings; 3 notes"
+    assert items["Writing check"] == "1 requirement and 1 criterion have warnings; 6 notes"
 
 
 def test_markdown_puts_findings_in_italics(analysis, recording, tmp_path):
     text = export_markdown(analysis, recording, tmp_path).read_text()
     assert '- *Writing check: warn: "or" joins two thoughts' in text
-    assert '  - *Writing check: warn: "and" in the "then" part' in text
-    assert "- Writing check: 1 requirement and 4 criteria have warnings; 3 notes" in text
+    assert '  - *Writing check: info: "and" in the "then" part' in text
+    assert "- Writing check: 1 requirement and 1 criterion have warnings; 6 notes" in text

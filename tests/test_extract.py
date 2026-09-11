@@ -375,3 +375,17 @@ def test_no_ocr_text_leaves_the_chunk_content_unchanged(tmp_path: Path) -> None:
     read_chunks(recording, tmp_path, empty, frames_per_call=4, ocr_text={}, log=lambda _: None)
     assert [c["content_blocks"] for c in plain.calls] == [c["content_blocks"] for c in empty.calls]
     assert "OCR" not in text_of(plain.calls[0]["content_blocks"])
+
+
+def test_spoken_text_names_the_speaker_on_change() -> None:
+    from specto.extract import spoken_text
+    from specto.model import Moment, TranscriptSegment
+
+    moment = Moment(keyframe_index=0, start=0, end=10, segments=[
+        TranscriptSegment(start=0, end=2, text="We open the queue.", speaker="Sam"),
+        TranscriptSegment(start=2, end=4, text="Only leads can approve.", speaker="Sam"),
+        TranscriptSegment(start=4, end=6, text="Every lead?", speaker="Ana"),
+        TranscriptSegment(start=6, end=8, text="No names here."),
+    ])
+    assert spoken_text(moment) == "Sam: We open the queue. Only leads can approve. Ana: Every lead? No names here."
+    assert spoken_text(Moment(keyframe_index=1, start=10, end=20)) == ""

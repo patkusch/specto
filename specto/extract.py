@@ -266,6 +266,23 @@ def _change_blocks(recording: Recording, keyframe: Keyframe, out_dir: Path) -> l
     return blocks
 
 
+def spoken_text(moment: Moment) -> str:
+    """What was said while the frame was showing, with the speaker's name in
+    front of each change of speaker when the transcript carries names."""
+    parts: list[str] = []
+    last_speaker: Optional[str] = None
+    for segment in moment.segments:
+        text = segment.text.strip()
+        if not text:
+            continue
+        if segment.speaker and segment.speaker != last_speaker:
+            parts.append(f"{segment.speaker}: {text}")
+        else:
+            parts.append(text)
+        last_speaker = segment.speaker or last_speaker
+    return " ".join(parts)
+
+
 def build_chunk_content(
     recording: Recording,
     moments: list[Moment],
@@ -310,7 +327,7 @@ def build_chunk_content(
         frame_text = ocr_text.get(keyframe.index, "")
         if frame_text and frame_text.strip():
             blocks.append(_ocr_block(keyframe.index, frame_text))
-        spoken = moment.text or "(nothing said)"
+        spoken = spoken_text(moment) or "(nothing said)"
         blocks.append({"type": "text", "text": f"Transcript while frame {keyframe.index} was showing: {spoken}"})
     return blocks
 

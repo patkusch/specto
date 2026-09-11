@@ -277,7 +277,7 @@ def lint_requirement(req: Requirement) -> list[Finding]:
 def lint_criterion(ac: AcceptanceCriterion) -> list[Finding]:
     """Findings on a Given / When / Then criterion; empty when it is clean."""
     findings: list[Finding] = []
-    parts = (("given", ac.given, "info"), ("when", ac.when, "warn"), ("then", ac.then, "warn"))
+    parts = (("given", ac.given, "info"), ("when", ac.when, "warn"), ("then", ac.then, "info"))
     for name, text, and_severity in parts:
         if not text.strip():
             findings.append(Finding(rule="empty-clause", severity="warn", message=f'The "{name}" part is empty.'))
