@@ -1,6 +1,6 @@
 # specto
 
-Watches a screen recording of an expert walking through a system and writes
+Watches a screen recording of an SME [expert] walking through a system and writes
 down what the system must do.
 
 An expert records themselves clicking through the screens and talking: "this
