@@ -191,7 +191,7 @@ def test_markdown_report(analysis, recording, tmp_path):
 
 def test_export_all(analysis, recording, tmp_path):
     paths = export_all(analysis, recording, tmp_path)
-    assert set(paths) == {"xlsx", "markdown"}
+    assert set(paths) == {"xlsx", "markdown", "jira_csv", "ado_csv"}
     assert paths["xlsx"] == tmp_path / "analysis.xlsx"
     assert paths["markdown"] == tmp_path / "report.md"
     assert all(p.exists() for p in paths.values())
