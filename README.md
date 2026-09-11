@@ -33,7 +33,17 @@ specto run walkthrough.mp4 --transcript walkthrough.vtt
 ```
 
 Output lands in `out/walkthrough/`: `analysis.xlsx`, `report.md`, a `frames/`
-folder, and the two JSON files the stages hand to each other.
+folder, two ticket import files, and the JSON files the stages hand to each
+other.
+
+**Into Jira or Azure DevOps.** `jira_import.csv` holds one Story per
+requirement with its acceptance criteria and source in the description, and
+one Task per question. In Jira go to Settings, System, External System
+Import, CSV, and pick the file; the columns map by name. `azure_devops_import.csv`
+holds one User Story per requirement and one Issue per question. In Azure
+DevOps go to Boards, Queries, Import Work Items, pick the file, then Save
+items. On a Scrum or Basic project change "User Story" to "Product Backlog
+Item" in the file first.
 
 If you have no transcript file, leave `--transcript` off and specto transcribes
 the audio on your machine (needs `pip install -e ".[whisper]"`; the first run
