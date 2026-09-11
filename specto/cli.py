@@ -4,6 +4,7 @@
     specto run walkthrough.mp4 --transcript walkthrough.vtt --out out/walkthrough
     specto export out/walkthrough        # rebuild the workbook from analysis.json
     specto score out/walkthrough expected.json   # compare with an answer key
+    specto doctor                        # what is installed, what is missing
 
 Each stage saves its result in the output folder, so running the same command
 again picks up where it left off. Pass --force to redo everything.
@@ -54,6 +55,17 @@ def cmd_run(args: argparse.Namespace) -> int:
         print(f"stopped after ingest; see {out_dir / 'recording.json'}")
         return 0
 
+    from .estimate import compare_models, estimate, format_comparison, format_estimate
+
+    if not args.fake and not (out_dir / "analysis.json").exists() or args.estimate:
+        print(format_estimate(estimate(recording, out_dir, model=args.model,
+                                       frames_per_call=args.frames_per_call, ocr_text=ocr_text)))
+    if args.estimate:
+        print(format_comparison(compare_models(recording, out_dir, frames_per_call=args.frames_per_call,
+                                               ocr_text=ocr_text)))
+        print("stopped before the model; drop --estimate to run it")
+        return 0
+
     if args.fake:
         from .fake import FakeCaller
         caller = FakeCaller()
@@ -91,6 +103,12 @@ def cmd_export(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_doctor(args: argparse.Namespace) -> int:
+    from .doctor import main as doctor_main
+
+    return doctor_main([])
+
+
 def cmd_score(args: argparse.Namespace) -> int:
     from .score import main as score_main
 
@@ -119,6 +137,7 @@ def build_parser() -> argparse.ArgumentParser:
                      help="read the text on each frame and show it to the model (needs pip install 'specto[ocr]')")
     run.add_argument("--whisper-model", default="base", help="faster-whisper model size when transcribing locally")
     run.add_argument("--ingest-only", action="store_true", help="stop after frames and transcript")
+    run.add_argument("--estimate", action="store_true", help="print the expected cost for each model and stop before calling one")
     run.add_argument("--fake", action="store_true", help="use a fake model (no API key needed) to check the pipeline")
     run.add_argument("--force", action="store_true", help="redo every stage even if outputs exist")
     run.set_defaults(func=cmd_run)
@@ -126,6 +145,9 @@ def build_parser() -> argparse.ArgumentParser:
     exp = sub.add_parser("export", help="rebuild the workbook and report from an output folder")
     exp.add_argument("out_dir")
     exp.set_defaults(func=cmd_export)
+
+    doc = sub.add_parser("doctor", help="check what is installed and what is missing")
+    doc.set_defaults(func=cmd_doctor)
 
     sc = sub.add_parser("score", help="compare an output folder with a hand-written answer key")
     sc.add_argument("out_dir")

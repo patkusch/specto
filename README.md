@@ -131,6 +131,16 @@ key for your own recording the same way.
 
 ## What it costs
 
+Before any real run specto prints what it expects to spend, and
+`--estimate` prints the figure for each model and stops:
+
+```bash
+specto run walkthrough.mp4 --transcript walkthrough.vtt --estimate
+```
+
+`specto doctor` lists what is installed and what is missing (ffmpeg, the
+speech model, OCR, the API key) and what to do about each.
+
 A one-hour walkthrough typically yields 60 to 120 still images. Each image is
 scaled to 1280 pixels wide and costs roughly 1,500 tokens to read, and the
 system prompt is cached between calls. Expect a few dollars per hour of

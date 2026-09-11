@@ -62,3 +62,20 @@ def test_cli_refuses_without_key(synthetic_video: Path, tmp_path: Path, monkeypa
     vtt.write_text(VTT, encoding="utf-8")
     rc = main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(tmp_path / "o")])
     assert rc == 2
+
+
+def test_cli_estimate_stops_before_the_model(synthetic_video: Path, tmp_path: Path, capsys) -> None:
+    vtt = tmp_path / "w.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    out = tmp_path / "o"
+    assert main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(out), "--estimate"]) == 0
+    text = capsys.readouterr().out
+    assert "Estimated cost on claude-opus-5" in text
+    assert "claude-haiku-4-5" in text
+    assert not (out / "analysis.json").exists()
+
+
+def test_cli_doctor_runs(capsys) -> None:
+    rc = main(["doctor"])
+    assert rc in (0, 1)
+    assert "ffmpeg" in capsys.readouterr().out
