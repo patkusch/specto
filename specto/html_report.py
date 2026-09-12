@@ -168,7 +168,7 @@ class _Page:
 
     def toc(self) -> None:
         self.add('<nav class="toc"><a href="#summary">Summary</a> <a href="#journey">Journey</a> '
-                 '<a href="#screens">Screens</a> <a href="#requirements">Requirements</a> '
+                 '<a href="#flow">Flow</a> <a href="#screens">Screens</a> <a href="#requirements">Requirements</a> '
                  '<a href="#questions">SME questions</a> <a href="#transcript">Transcript</a></nav>\n')
 
     def summary(self) -> None:
@@ -191,6 +191,19 @@ class _Page:
                 self.add(f'<li value="{j.order}"><div><b>{self.screen(j.screen_id)}</b>{who}: {esc(j.description)} '
                          f'<span class="when">{esc(mmss(j.timestamp))}</span></div>{self.thumb(j.keyframe_index, j.timestamp)}</li>\n')
             self.add("</ol>\n")
+        self.add("</section>\n")
+
+    def flow(self) -> None:
+        from .flow import build_flow, flow_list, flow_svg
+
+        flow = build_flow(self.analysis)
+        self.add('<section id="flow">\n<h2>Screen flow</h2>\n')
+        if not flow.nodes:
+            self.add('<p class="muted">No screens recorded.</p>\n</section>\n')
+            return
+        self.add('<p class="muted">Boxes are screens in the order the expert reached them; labelled arrows are the actions that led from one to the next.</p>\n')
+        self.add('<div class="flow">' + flow_svg(flow) + '</div>\n')
+        self.add('<ol class="flowlist">' + "".join(f"<li>{esc(line)}</li>" for line in flow_list(flow)) + "</ol>\n")
         self.add("</section>\n")
 
     def screens(self) -> None:
@@ -316,6 +329,7 @@ class _Page:
         self.add('<main>\n')
         self.summary()
         self.journey()
+        self.flow()
         self.screens()
         self.requirements()
         self.questions()
@@ -339,6 +353,8 @@ h3 { font-size:1.1em; margin:12px 0 6px; }
 h4 { font-size:0.85em; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); margin:16px 0 6px; }
 p { margin:6px 0; }
 .lead { font-size:1.05em; }
+.flow { margin:12px 0; overflow-x:auto; }
+.flowlist { font-size:0.9em; color:var(--muted); }
 .muted { color:var(--muted); }
 .id { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:0.9em; color:var(--muted); }
 .when { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:0.85em; color:var(--muted); white-space:nowrap; }

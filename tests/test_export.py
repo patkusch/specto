@@ -258,3 +258,8 @@ def test_personal_data_sheet_and_summary(workbook, analysis, recording, tmp_path
     assert items["Personal data"].startswith(("Personal data seen", "No personal data"))
     text = export_markdown(analysis, recording, tmp_path).read_text()
     assert "## Personal data seen" in text
+
+
+def test_markdown_has_screen_flow(analysis, recording, tmp_path):
+    text = export_markdown(analysis, recording, tmp_path).read_text()
+    assert "## Screen flow" in text and "```mermaid" in text and "flowchart LR" in text

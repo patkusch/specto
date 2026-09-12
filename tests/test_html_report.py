@@ -209,3 +209,10 @@ def test_no_javascript_needed_for_lightbox(analysis, recording, tmp_path, frames
     text = export_html(analysis, recording, tmp_path).read_text(encoding="utf-8")
     assert "figure.big:target { display:flex; }" in text
     assert text.count("<script>") == 1
+
+
+def test_flow_section_has_inline_svg(analysis, recording, tmp_path):
+    text = export_html(analysis, recording, tmp_path).read_text()
+    assert '<section id="flow">' in text
+    assert text.count("<rect") >= len(analysis.screens)
+    assert 'href="#flow"' in text

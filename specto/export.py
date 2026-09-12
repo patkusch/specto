@@ -369,6 +369,10 @@ def export_markdown(analysis: Analysis, recording: Recording, out_dir: Path, fil
         lines.append(f"{j.order}. **{_name(names, j.screen_id)}**{who}: {j.description} {link(j.keyframe_index, j.timestamp)}")
     lines.append("")
 
+    from .flow import build_flow, flow_markdown
+
+    lines += [flow_markdown(build_flow(analysis)), ""]
+
     lines += ["## Screens", ""]
     for s in analysis.screens:
         first_index = s.keyframe_indexes[0] if s.keyframe_indexes else -1
