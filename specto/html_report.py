@@ -279,7 +279,7 @@ class _Page:
             self.add(f'<tr id="{esc(q.id)}"><td class="id">{esc(q.id)}</td><td>{esc(q.question)}</td><td>{esc(q.why_it_matters)}</td>'
                      f"<td>{esc(q.category)}</td><td>{self.screen(q.screen_id)}</td><td>{esc(q.context_quote)}</td>"
                      f"<td>{self.time_and_thumb(q.keyframe_index, q.timestamp)}</td>"
-                     f'<td class="answer" contenteditable="true" aria-label="Answer to {esc(q.id)}"></td></tr>\n')
+                     f'<td class="answer" contenteditable="true" aria-label="Answer to {esc(q.id)}">{esc(q.answer or "")}</td></tr>\n')
         self.add("</tbody>\n</table>\n</section>\n")
 
     def transcript(self) -> None:

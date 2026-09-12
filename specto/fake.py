@@ -14,6 +14,10 @@ from pydantic import BaseModel
 FRAME_MARKER = re.compile(r"Frame (\d+) at (?:(\d+):)?(\d+):(\d+)")
 KEYFRAME_IN_JSON = re.compile(r'"keyframe_index":\s*(\d+)')
 TIMESTAMP_IN_JSON = re.compile(r'"timestamp":\s*([0-9.]+)')
+REQUIREMENT_ID_IN_JSON = re.compile(r'"id":\s*"(R\d+)"')
+QUESTION_ID_IN_JSON = re.compile(r'"id":\s*"(Q\d+)"')
+ANSWER_IN_JSON = re.compile(r'"answer":\s*"((?:[^"\\]|\\.)*)"')
+SCREEN_ID_IN_JSON = re.compile(r'"screen_id":\s*"(S\d+)"')
 
 
 class FakeCaller:
@@ -34,6 +38,8 @@ class FakeCaller:
         fields = set(output_model.model_fields)
         if "requirement_candidates" in fields:
             data = self._chunk_reading(text)
+        elif "follow_up_questions" in fields:
+            data = self._resolve(text)
         else:
             data = self._analysis(text)
         data = {k: v for k, v in data.items() if k in fields}
@@ -180,5 +186,38 @@ class FakeCaller:
             "questions": [
                 {"id": "Q004", "question": "What happens if Save fails?", "why_it_matters": "The error path is not shown.", "context_quote": "we press save", "timestamp": t1, "keyframe_index": k1, "screen_id": "S03", "category": "edge case"},
                 {"id": "Q008", "question": "Who is allowed to approve?", "why_it_matters": "Permissions decide who sees the queue.", "context_quote": None, "timestamp": t2, "keyframe_index": k2, "screen_id": "S09", "category": "permissions"},
+            ],
+        }
+
+    # ------------------------------------------------------------ resolve shape
+
+    def _resolve(self, text: str) -> dict:
+        """One of each change, built from the first answered question in the
+        request and the first existing requirement. Ids are temporary."""
+        answers_json = text.split("Answered questions", 1)[-1]
+        requirement_id = (REQUIREMENT_ID_IN_JSON.findall(text) or ["R001"])[0]
+        question_match = QUESTION_ID_IN_JSON.search(answers_json)
+        question_id = question_match.group(1) if question_match else "Q001"
+        tail = answers_json[question_match.end():] if question_match else answers_json
+        keyframe_match = KEYFRAME_IN_JSON.search(tail)
+        timestamp_match = TIMESTAMP_IN_JSON.search(tail)
+        screen_match = SCREEN_ID_IN_JSON.search(tail)
+        answer_match = ANSWER_IN_JSON.search(tail)
+        keyframe = int(keyframe_match.group(1)) if keyframe_match else 0
+        timestamp = float(timestamp_match.group(1)) if timestamp_match else 0.0
+        screen_id = screen_match.group(1) if screen_match else None
+        answer = answer_match.group(1).replace('\\"', '"') if answer_match else "yes"
+        return {
+            "new_requirements": [
+                {"id": "R901", "statement": f"The system must do what the expert's answer to {question_id} says.", "rationale": None, "source_quote": f"Answer to {question_id}: {answer}", "timestamp": timestamp, "keyframe_index": keyframe, "screen_id": screen_id, "kind": "functional", "priority": "must", "confidence": "high"},
+            ],
+            "updated_statements": [
+                {"requirement_id": requirement_id, "statement": f"The system must do what {requirement_id} said, as narrowed by the answer to {question_id}.", "reason": f"{question_id} narrows it."},
+            ],
+            "new_acceptance_criteria": [
+                {"id": "AC901", "requirement_id": "R901", "given": f"the situation described in the answer to {question_id}", "when": "the user does the step", "then": "the system behaves as the answer says", "timestamp": timestamp, "keyframe_index": keyframe},
+            ],
+            "follow_up_questions": [
+                {"id": "Q901", "question": f"Does the answer to {question_id} hold for every role?", "why_it_matters": "The answer named one role only.", "context_quote": answer, "timestamp": timestamp, "keyframe_index": keyframe, "screen_id": screen_id, "category": "permissions", "status": "open"},
             ],
         }

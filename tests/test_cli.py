@@ -112,3 +112,34 @@ def test_cli_merge_two_runs(synthetic_video: Path, tmp_path: Path) -> None:
     assert len(rec.keyframes) == 2 * len(Recording.model_validate_json((a / "recording.json").read_text()).keyframes)
     assert "merged" in ana.title
     assert (merged / "analysis.xlsx").exists() and (merged / "report.html").exists()
+
+
+def test_cli_answers_then_resolve_with_fake_model(synthetic_video: Path, tmp_path: Path) -> None:
+    import openpyxl
+
+    vtt = tmp_path / "w.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    out = tmp_path / "o"
+    assert main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(out), "--fake"]) == 0
+    before = Analysis.model_validate_json((out / "analysis.json").read_text())
+    first_q = before.questions[0].id
+
+    wb = openpyxl.load_workbook(out / "analysis.xlsx")
+    ws = wb["SME Questions"]
+    headers = [c.value for c in ws[1]]
+    id_col, ans_col = headers.index("Id") + 1, headers.index("Answer") + 1
+    for row in ws.iter_rows(min_row=2):
+        if row[id_col - 1].value == first_q:
+            row[ans_col - 1].value = "Only team leads, and it must be logged."
+    wb.save(out / "analysis.xlsx")
+
+    assert main(["answers", str(out)]) == 0
+    after = Analysis.model_validate_json((out / "analysis.json").read_text())
+    answered = next(q for q in after.questions if q.id == first_q)
+    assert answered.status == "answered" and "team leads" in (answered.answer or "")
+    html = (out / "report.html").read_text()
+    assert "Only team leads, and it must be logged." in html
+
+    assert main(["resolve", str(out), "--fake"]) == 0
+    resolved = Analysis.model_validate_json((out / "analysis.json").read_text())
+    assert len(resolved.requirements) > len(before.requirements)

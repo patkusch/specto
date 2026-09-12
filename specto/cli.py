@@ -6,6 +6,8 @@
     specto score out/walkthrough expected.json   # compare with an answer key
     specto doctor                        # what is installed, what is missing
     specto merge out/day1 out/day2 --out out/all   # several sessions, one workbook
+    specto answers out/walkthrough       # read the answers typed into the workbook
+    specto resolve out/walkthrough       # answered questions become requirements
     specto live --out out/call           # during a call: screen + mic, questions every 5 minutes
 
 Each stage saves its result in the output folder, so running the same command
@@ -130,6 +132,44 @@ def cmd_live(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_answers(args: argparse.Namespace) -> int:
+    from .answers import import_answers
+    from .export import export_all
+
+    out_dir = Path(args.out_dir)
+    result = import_answers(out_dir, args.xlsx)
+    print(f"answers: {result.changed} question(s) updated" + (f"; unknown ids ignored: {', '.join(result.unknown_ids)}" if result.unknown_ids else ""))
+    analysis = _load(out_dir / "analysis.json", Analysis)
+    recording = _load(out_dir / "recording.json", Recording)
+    for name, p in export_all(analysis, recording, out_dir).items():
+        print(f"wrote {name}: {p}")
+    return 0
+
+
+def cmd_resolve(args: argparse.Namespace) -> int:
+    from .export import export_all
+    from .resolve import resolve_dir
+
+    out_dir = Path(args.out_dir)
+    if args.fake:
+        from .fake import FakeCaller
+        caller = FakeCaller()
+    else:
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            print("ANTHROPIC_API_KEY is not set. Export it, or pass --fake to try without the model.", file=sys.stderr)
+            return 2
+        from .extract import ClaudeCaller
+        caller = ClaudeCaller(model=args.model, effort=args.effort)
+    response = resolve_dir(out_dir, caller=caller)
+    print(f"resolve: {len(response.new_requirements)} new requirement(s), {len(response.updated_statements)} updated, "
+          f"{len(response.new_acceptance_criteria)} new criteria, {len(response.follow_up_questions)} follow-up question(s)")
+    analysis = _load(out_dir / "analysis.json", Analysis)
+    recording = _load(out_dir / "recording.json", Recording)
+    for name, p in export_all(analysis, recording, out_dir).items():
+        print(f"wrote {name}: {p}")
+    return 0
+
+
 def cmd_merge(args: argparse.Namespace) -> int:
     from .export import export_all
     from .merge import merge_dirs, merge_report
@@ -199,6 +239,18 @@ def build_parser() -> argparse.ArgumentParser:
     live.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
     live.add_argument("--fake", action="store_true", help="stand-in model, no key needed")
     live.set_defaults(func=cmd_live)
+
+    an = sub.add_parser("answers", help="read the Answer and Status columns typed into the workbook back into the analysis")
+    an.add_argument("out_dir")
+    an.add_argument("--xlsx", help="the workbook with the answers (default: out_dir/analysis.xlsx)")
+    an.set_defaults(func=cmd_answers)
+
+    rs = sub.add_parser("resolve", help="turn answered questions into requirements and criteria")
+    rs.add_argument("out_dir")
+    rs.add_argument("--model", default="claude-opus-5")
+    rs.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
+    rs.add_argument("--fake", action="store_true", help="stand-in model, no key needed")
+    rs.set_defaults(func=cmd_resolve)
 
     mg = sub.add_parser("merge", help="combine several finished runs into one workbook, no model call")
     mg.add_argument("sources", nargs="+", help="output folders of finished runs, in session order")
