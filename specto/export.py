@@ -259,9 +259,27 @@ def export_xlsx(analysis: Analysis, recording: Recording, out_dir: Path, filenam
         recording,
     )
 
+    from .glossary import GLOSSARY_HEADERS, glossary_rows, glossary_with_findings
+
+    entries, _findings = glossary_with_findings(analysis)
+    rows = glossary_rows(entries)[1:]
+    for row, entry in zip(rows, entries):
+        row[4] = FrameRef(entry.keyframe_index, entry.first_seen)
+    write_sheet(wb, "Glossary", GLOSSARY_HEADERS, rows, recording)
+
     path = out_dir / filename
     wb.save(path)
     return path
+
+
+def naming_check_line(analysis: Analysis) -> str:
+    """One sentence on the glossary's naming findings, for the Summary sheet."""
+    from .glossary import glossary_with_findings
+
+    entries, findings = glossary_with_findings(analysis)
+    if not findings:
+        return f"{len(entries)} terms in the glossary, no naming clashes found"
+    return f"{len(entries)} terms in the glossary; {len(findings)} naming " + ("clash" if len(findings) == 1 else "clashes") + " to check on the Glossary sheet"
 
 
 def summary_rows(analysis: Analysis, recording: Recording) -> list[tuple[str, Any]]:
@@ -281,6 +299,7 @@ def summary_rows(analysis: Analysis, recording: Recording) -> list[tuple[str, An
         ("Acceptance criteria", len(analysis.acceptance_criteria)),
         ("Questions", len(analysis.questions)),
         ("Writing check", summarize(lint_analysis(analysis))),
+        ("Naming check", naming_check_line(analysis)),
     ]
     if analysis.usage is not None:
         u = analysis.usage
@@ -386,6 +405,13 @@ def export_markdown(analysis: Analysis, recording: Recording, out_dir: Path, fil
         if q.context_quote:
             lines.append(f'- What was said: "{q.context_quote}"')
         lines.append("")
+
+    from .glossary import glossary_markdown, glossary_with_findings
+
+    entries, findings = glossary_with_findings(analysis)
+    lines += [glossary_markdown(entries), ""]
+    if findings:
+        lines += ["Naming to check:", ""] + [f"- {finding}" for finding in findings] + [""]
 
     lines += ["## What was said", ""]
     for seg in recording.segments:
