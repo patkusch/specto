@@ -183,7 +183,7 @@ def export_xlsx(analysis: Analysis, recording: Recording, out_dir: Path, filenam
     wb = Workbook()
     wb.remove(wb.active)
 
-    _summary_sheet(wb, analysis, recording)
+    _summary_sheet(wb, analysis, recording, out_dir)
 
     write_sheet(
         wb, "Journey",
@@ -268,9 +268,26 @@ def export_xlsx(analysis: Analysis, recording: Recording, out_dir: Path, filenam
         row[4] = FrameRef(entry.keyframe_index, entry.first_seen)
     write_sheet(wb, "Glossary", GLOSSARY_HEADERS, rows, recording)
 
+    from .pii import PII_HEADERS, load_ocr_text, pii_rows, scan_recording
+
+    hits = scan_recording(recording, analysis, load_ocr_text(out_dir))
+    prows = pii_rows(hits)[1:]
+    for row, hit in zip(prows, hits):
+        if hit.keyframe_index is not None:
+            row[4] = FrameRef(hit.keyframe_index, hit.timestamp or 0.0)
+    write_sheet(wb, "Personal Data", PII_HEADERS, prows, recording)
+
     path = out_dir / filename
     wb.save(path)
     return path
+
+
+def personal_data_line(analysis: Analysis, recording: Recording, out_dir: Optional[Path]) -> str:
+    """One sentence on the personal data the recording captured, for the Summary sheet."""
+    from .pii import load_ocr_text, pii_summary, scan_recording
+
+    ocr = load_ocr_text(out_dir) if out_dir else {}
+    return pii_summary(scan_recording(recording, analysis, ocr))
 
 
 def naming_check_line(analysis: Analysis) -> str:
@@ -283,7 +300,7 @@ def naming_check_line(analysis: Analysis) -> str:
     return f"{len(entries)} terms in the glossary; {len(findings)} naming " + ("clash" if len(findings) == 1 else "clashes") + " to check on the Glossary sheet"
 
 
-def summary_rows(analysis: Analysis, recording: Recording) -> list[tuple[str, Any]]:
+def summary_rows(analysis: Analysis, recording: Recording, out_dir: Optional[Path] = None) -> list[tuple[str, Any]]:
     """The item/value pairs shown on the Summary sheet and at the top of the report."""
     rows: list[tuple[str, Any]] = [
         ("Title", analysis.title),
@@ -301,6 +318,7 @@ def summary_rows(analysis: Analysis, recording: Recording) -> list[tuple[str, An
         ("Questions", len(analysis.questions)),
         ("Writing check", summarize(lint_analysis(analysis))),
         ("Naming check", naming_check_line(analysis)),
+        ("Personal data", personal_data_line(analysis, recording, out_dir)),
     ]
     if analysis.usage is not None:
         u = analysis.usage
@@ -316,8 +334,8 @@ def summary_rows(analysis: Analysis, recording: Recording) -> list[tuple[str, An
     return rows
 
 
-def _summary_sheet(wb: Workbook, analysis: Analysis, recording: Recording) -> Worksheet:
-    return write_sheet(wb, "Summary", ["Item", "Value"], [list(r) for r in summary_rows(analysis, recording)], recording)
+def _summary_sheet(wb: Workbook, analysis: Analysis, recording: Recording, out_dir: Optional[Path] = None) -> Worksheet:
+    return write_sheet(wb, "Summary", ["Item", "Value"], [list(r) for r in summary_rows(analysis, recording, out_dir)], recording)
 
 
 # ------------------------------------------------------------------ the report
@@ -339,7 +357,7 @@ def export_markdown(analysis: Analysis, recording: Recording, out_dir: Path, fil
     lines: list[str] = [f"# {analysis.title}", ""]
 
     lines += ["## Summary", "", analysis.summary, ""]
-    for item, value in summary_rows(analysis, recording):
+    for item, value in summary_rows(analysis, recording, out_dir):
         if item in ("Title", "Summary"):
             continue
         lines.append(f"- {item}: {value}")
@@ -408,6 +426,17 @@ def export_markdown(analysis: Analysis, recording: Recording, out_dir: Path, fil
         lines.append("")
 
     from .glossary import glossary_markdown, glossary_with_findings
+
+    from .pii import load_ocr_text, pii_summary, scan_recording
+
+    hits = scan_recording(recording, analysis, load_ocr_text(out_dir))
+    lines += ["## Personal data seen", "", pii_summary(hits), ""]
+    if hits:
+        lines += ["| Kind | Value (masked) | Where | Time | Frame |", "|---|---|---|---|---|"]
+        for hit in hits:
+            frame = frame_markdown(recording, hit.keyframe_index, hit.timestamp or 0.0) if hit.keyframe_index is not None else ""
+            lines.append(f"| {hit.kind} | {hit.value_masked} | {hit.source} | {mmss(hit.timestamp or 0.0)} | {frame} |")
+        lines.append("")
 
     entries, findings = glossary_with_findings(analysis)
     lines += [glossary_markdown(entries), ""]
