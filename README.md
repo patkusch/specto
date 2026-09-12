@@ -118,6 +118,16 @@ again skips the stages already done, so a prompt change re-runs only the
 extraction, and a workbook layout change re-runs only the export
 (`specto export out/walkthrough`). `--force` redoes everything.
 
+## Commands
+
+| Command | What it does |
+|---|---|
+| `specto run VIDEO` | the whole pipeline on a recording |
+| `specto live --out DIR` | screen and microphone during a call, questions every five minutes |
+| `specto export DIR` | rebuild every output from a finished analysis |
+| `specto score DIR KEY` | compare an output with an answer key |
+| `specto doctor` | what is installed and what is missing |
+
 ## Options
 
 | Flag | Meaning | Default |
