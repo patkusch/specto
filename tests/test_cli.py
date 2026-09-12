@@ -79,3 +79,21 @@ def test_cli_doctor_runs(capsys) -> None:
     rc = main(["doctor"])
     assert rc in (0, 1)
     assert "ffmpeg" in capsys.readouterr().out
+
+
+def test_cli_live_replay_with_fake_model(tmp_path: Path) -> None:
+    from PIL import Image, ImageDraw
+
+    shots = tmp_path / "shots"
+    shots.mkdir()
+    for t, colour, label in ((0, (40, 70, 140), "Search"), (12, (245, 245, 245), "Details"), (30, (30, 120, 60), "Queue")):
+        img = Image.new("RGB", (640, 360), colour)
+        ImageDraw.Draw(img).text((40, 40), label, fill=(0, 0, 0) if sum(colour) > 380 else (255, 255, 255))
+        img.save(shots / f"shot_{t}.png")
+    vtt = tmp_path / "w.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    out = tmp_path / "call"
+    rc = main(["live", "--out", str(out), "--replay", str(shots), "--transcript", str(vtt), "--every", "20", "--fake"])
+    assert rc == 0
+    assert (out / "live_questions.md").exists()
+    assert (out / "analysis.xlsx").exists()

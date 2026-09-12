@@ -5,6 +5,7 @@
     specto export out/walkthrough        # rebuild the workbook from analysis.json
     specto score out/walkthrough expected.json   # compare with an answer key
     specto doctor                        # what is installed, what is missing
+    specto live --out out/call           # during a call: screen + mic, questions every 5 minutes
 
 Each stage saves its result in the output folder, so running the same command
 again picks up where it left off. Pass --force to redo everything.
@@ -103,6 +104,31 @@ def cmd_export(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_live(args: argparse.Namespace) -> int:
+    from .live import capture, replay
+
+    out_dir = Path(args.out)
+    if args.fake:
+        from .fake import FakeCaller
+        caller = FakeCaller()
+    else:
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            print("ANTHROPIC_API_KEY is not set. Export it, or pass --fake to try live mode without the model.",
+                  file=sys.stderr)
+            return 2
+        from .extract import ClaudeCaller
+        caller = ClaudeCaller(model=args.model, effort=args.effort)
+
+    if args.replay:
+        replay(out_dir, args.replay, args.transcript, caller, every_seconds=args.every)
+    else:
+        capture(out_dir, interval=args.interval, audio_chunk_seconds=args.audio_chunk,
+                every_seconds=args.every, caller=caller, display=args.display,
+                audio_device=args.audio_device, whisper_model=args.whisper_model)
+    print(f"live outputs are in {out_dir}; open {out_dir / 'live_questions.md'} for the questions")
+    return 0
+
+
 def cmd_doctor(args: argparse.Namespace) -> int:
     from .doctor import main as doctor_main
 
@@ -145,6 +171,21 @@ def build_parser() -> argparse.ArgumentParser:
     exp = sub.add_parser("export", help="rebuild the workbook and report from an output folder")
     exp.add_argument("out_dir")
     exp.set_defaults(func=cmd_export)
+
+    live = sub.add_parser("live", help="watch the shared screen and microphone during a call (macOS)")
+    live.add_argument("--out", required=True, help="output folder; an existing one is resumed")
+    live.add_argument("--replay", metavar="DIR", help="instead of capturing, feed a folder of screenshots named shot_<seconds>.png")
+    live.add_argument("--transcript", help="transcript file to use with --replay")
+    live.add_argument("--every", type=float, default=300, help="seconds between analyses (default 300)")
+    live.add_argument("--interval", type=float, default=3.0, help="seconds between screenshots (default 3)")
+    live.add_argument("--audio-chunk", type=float, default=30, help="seconds of microphone per transcribed chunk (default 30)")
+    live.add_argument("--display", type=int, default=1, help="which display to capture (default 1)")
+    live.add_argument("--audio-device", default=":0", help="ffmpeg avfoundation audio device (default :0)")
+    live.add_argument("--whisper-model", default="base")
+    live.add_argument("--model", default="claude-opus-5")
+    live.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
+    live.add_argument("--fake", action="store_true", help="stand-in model, no key needed")
+    live.set_defaults(func=cmd_live)
 
     doc = sub.add_parser("doctor", help="check what is installed and what is missing")
     doc.set_defaults(func=cmd_doctor)

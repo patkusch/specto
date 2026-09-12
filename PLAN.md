@@ -71,13 +71,18 @@ else can be built and checked without them.
 Run the example through Claude Opus 5, record the cost, tune the prompts
 against the score, save the output as the reference result. Compare Sonnet 5.
 
-### Phase 3: live mode
+### Phase 3: live mode (built 2026-09-12, not yet run on a real call)
 `specto live`: screenshot every few seconds, mic to text in rolling windows,
-the questions list growing during the call. Built with a replay mode first.
+the questions list growing during the call. Built with a replay mode first;
+the replay path is tested, the capture path needs a Mac with Screen Recording
+and Microphone permission granted to the terminal. Each analysis round
+re-reads the whole session; reusing earlier chunk readings is the next step.
 
 ### Phase 4: where the output goes
-Jira and Azure DevOps import files, speaker labels, a review page where the
-analyst edits and ticks rows before export.
+Jira and Azure DevOps import files (done 2026-09-11), speaker names in what
+the model reads (done), a single-file HTML report with answer cells (done
+2026-09-12). Still open: speaker labels from audio, and a review step where
+the analyst's edits flow back into the workbook.
 
 ### Phase 5: hardening
 Three to five real recordings, a cost line per run, one-command install.
