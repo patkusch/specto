@@ -171,9 +171,9 @@ that further.
 
 ## Limits
 
-- Live mode is macOS only and re-reads the whole session at every analysis,
-  so a long call costs more each round; reusing earlier readings is the next
-  optimisation.
+- Live mode is macOS only. Each analysis round reuses what the model
+  already read, so only the newest frames and one merge call are paid for
+  each time.
 - It writes a first draft. The Requirements sheet carries a confidence column:
   "high" means the expert said it plainly, "low" means it was inferred from
   the screen. Read the low ones with care.

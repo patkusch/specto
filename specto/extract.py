@@ -13,6 +13,7 @@ tests pass a fake, so nothing here needs a network or an API key.
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 from pathlib import Path
 from typing import Callable, Optional, Protocol
@@ -335,6 +336,45 @@ def build_chunk_content(
 # ---------------------------------------------------------------------- pass 1
 
 
+def chunk_key(chunk: list[Moment]) -> str:
+    """A fingerprint of what a chunk would show the model: which frames, their
+    time span and the words spoken over them. Two rounds of a live session that
+    see the same chunk get the same key, so the earlier reading can be reused.
+    """
+    parts = [(m.keyframe_index, round(m.start, 2), round(m.end, 2), spoken_text(m)) for m in chunk]
+    return hashlib.sha1(json.dumps(parts, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def load_prior_readings(path: Path | str) -> dict[str, ChunkReading]:
+    """Readings saved by an earlier run, keyed by chunk fingerprint. Files from
+    before fingerprints were stored come back empty, so nothing is reused."""
+    path = Path(path)
+    if not path.exists():
+        return {}
+    try:
+        entries = json.loads(path.read_text())
+    except json.JSONDecodeError:
+        return {}
+    prior: dict[str, ChunkReading] = {}
+    for entry in entries:
+        if isinstance(entry, dict) and "key" in entry and "reading" in entry:
+            prior[entry["key"]] = ChunkReading.model_validate(entry["reading"])
+    return prior
+
+
+def save_readings(path: Path | str, chunks: list[list[Moment]], readings: list[ChunkReading]) -> None:
+    """Write chunk_readings.json with a fingerprint next to each reading."""
+    Path(path).write_text(json.dumps(
+        [{"key": chunk_key(chunk), "reading": reading.model_dump()} for chunk, reading in zip(chunks, readings)],
+        indent=2,
+    ))
+
+
+def split_chunks(recording: Recording, frames_per_call: int) -> list[list[Moment]]:
+    moments = recording.moments
+    return [moments[i : i + frames_per_call] for i in range(0, len(moments), frames_per_call)]
+
+
 def read_chunks(
     recording: Recording,
     out_dir: Path | str,
@@ -343,20 +383,28 @@ def read_chunks(
     usage: Optional[Usage] = None,
     log: Callable[[str], None] = print,
     ocr_text: Optional[dict[int, str]] = None,
+    prior: Optional[dict[str, ChunkReading]] = None,
 ) -> list[ChunkReading]:
     """Walk the moments in chunks and ask the model what each chunk shows.
 
     Token counts go into `usage` when one is given. One line is logged per call.
     `ocr_text` (keyframe_index -> text read off the frame) is passed through to
-    each chunk's content when given.
+    each chunk's content when given. `prior` holds readings from an earlier run
+    keyed by `chunk_key`; a chunk whose key matches is reused without a call,
+    which is what keeps a long live session affordable.
     """
     out_dir = Path(out_dir)
-    moments = recording.moments
-    if not moments:
+    if not recording.moments:
         return []
-    chunks = [moments[i : i + frames_per_call] for i in range(0, len(moments), frames_per_call)]
+    chunks = split_chunks(recording, frames_per_call)
+    prior = prior or {}
     readings: list[ChunkReading] = []
     for number, chunk in enumerate(chunks, start=1):
+        key = chunk_key(chunk)
+        if key in prior:
+            readings.append(prior[key])
+            log(f"chunk {number}/{len(chunks)}: {len(chunk)} frames, reused the earlier reading")
+            continue
         content = build_chunk_content(
             recording, chunk, out_dir, number, len(chunks), readings, ocr_text=ocr_text
         )
@@ -523,12 +571,16 @@ def extract(
     frames_per_call: int = 8,
     log: Callable[[str], None] = print,
     ocr_text: Optional[dict[int, str]] = None,
+    reuse_readings: bool = False,
 ) -> Analysis:
     """Run both passes and write analysis.json; reuse it on a re-run unless force.
 
     Also writes chunk_readings.json, which is handy when a prompt needs tuning.
     `ocr_text` (keyframe_index -> text read off the frame, see specto.ocr) is
     shown to the model next to each frame; it is not stored in the Analysis.
+    With `reuse_readings`, chunks already read in an earlier run (same frames,
+    same words) are taken from chunk_readings.json instead of being sent again;
+    live mode uses this so each round only pays for what is new.
     """
     out_dir = Path(out_dir)
     analysis_path = out_dir / "analysis.json"
@@ -538,13 +590,14 @@ def extract(
 
     caller = caller or ClaudeCaller()
     usage = Usage(model=getattr(caller, "model", "unknown"))
+    readings_path = out_dir / "chunk_readings.json"
+    prior = load_prior_readings(readings_path) if reuse_readings else {}
     readings = read_chunks(
-        recording, out_dir, caller, frames_per_call=frames_per_call, usage=usage, log=log, ocr_text=ocr_text
+        recording, out_dir, caller, frames_per_call=frames_per_call, usage=usage, log=log,
+        ocr_text=ocr_text, prior=prior,
     )
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "chunk_readings.json").write_text(
-        json.dumps([r.model_dump() for r in readings], indent=2)
-    )
+    save_readings(readings_path, split_chunks(recording, frames_per_call), readings)
     analysis = consolidate(recording, readings, caller, usage=usage, log=log)
     analysis.usage = usage
     analysis_path.write_text(analysis.model_dump_json(indent=2))

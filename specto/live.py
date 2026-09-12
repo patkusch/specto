@@ -271,10 +271,10 @@ def analyze(
     on the whole recording, exports the workbook and report, and rewrites
     `live_questions.md`. Returns the Analysis, or None when nothing ran.
 
-    Cost: every round rereads every frame from the start, because extract has
-    no notion of "the frames since last time". A ten-round call therefore
-    reads the first frames ten times. Keeping the chunk readings from earlier
-    rounds and reading only the new frames is the obvious next optimisation.
+    Cost: each round reuses the chunk readings from earlier rounds (extract's
+    `reuse_readings`), so only the chunk still being filled and any chunk whose
+    words changed are sent again, plus the one merge call. A ten-round call
+    reads each full chunk once.
     """
     with session._lock:
         frames = len(session.recording.keyframes)
@@ -292,7 +292,7 @@ def analyze(
         round_number = session.analysis_rounds
 
     log(f"live: analysis round {round_number} at {mmss(recording.duration)}, {frames} frames, {segments} segments")
-    analysis = extract(recording, session.out_dir, caller=caller, force=True, log=log)
+    analysis = extract(recording, session.out_dir, caller=caller, force=True, reuse_readings=True, log=log)
     export_all(analysis, recording, session.out_dir)
     questions_path = write_live_questions(analysis, session.out_dir / QUESTIONS_FILE, recording.duration)
     log(f"live: {len(analysis.questions)} questions in {questions_path}")

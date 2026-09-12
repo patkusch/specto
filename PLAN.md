@@ -76,7 +76,7 @@ against the score, save the output as the reference result. Compare Sonnet 5.
 the questions list growing during the call. Built with a replay mode first;
 the replay path is tested, the capture path needs a Mac with Screen Recording
 and Microphone permission granted to the terminal. Each analysis round
-re-reads the whole session; reusing earlier chunk readings is the next step.
+reuses the chunk readings from earlier rounds and only sends what is new.
 
 ### Phase 4: where the output goes
 Jira and Azure DevOps import files (done 2026-09-11), speaker names in what
