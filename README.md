@@ -32,9 +32,14 @@ export ANTHROPIC_API_KEY=...
 specto run walkthrough.mp4 --transcript walkthrough.vtt
 ```
 
-Output lands in `out/walkthrough/`: `analysis.xlsx`, `report.md`, a `frames/`
-folder, two ticket import files, and the JSON files the stages hand to each
-other.
+Output lands in `out/walkthrough/`: `analysis.xlsx`, `report.md`,
+`report.html`, a `frames/` folder, two ticket import files, and the JSON
+files the stages hand to each other.
+
+**One file to send.** `report.html` is the whole analysis in a single page
+with the frames inside it, so it can be emailed or dropped in a chat and
+opens anywhere with nothing else attached. The SME Questions table has
+answer cells you can type into during the follow-up call, then print to PDF.
 
 **Into Jira or Azure DevOps.** `jira_import.csv` holds one Story per
 requirement with its acceptance criteria and source in the description, and
