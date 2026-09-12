@@ -389,3 +389,51 @@ def test_spoken_text_names_the_speaker_on_change() -> None:
     ])
     assert spoken_text(moment) == "Sam: We open the queue. Only leads can approve. Ana: Every lead? No names here."
     assert spoken_text(Moment(keyframe_index=1, start=10, end=20)) == ""
+
+
+def test_reuse_readings_skips_unchanged_chunks(tmp_path: Path) -> None:
+    """Second round: nothing changed, so only the merge call is made. Third
+    round: two frames added, so only the last chunk and the merge are sent."""
+    from specto.extract import extract, load_prior_readings
+    from specto.fake import FakeCaller
+    from specto.model import Keyframe, Moment, Recording, TranscriptSegment
+
+    frames_dir = tmp_path / "frames"
+    frames_dir.mkdir()
+    def make(n: int) -> Recording:
+        keyframes, moments = [], []
+        for i in range(n):
+            p = frames_dir / f"frame_{i:04d}.jpg"
+            if not p.exists():
+                Image.new("RGB", (64, 48), (i * 20 % 255, 80, 120)).save(p)
+            keyframes.append(Keyframe(index=i, timestamp=float(i * 10), path=f"frames/frame_{i:04d}.jpg", width=64, height=48))
+            seg = TranscriptSegment(start=i * 10 + 1, end=i * 10 + 4, text=f"screen {i}")
+            moments.append(Moment(keyframe_index=i, start=i * 10, end=(i + 1) * 10, segments=[seg]))
+        return Recording(source="live", duration=n * 10.0, keyframes=keyframes, moments=moments,
+                         segments=[m.segments[0] for m in moments])
+
+    first = FakeCaller()
+    extract(make(8), tmp_path, caller=first, force=True, frames_per_call=4, reuse_readings=True, log=lambda _: None)
+    assert len(first.calls) == 3  # two chunks + merge
+    assert len(load_prior_readings(tmp_path / "chunk_readings.json")) == 2
+
+    second = FakeCaller()
+    extract(make(8), tmp_path, caller=second, force=True, frames_per_call=4, reuse_readings=True, log=lambda _: None)
+    assert len(second.calls) == 1  # merge only
+
+    third = FakeCaller()
+    extract(make(10), tmp_path, caller=third, force=True, frames_per_call=4, reuse_readings=True, log=lambda _: None)
+    assert len(third.calls) == 2  # the new partial chunk + merge
+
+    without = FakeCaller()
+    extract(make(10), tmp_path, caller=without, force=True, frames_per_call=4, log=lambda _: None)
+    assert len(without.calls) == 4  # default behaviour: everything re-read
+
+
+def test_old_chunk_readings_file_without_keys_is_ignored(tmp_path: Path) -> None:
+    from specto.extract import load_prior_readings
+
+    (tmp_path / "chunk_readings.json").write_text('[{"screens": [], "fields": []}]')
+    assert load_prior_readings(tmp_path / "chunk_readings.json") == {}
+    (tmp_path / "chunk_readings.json").write_text("not json")
+    assert load_prior_readings(tmp_path / "chunk_readings.json") == {}
