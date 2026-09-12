@@ -15,7 +15,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 SHEET_ORDER = [
     "Summary", "Journey", "Screens", "Data Fields", "Actions",
-    "Requirements", "Acceptance Criteria", "SME Questions", "Transcript",
+    "Requirements", "Acceptance Criteria", "SME Questions", "Transcript", "Glossary",
 ]
 
 HEADERS = {
@@ -235,3 +235,17 @@ def test_markdown_puts_findings_in_italics(analysis, recording, tmp_path):
     assert '- *Writing check: warn: "or" joins two thoughts' in text
     assert '  - *Writing check: info: "and" in the "then" part' in text
     assert "- Writing check: 1 requirement and 1 criterion have warnings; 6 notes" in text
+
+
+def test_glossary_sheet_and_markdown(workbook, analysis, recording, tmp_path):
+    ws = workbook["Glossary"]
+    headers = [c.value for c in ws[1]]
+    assert headers[:3] == ["Term", "Kind", "Where"] and "Definition" in headers
+    terms = {row[0].value for row in ws.iter_rows(min_row=2)}
+    assert {"Customer search", "Email"} <= terms
+    frame_cell = next(row[4] for row in ws.iter_rows(min_row=2) if row[0].value == "Customer search")
+    assert frame_cell.hyperlink is not None
+    text = export_markdown(analysis, recording, tmp_path).read_text()
+    assert "## Glossary" in text and "| Email |" in text
+    items = {row[0].value: row[1].value for row in workbook["Summary"].iter_rows(min_row=2)}
+    assert items["Naming check"].startswith("22 terms in the glossary")
