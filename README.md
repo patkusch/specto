@@ -19,10 +19,18 @@ looks at what was on screen at that moment, and produces one spreadsheet:
 | Acceptance Criteria | How to check each requirement is met (Given / When / Then) |
 | SME Questions | What the expert did not say and someone must ask before building |
 | Transcript | Everything said, with the time and the screen that was showing |
+| Glossary | Every role, screen, field and button named, where it first appeared, and a Definition column to fill in |
+| Personal Data | Every email, phone number, postcode, date of birth, card or account number, name and address that appeared on screen or was said, masked, with the frame it was on |
 
 Every row links to a still image from the recording, so a reader can check any
 claim against the screen in one click. A Markdown report with the same content
 is written next to the workbook.
+
+An expert walking through a real system shows real customer records. The
+Personal Data sheet lists what personal data the recording captured and on
+which frame, with the values masked. Check it before the workbook, the
+report or the frames folder is shared or stored, and delete the frames it
+points at if that data should not leave the team.
 
 ## Try it
 

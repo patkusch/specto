@@ -15,7 +15,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 SHEET_ORDER = [
     "Summary", "Journey", "Screens", "Data Fields", "Actions",
-    "Requirements", "Acceptance Criteria", "SME Questions", "Transcript", "Glossary",
+    "Requirements", "Acceptance Criteria", "SME Questions", "Transcript", "Glossary", "Personal Data",
 ]
 
 HEADERS = {
@@ -249,3 +249,12 @@ def test_glossary_sheet_and_markdown(workbook, analysis, recording, tmp_path):
     assert "## Glossary" in text and "| Email |" in text
     items = {row[0].value: row[1].value for row in workbook["Summary"].iter_rows(min_row=2)}
     assert items["Naming check"].startswith("22 terms in the glossary")
+
+
+def test_personal_data_sheet_and_summary(workbook, analysis, recording, tmp_path):
+    ws = workbook["Personal Data"]
+    assert [c.value for c in ws[1]][:2] == ["Kind", "Value (masked)"]
+    items = {row[0].value: row[1].value for row in workbook["Summary"].iter_rows(min_row=2)}
+    assert items["Personal data"].startswith(("Personal data seen", "No personal data"))
+    text = export_markdown(analysis, recording, tmp_path).read_text()
+    assert "## Personal data seen" in text
