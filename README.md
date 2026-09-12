@@ -75,6 +75,23 @@ to the model next to the image, so small labels and values are not lost when
 the frame is scaled down. It is on by default when installed; `--no-ocr` turns
 it off.
 
+## During a call, not after it
+
+```bash
+specto live --out out/todays-call
+```
+
+On a Mac this grabs the shared screen every three seconds and records the
+microphone in thirty-second pieces, keeps only the moments the screen
+changed, and every five minutes runs the whole session so far through the
+same analysis. `out/todays-call/live_questions.md` holds just the open
+questions, newest first, so it can sit in a window and be asked before the
+expert leaves. Press Ctrl-C to stop; the full workbook and reports are
+written at the end. macOS will ask once for Screen Recording and Microphone
+permission for your terminal. If the folder already exists the session is
+resumed. To try it without a call, `--replay DIR --transcript FILE` feeds a
+folder of screenshots named `shot_<seconds>.png` through the same path.
+
 ## How it works
 
 1. **Ingest.** One frame per second is compared with the last kept frame
@@ -154,8 +171,9 @@ that further.
 
 ## Limits
 
-- Recorded files only. Live capture during a call is the next step (see
-  `PLAN.md`).
+- Live mode is macOS only and re-reads the whole session at every analysis,
+  so a long call costs more each round; reusing earlier readings is the next
+  optimisation.
 - It writes a first draft. The Requirements sheet carries a confidence column:
   "high" means the expert said it plainly, "low" means it was inferred from
   the screen. Read the low ones with care.
