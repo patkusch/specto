@@ -81,8 +81,10 @@ reuses the chunk readings from earlier rounds and only sends what is new.
 ### Phase 4: where the output goes
 Jira and Azure DevOps import files (done 2026-09-11), speaker names in what
 the model reads (done), a single-file HTML report with answer cells (done
-2026-09-12). Still open: speaker labels from audio, and a review step where
-the analyst's edits flow back into the workbook.
+2026-09-12), answers read back from the workbook and turned into
+requirements (done 2026-09-12), merge of several sessions (done), glossary,
+personal-data and screen-flow sheets (done). Still open: speaker labels
+from audio.
 
 ### Phase 5: hardening
 Three to five real recordings, a cost line per run, one-command install.

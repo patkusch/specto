@@ -2,6 +2,21 @@
 
 Newest first. Dates are when the change was pushed.
 
+## 0.3.0 (2026-09-12)
+
+- Glossary sheet built from the analysis, with a naming check for
+  near-duplicate terms and roles missing from the actors list.
+- Personal Data sheet: every email, phone number, postcode, date of birth,
+  card or account number, name and address the recording captured, masked,
+  with the frame it was on.
+- Screen-flow picture in the HTML and Markdown reports.
+- `specto answers` reads the Answer and Status columns typed into the
+  workbook back in; `specto resolve` turns answered questions into
+  requirements, criteria and follow-ups.
+- `specto merge` folds several sessions into one workbook without a model
+  call.
+- Changelog and a commands table in the README.
+
 ## 0.2.0 (2026-09-12)
 
 - Live mode: `specto live` watches the shared screen and microphone during
