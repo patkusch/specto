@@ -97,3 +97,18 @@ def test_cli_live_replay_with_fake_model(tmp_path: Path) -> None:
     assert rc == 0
     assert (out / "live_questions.md").exists()
     assert (out / "analysis.xlsx").exists()
+
+
+def test_cli_merge_two_runs(synthetic_video: Path, tmp_path: Path) -> None:
+    vtt = tmp_path / "w.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    a, b = tmp_path / "a", tmp_path / "b"
+    assert main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(a), "--fake"]) == 0
+    assert main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(b), "--fake"]) == 0
+    merged = tmp_path / "all"
+    assert main(["merge", str(a), str(b), "--out", str(merged)]) == 0
+    rec = Recording.model_validate_json((merged / "recording.json").read_text())
+    ana = Analysis.model_validate_json((merged / "analysis.json").read_text())
+    assert len(rec.keyframes) == 2 * len(Recording.model_validate_json((a / "recording.json").read_text()).keyframes)
+    assert "merged" in ana.title
+    assert (merged / "analysis.xlsx").exists() and (merged / "report.html").exists()

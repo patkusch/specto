@@ -5,6 +5,7 @@
     specto export out/walkthrough        # rebuild the workbook from analysis.json
     specto score out/walkthrough expected.json   # compare with an answer key
     specto doctor                        # what is installed, what is missing
+    specto merge out/day1 out/day2 --out out/all   # several sessions, one workbook
     specto live --out out/call           # during a call: screen + mic, questions every 5 minutes
 
 Each stage saves its result in the output folder, so running the same command
@@ -129,6 +130,18 @@ def cmd_live(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_merge(args: argparse.Namespace) -> int:
+    from .export import export_all
+    from .merge import merge_dirs, merge_report
+
+    out_dir = Path(args.out)
+    analysis, recording = merge_dirs(args.sources, out_dir)
+    print(merge_report(args.sources, analysis))
+    for name, p in export_all(analysis, recording, out_dir).items():
+        print(f"wrote {name}: {p}")
+    return 0
+
+
 def cmd_doctor(args: argparse.Namespace) -> int:
     from .doctor import main as doctor_main
 
@@ -186,6 +199,11 @@ def build_parser() -> argparse.ArgumentParser:
     live.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
     live.add_argument("--fake", action="store_true", help="stand-in model, no key needed")
     live.set_defaults(func=cmd_live)
+
+    mg = sub.add_parser("merge", help="combine several finished runs into one workbook, no model call")
+    mg.add_argument("sources", nargs="+", help="output folders of finished runs, in session order")
+    mg.add_argument("--out", required=True, help="folder for the merged result")
+    mg.set_defaults(func=cmd_merge)
 
     doc = sub.add_parser("doctor", help="check what is installed and what is missing")
     doc.set_defaults(func=cmd_doctor)
