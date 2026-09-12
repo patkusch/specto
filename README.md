@@ -23,7 +23,9 @@ looks at what was on screen at that moment, and produces one spreadsheet:
 | Personal Data | Every email, phone number, postcode, date of birth, card or account number, name and address that appeared on screen or was said, masked, with the frame it was on |
 
 Every row links to a still image from the recording, so a reader can check any
-claim against the screen in one click. A Markdown report with the same content
+claim against the screen in one click. The reports also carry a screen-flow
+picture: the screens as boxes in the order the expert reached them, with the
+button that led from each to the next on the arrow. A Markdown report with the same content
 is written next to the workbook.
 
 An expert walking through a real system shows real customer records. The
