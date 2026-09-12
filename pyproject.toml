@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "specto"
-version = "0.2.0"
+version = "0.3.0"
 description = "Watch a recorded expert walkthrough of a system and write down what the system must do."
 readme = "README.md"
 requires-python = ">=3.11"
