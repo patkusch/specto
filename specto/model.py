@@ -147,6 +147,8 @@ class Question(BaseModel):
     keyframe_index: int
     screen_id: Optional[str] = None
     category: Literal["ambiguity", "missing information", "edge case", "validation rule", "permissions", "data", "integration", "other"] = "other"
+    answer: Optional[str] = Field(default=None, description="What the expert said when asked, typed in by the analyst")
+    status: Literal["open", "answered", "not needed"] = "open"
 
 
 class Usage(BaseModel):

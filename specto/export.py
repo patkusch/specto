@@ -248,7 +248,8 @@ def export_xlsx(analysis: Analysis, recording: Recording, out_dir: Path, filenam
         ["Id", "Question", "Why it matters", "Category", "Screen", "What was said", "Time", "Frame",
          "Answer", "Status"],
         [[q.id, q.question, q.why_it_matters, q.category, _name(names, q.screen_id), q.context_quote,
-          mmss(q.timestamp), FrameRef(q.keyframe_index, q.timestamp), "", ""] for q in analysis.questions],
+          mmss(q.timestamp), FrameRef(q.keyframe_index, q.timestamp), q.answer,
+          q.status if q.status != "open" else ""] for q in analysis.questions],
         recording,
     )
 

@@ -92,6 +92,23 @@ permission for your terminal. If the folder already exists the session is
 resumed. To try it without a call, `--replay DIR --transcript FILE` feeds a
 folder of screenshots named `shot_<seconds>.png` through the same path.
 
+## After the follow-up call
+
+Type the expert's answers into the Answer column of the SME Questions sheet
+(and "not needed" in Status for the ones that no longer matter), then:
+
+```bash
+specto answers out/walkthrough
+specto resolve out/walkthrough
+```
+
+The first reads the answers back and rewrites every output with them. The
+second sends only the answered questions to the model and adds what the
+answers establish: new requirements with their source marked as the answer,
+changed wording on existing ones with the reason recorded, criteria for
+each, and any follow-up questions the answers raised. Running it again only
+sends newly answered questions.
+
 ## How it works
 
 1. **Ingest.** One frame per second is compared with the last kept frame
@@ -128,6 +145,8 @@ extraction, and a workbook layout change re-runs only the export
 | `specto score DIR KEY` | compare an output with an answer key |
 | `specto doctor` | what is installed and what is missing |
 | `specto merge DIR DIR... --out DIR` | several sessions into one workbook: same screens, requirements and questions folded together, no model call |
+| `specto answers DIR` | read the Answer and Status columns typed into the workbook back in |
+| `specto resolve DIR` | turn the answered questions into requirements and criteria, and raise any follow-ups |
 
 ## Options
 
