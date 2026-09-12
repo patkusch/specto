@@ -127,6 +127,7 @@ extraction, and a workbook layout change re-runs only the export
 | `specto export DIR` | rebuild every output from a finished analysis |
 | `specto score DIR KEY` | compare an output with an answer key |
 | `specto doctor` | what is installed and what is missing |
+| `specto merge DIR DIR... --out DIR` | several sessions into one workbook: same screens, requirements and questions folded together, no model call |
 
 ## Options
 
