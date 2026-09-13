@@ -11,3 +11,12 @@ To rebuild: `.venv/bin/pip install playwright && .venv/bin/playwright install ch
 To run specto on it without an API key: `specto run examples/onboarding/walkthrough.mp4 --transcript examples/onboarding/walkthrough.vtt --fake`.
 
 Two things measured on 2026-09-10. Local speech-to-text (faster-whisper, base model) on the audio got 14 words wrong out of 335, a word error rate of about 4%; the mistakes were small ("verify it" for "verified"). The ffmpeg scene detector found none of the five screen changes, because all six pages have the same light background, so ingest fell back to one frame every 10 seconds (11 frames); a hash-based detector is planned to fix that.
+
+## Reference result
+
+`reference/` holds a real reading of this recording: the answers a Claude
+model gave to the two request files (`chunk_01.response.json`,
+`consolidate.response.json`), the analysis built from them, its score
+against `expected.json` (overall recall 0.97) and the Markdown report. Use
+it to compare a new prompt or a new model: run the pipeline, then diff the
+score.

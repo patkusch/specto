@@ -4,3 +4,5 @@
 - To regenerate: run specto into some folder, then `.venv/bin/python docs/make_screenshots.py OUT_DIR`.
 - The script needs Playwright with chromium, openpyxl and Pillow in the venv, and keeps every PNG under 400 KB.
 - Regenerate them after the first run with a real model, so the README stops showing placeholder text.
+
+Regenerated 2026-09-13 from a real reading of the example (see examples/onboarding/reference/).

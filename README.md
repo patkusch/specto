@@ -23,9 +23,9 @@ looks at what was on screen at that moment, and produces one spreadsheet:
 | Gaps | What the analysis does not cover yet: screens with no requirement, fields never mentioned, requirements with no criteria, buttons that lead nowhere |
 | Personal Data | Every email, phone number, postcode, date of birth, card or account number, name and address that appeared on screen or was said, masked, with the frame it was on |
 
-![A requirement card from report.html: the statement, the expert's quote, the frame it came from, and its acceptance criteria (layout shown with the stand-in model)](docs/report-requirements.png)
+![A requirement card from report.html: the statement, the expert's quote, the frame it came from, and its acceptance criteria ](docs/report-requirements.png)
 
-![The SME questions table in report.html, most blocking first, with an Answer column to type into (layout shown with the stand-in model)](docs/report-questions.png)
+![The SME questions table in report.html, most blocking first, with an Answer column to type into ](docs/report-questions.png)
 
 ![One frame from the example recording, the Customer Details screen](docs/frame-example.png)
 
@@ -274,6 +274,32 @@ Ctrl-C) saves what it has read so far and picks up from there next time.
 | `--max-cost USD` | stop before the model if the estimate is above this | |
 | `--fake` | stand-in model, no key needed | |
 | `--force` | redo every stage | |
+
+## Does it work?
+
+On the example recording, read by Claude through the bring-your-own-model
+path (the agents in a Claude Code session acting as the model, so no API
+key was involved), the result was 6 screens, 59 fields, 12 actions, 32
+requirements, 44 acceptance criteria and 17 questions. Against the
+hand-written answer key:
+
+| What the key asks for | Found |
+|---|---|
+| Screens | 6 of 6 |
+| Fields | 14 of 14 |
+| Actions | 4 of 4 |
+| Requirements | 6 of 7 (the seventh is there too, folded into one requirement with another) |
+| Questions | 5 of 5 |
+
+Two things the model noticed that the narration never said: the Approve
+button is visible on screen while the expert says only team leads see it,
+and a record can be submitted while its ID document is still "Pending
+check". Both became questions, each naming the requirements it holds up.
+The full result is in `examples/onboarding/reference/`.
+
+The same stages have not yet been run through the API itself, so the first
+run with a key should be on the example, and the score compared with that
+folder.
 
 ## Checking the output against an answer key
 
