@@ -20,6 +20,7 @@ dependencies = [
 whisper = ["faster-whisper>=1.0"]
 whisper-precise = ["faster-whisper>=1.0", "stable-ts>=2.19"]  # word timings ~3x closer; pulls in torch (~600 MB)
 ocr = ["rapidocr-onnxruntime>=1.2"]
+live = ["mss>=9"]  # screen grabs in live mode on macOS, Windows and Linux (X11); the platform tools work without it
 dev = ["pytest>=8"]
 
 [project.scripts]

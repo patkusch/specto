@@ -16,16 +16,19 @@ Three layers, each usable on its own:
    with just the open questions, newest first.
 3. `replay` and `capture`: two ways to feed the store. `replay` walks a
    folder of screenshots and a transcript file as if they were arriving live
-   (this is what the tests drive); `capture` is the real thing on macOS,
-   using `screencapture` for the screen and ffmpeg's avfoundation input for
-   the microphone.
+   (this is what the tests drive); `capture` is the real thing, on macOS,
+   Windows and Linux: `take_screenshot` grabs the screen with the `mss`
+   library or the platform's own tool, and ffmpeg records the microphone
+   through the input that platform has (avfoundation, dshow, pulse/alsa).
 """
 from __future__ import annotations
 
 import contextlib
 import io
+import os
 import re
 import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
@@ -43,19 +46,58 @@ from specto.model import Analysis, Keyframe, Recording, TranscriptSegment, Word
 from specto.timefmt import mmss
 
 MAX_WIDTH = 1280  # saved frames are scaled to at most this wide, the same as the offline ingest
-SCREENCAPTURE = "/usr/sbin/screencapture"
 SCREENSHOT_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
 QUESTIONS_FILE = "live_questions.md"
 QUESTIONS_HEADING = "Questions to ask before the call ends"
+JPEG_QUALITY = 85  # for live screenshots, whichever backend takes them
 
-SCREEN_PERMISSION_HINT = (
-    "specto could not take a screenshot. On macOS the terminal needs Screen Recording permission: "
-    "System Settings > Privacy & Security > Screen Recording, switch on your terminal app, then start again."
-)
-MIC_PERMISSION_HINT = (
-    "specto could not record the microphone. On macOS the terminal needs Microphone permission: "
-    "System Settings > Privacy & Security > Microphone, switch on your terminal app, then start again."
-)
+# Screen grab backends. `mss` is a Python library (the `live` extra) that works on
+# macOS, Windows and Linux under X11; the rest are the platforms' own commands.
+SCREENCAPTURE = "/usr/sbin/screencapture"  # macOS
+GRIM = "grim"  # Linux, Wayland
+IMPORT = "import"  # Linux, X11 (ImageMagick)
+POWERSHELL = "powershell"  # Windows
+SCREENSHOT_BACKENDS = ("mss", "screencapture", "grim", "import", "powershell")
+INSTALL_HINTS = {
+    "mss": 'pip install "specto[live]"',
+    "screencapture": "it ships with macOS in /usr/sbin",
+    "grim": "install grim (apt install grim); it is for Wayland sessions",
+    "import": "install ImageMagick (apt install imagemagick); it is for X11 sessions",
+    "powershell": "PowerShell ships with Windows; check powershell.exe is on PATH",
+}
+SCREEN_HINTS = {
+    "darwin": (
+        "On macOS the terminal needs Screen Recording permission: System Settings > Privacy & Security > "
+        "Screen Recording, switch on your terminal app, then start again."
+    ),
+    "win32": 'On Windows install the mss library (pip install "specto[live]") or make sure powershell.exe is on PATH; no permission setting is needed.',
+    "linux": (
+        'On Linux install the mss library for X11 (pip install "specto[live]"), grim for Wayland (apt install grim) '
+        "or ImageMagick for the import command (apt install imagemagick)."
+    ),
+}
+MIC_HINTS = {
+    "darwin": (
+        "On macOS the terminal needs Microphone permission: System Settings > Privacy & Security > Microphone, "
+        "switch on your terminal app, then start again."
+    ),
+    "win32": (
+        "On Windows allow desktop apps to use the microphone (Settings > Privacy & security > Microphone) and, "
+        "if the wrong input was picked, pass --audio-device with a name from "
+        "`ffmpeg -list_devices true -f dshow -i dummy`."
+    ),
+    "linux": (
+        "On Linux check that PulseAudio or PipeWire is running (`pactl info`), or pass an ALSA device "
+        "such as --audio-device hw:0."
+    ),
+}
+# The macOS wording, kept under the old names.
+SCREEN_PERMISSION_HINT = "specto could not take a screenshot. " + SCREEN_HINTS["darwin"]
+MIC_PERMISSION_HINT = "specto could not record the microphone. " + MIC_HINTS["darwin"]
+
+# The CLI's default microphone is avfoundation's ":0"; on the other platforms it
+# just means "the default input" and is translated in `audio_input_args`.
+DEFAULT_AUDIO_DEVICE = ":0"
 
 _SHOT_TIME_RE = re.compile(r"(\d+(?:\.\d+)?)$")
 
@@ -409,41 +451,297 @@ def replay(
     return session
 
 
-# ------------------------------------------------------------- macOS capture
+# --------------------------------------------------------- screen and mic
 
 
-def take_screenshot(
-    out_path: str | Path, display: int = 1, command: str = SCREENCAPTURE
-) -> tuple[bool, str]:
-    """Grab one display to a JPEG with macOS `screencapture`. Returns (ok, error text).
+def normalize_platform(name: Optional[str] = None) -> str:
+    """'darwin', 'win32' or 'linux' from a `sys.platform` or `platform.system()` spelling; None means this machine."""
+    name = (name or sys.platform).lower()
+    if name.startswith(("darwin", "mac")):
+        return "darwin"
+    if name.startswith(("win", "cygwin", "msys")):
+        return "win32"
+    return "linux"  # linux and the BSDs use the same tools
 
-    Without Screen Recording permission the command exits 1 with
-    "could not create image from display" and writes nothing, which is what
-    happens in a sandbox too; both come back as ok=False.
+
+def wayland_session() -> bool:
+    """True when this Linux session runs on Wayland, where mss and import cannot grab the screen."""
+    return bool(os.environ.get("WAYLAND_DISPLAY")) or os.environ.get("XDG_SESSION_TYPE", "").lower() == "wayland"
+
+
+def screenshot_backends(platform: Optional[str] = None, wayland: Optional[bool] = None) -> list[str]:
+    """The backends `take_screenshot` tries on `platform`, in order.
+
+    mss comes first everywhere it can work; on a Linux Wayland session (found
+    from the environment when `wayland` is None) grim comes first instead.
     """
-    out_path = Path(out_path)
+    platform = normalize_platform(platform)
+    if platform == "darwin":
+        return ["mss", "screencapture"]
+    if platform == "win32":
+        return ["mss", "powershell"]
+    if wayland is None:
+        wayland = wayland_session()
+    return ["grim", "mss", "import"] if wayland else ["mss", "grim", "import"]
+
+
+def macos_screen_recording_allowed() -> Optional[bool]:
+    """Whether this process has macOS Screen Recording permission; None when it cannot be asked.
+
+    Uses CoreGraphics' CGPreflightScreenCaptureAccess. Without the permission
+    a screen grab through mss still returns an image, but one showing only
+    the wallpaper and the menu bar, which is worse than a clear failure.
+    """
+    if normalize_platform() != "darwin":
+        return None
     try:
-        result = subprocess.run(
-            [command, "-x", "-t", "jpg", "-D", str(display), str(out_path)],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
+        import ctypes
+        import ctypes.util
+
+        lib = ctypes.util.find_library("CoreGraphics")
+        if not lib:
+            return None
+        core_graphics = ctypes.CDLL(lib)
+        core_graphics.CGPreflightScreenCaptureAccess.restype = ctypes.c_bool
+        return bool(core_graphics.CGPreflightScreenCaptureAccess())
+    except Exception:
+        return None
+
+
+def _run_tool(argv: list[str], timeout: float = 30) -> tuple[bool, str]:
+    """Run a screenshot command; (True, "") on exit 0, else (False, why) in one line."""
+    try:
+        result = subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
     except FileNotFoundError:
-        return False, f"{command} not found (live capture only works on macOS)"
+        return False, f"{argv[0]} not found"
     except subprocess.TimeoutExpired:
-        return False, f"{command} did not finish in 30 seconds"
-    if result.returncode != 0 or not out_path.exists() or out_path.stat().st_size == 0:
-        return False, (result.stderr or result.stdout or "no image written").strip()
+        return False, f"{argv[0]} did not finish in {timeout:g} seconds"
+    if result.returncode != 0:
+        return False, (result.stderr or result.stdout or f"exit code {result.returncode}").strip()
     return True, ""
 
 
-def start_audio_recorder(out_path: str | Path, seconds: float, device: str = ":0") -> subprocess.Popen:
-    """Start ffmpeg recording `seconds` of the microphone to a 16 kHz mono wav; returns the process."""
+def _shot_mss(out_path: Path, display: int, platform: str, command: str) -> tuple[bool, str]:
+    try:
+        import mss  # optional: the `live` extra
+    except ImportError:
+        return False, "not installed"
+    if platform == "darwin" and macos_screen_recording_allowed() is False:
+        return False, "Screen Recording permission not granted (the grab would show only the wallpaper)"
+    grabber = getattr(mss, "MSS", None) or mss.mss  # the factory is deprecated from mss 10
+    try:
+        with grabber() as sct:
+            monitors = sct.monitors  # [0] is every monitor together, then one entry per monitor
+            if display < 1 or display >= len(monitors):
+                return False, f"no display {display}; this machine has {len(monitors) - 1}"
+            shot = sct.grab(monitors[display])
+            Image.frombytes("RGB", tuple(shot.size), shot.bgra, "raw", "BGRX").save(
+                out_path, "JPEG", quality=JPEG_QUALITY
+            )
+    except Exception as exc:
+        return False, f"{type(exc).__name__}: {exc}".strip(": ")
+    return True, ""
+
+
+def _shot_screencapture(out_path: Path, display: int, platform: str, command: str) -> tuple[bool, str]:
+    return _run_tool([command, "-x", "-t", "jpg", "-D", str(display), str(out_path)])
+
+
+def _shot_grim(out_path: Path, display: int, platform: str, command: str) -> tuple[bool, str]:
+    # grim picks outputs by name, not number, so every monitor is grabbed together.
+    return _run_tool([GRIM, "-t", "jpeg", "-q", str(JPEG_QUALITY), str(out_path)])
+
+
+def _shot_import(out_path: Path, display: int, platform: str, command: str) -> tuple[bool, str]:
+    return _run_tool([IMPORT, "-window", "root", "-quality", str(JPEG_QUALITY), str(out_path)])
+
+
+def powershell_screenshot_script(out_path: Path, display: int) -> str:
+    """One PowerShell line that saves screen `display` (1 = primary) as a JPEG with System.Drawing."""
+    screen = (
+        "[System.Windows.Forms.Screen]::PrimaryScreen"
+        if display == 1
+        else f"[System.Windows.Forms.Screen]::AllScreens[{display - 1}]"
+    )
+    path = str(out_path).replace("'", "''")
+    return (
+        "Add-Type -AssemblyName System.Windows.Forms; Add-Type -AssemblyName System.Drawing; "
+        f"$s = {screen}; if ($null -eq $s) {{ throw 'no display {display}' }}; "
+        "$b = New-Object System.Drawing.Bitmap $s.Bounds.Width, $s.Bounds.Height; "
+        "$g = [System.Drawing.Graphics]::FromImage($b); "
+        "$g.CopyFromScreen($s.Bounds.Location, [System.Drawing.Point]::Empty, $s.Bounds.Size); "
+        "$codec = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq 'image/jpeg' }; "
+        "$params = New-Object System.Drawing.Imaging.EncoderParameters 1; "
+        f"$params.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter ([System.Drawing.Imaging.Encoder]::Quality, [long]{JPEG_QUALITY}); "
+        f"$b.Save('{path}', $codec, $params); $g.Dispose(); $b.Dispose()"
+    )
+
+
+def _shot_powershell(out_path: Path, display: int, platform: str, command: str) -> tuple[bool, str]:
+    script = powershell_screenshot_script(out_path, display)
+    return _run_tool([POWERSHELL, "-NoProfile", "-NonInteractive", "-Command", script], timeout=60)
+
+
+_SHOT_BACKENDS: dict[str, Callable[[Path, int, str, str], tuple[bool, str]]] = {
+    "mss": _shot_mss,
+    "screencapture": _shot_screencapture,
+    "grim": _shot_grim,
+    "import": _shot_import,
+    "powershell": _shot_powershell,
+}
+
+
+def take_screenshot(
+    out_path: str | Path,
+    display: int = 1,
+    command: str = SCREENCAPTURE,
+    backend: str = "auto",
+    platform: Optional[str] = None,
+) -> tuple[bool, str]:
+    """Grab one display to a JPEG. Returns (ok, error text).
+
+    `backend="auto"` tries, in order, the `mss` library when it is installed
+    (macOS, Windows, Linux under X11), then the platform's own tool: macOS
+    `screencapture` (`command`), Linux `grim` (Wayland) or ImageMagick's
+    `import` (X11), Windows PowerShell with System.Drawing. Pin one with
+    `backend="mss"`, "screencapture", "grim", "import" or "powershell".
+    `display` counts from 1; grim and import grab every monitor together.
+
+    On failure the error names each backend that was tried and why it
+    failed, then the permission or install hint for the platform. On macOS
+    without Screen Recording permission `screencapture` exits 1 with "could
+    not create image from display", and mss is not even tried, because it
+    would return only the wallpaper. `platform` is for tests.
+    """
+    platform = normalize_platform(platform)
+    out_path = Path(out_path)
+    if backend == "auto":
+        order = screenshot_backends(platform)
+    elif backend in _SHOT_BACKENDS:
+        order = [backend]
+    else:
+        raise ValueError(f"unknown screenshot backend {backend!r}; one of auto, {', '.join(SCREENSHOT_BACKENDS)}")
+    failures = []
+    for name in order:
+        ok, error = _SHOT_BACKENDS[name](out_path, display, platform, command)
+        if ok and not (out_path.exists() and out_path.stat().st_size > 0):
+            ok, error = False, "no image written"
+        if ok:
+            return True, ""
+        out_path.unlink(missing_ok=True)
+        if error.endswith("not found") or error == "not installed":
+            error += f" ({INSTALL_HINTS[name]})"
+        failures.append(f"{name}: {error}")
+    return False, "; ".join(failures) + ". " + SCREEN_HINTS[platform]
+
+
+def audio_input_args(platform: Optional[str], device: str = DEFAULT_AUDIO_DEVICE) -> list[str]:
+    """ffmpeg's input arguments for the microphone on `platform` (pure; no ffmpeg is run).
+
+    macOS: `-f avfoundation -i :0` (an avfoundation index; `:0` is the
+    default input). Windows: `-f dshow -i audio=<name>`; dshow needs a real
+    device name, so the default marker ":0" is refused here and resolved by
+    `start_audio_recorder` from ffmpeg's own device list. Linux: `-f pulse
+    -i default` (PulseAudio or PipeWire), or `-f alsa` when the device
+    looks like an ALSA name such as `hw:0`.
+    """
+    platform = normalize_platform(platform)
+    device = device or DEFAULT_AUDIO_DEVICE
+    if platform == "darwin":
+        return ["-f", "avfoundation", "-i", device]
+    if platform == "win32":
+        if device == DEFAULT_AUDIO_DEVICE:
+            raise ValueError(
+                "ffmpeg's dshow input needs a device name; pass one from "
+                "`ffmpeg -list_devices true -f dshow -i dummy` or let start_audio_recorder pick the first"
+            )
+        return ["-f", "dshow", "-i", f"audio={device}"]
+    if device == DEFAULT_AUDIO_DEVICE:
+        device = "default"
+    alsa = device.startswith(("hw:", "plughw:", "sysdefault", "dsnoop", "dmix"))
+    return ["-f", "alsa" if alsa else "pulse", "-i", device]
+
+
+_DSHOW_DEVICE_RE = re.compile(r'^\[dshow @ [^\]]*\]\s*"(?P<name>[^"]+)"(?:\s*\((?P<kind>[^)]*)\))?\s*$')
+
+
+def parse_dshow_devices(listing: str) -> list[str]:
+    """Audio device names from `ffmpeg -list_devices true -f dshow -i dummy` (it prints to stderr).
+
+    Reads both spellings: ffmpeg 5 and newer tag each line with "(audio)" or
+    "(video)"; older builds print a "DirectShow audio devices" heading first.
+    """
+    names = []
+    in_audio_section = False
+    for line in listing.splitlines():
+        if "DirectShow audio devices" in line:
+            in_audio_section = True
+            continue
+        if "DirectShow video devices" in line:
+            in_audio_section = False
+            continue
+        match = _DSHOW_DEVICE_RE.match(line.strip())
+        if not match:
+            continue
+        kind = match.group("kind")
+        if (kind is None and in_audio_section) or (kind is not None and "audio" in kind):
+            names.append(match.group("name"))
+    return names
+
+
+def list_dshow_audio_devices() -> list[str]:
+    """Names of the microphones ffmpeg's dshow input sees, first one first (Windows only)."""
+    try:
+        result = subprocess.run(
+            [ffmpeg_exe(), "-hide_banner", "-list_devices", "true", "-f", "dshow", "-i", "dummy"],
+            capture_output=True, text=True, timeout=20,
+        )
+    except Exception:
+        return []
+    return parse_dshow_devices(result.stderr + result.stdout)
+
+
+def resolve_audio_device(
+    platform: Optional[str] = None,
+    device: str = DEFAULT_AUDIO_DEVICE,
+    log: Callable[[str], None] = print,
+) -> str:
+    """The device name ffmpeg gets; on Windows the default marker becomes the first dshow microphone.
+
+    Raises RuntimeError when Windows has no dshow audio device to pick.
+    """
+    if normalize_platform(platform) != "win32" or device != DEFAULT_AUDIO_DEVICE:
+        return device
+    devices = list_dshow_audio_devices()
+    if not devices:
+        raise RuntimeError("ffmpeg lists no dshow audio device. " + MIC_HINTS["win32"])
+    log(
+        f"live: no --audio-device given, using the first microphone ffmpeg lists: {devices[0]!r} "
+        "(`ffmpeg -list_devices true -f dshow -i dummy` shows the others)"
+    )
+    return devices[0]
+
+
+def start_audio_recorder(
+    out_path: str | Path,
+    seconds: float,
+    device: str = DEFAULT_AUDIO_DEVICE,
+    platform: Optional[str] = None,
+    log: Callable[[str], None] = print,
+) -> subprocess.Popen:
+    """Start ffmpeg recording `seconds` of the microphone to a 16 kHz mono wav; returns the process.
+
+    The input is picked for the platform by `audio_input_args` (avfoundation,
+    dshow, pulse or alsa). On Windows with no device named, the first
+    microphone in ffmpeg's dshow list is used and `log` says which.
+    `platform` is for tests.
+    """
+    platform = normalize_platform(platform)
+    device = resolve_audio_device(platform, device, log)
     return subprocess.Popen(
         [
             ffmpeg_exe(), "-hide_banner", "-nostdin", "-loglevel", "error", "-y",
-            "-f", "avfoundation", "-i", device,
+            *audio_input_args(platform, device),
             "-t", f"{seconds:g}", "-ac", "1", "-ar", "16000",
             str(out_path),
         ],
@@ -471,10 +769,15 @@ def _audio_loop(
     """
     audio_dir = session.out_dir / "audio"
     audio_dir.mkdir(parents=True, exist_ok=True)
+    mic_hint = "specto could not record the microphone. " + MIC_HINTS[normalize_platform()]
     number = 0
     chunk_path = audio_dir / f"chunk_{number:04d}.wav"
     chunk_start = time.monotonic() - started
-    recorder = start_audio_recorder(chunk_path, chunk_seconds, device)
+    try:
+        recorder = start_audio_recorder(chunk_path, chunk_seconds, device, log=log)
+    except (RuntimeError, ValueError, OSError) as exc:
+        log(f"{mic_hint} ({exc})")
+        return
     while True:
         while recorder.poll() is None:
             if stop.is_set():
@@ -487,14 +790,14 @@ def _audio_loop(
             time.sleep(0.2)
         error = (recorder.stderr.read() if recorder.stderr else "").strip()
         if not chunk_path.exists() or chunk_path.stat().st_size <= 44:  # a wav header alone is 44 bytes
-            log(f"{MIC_PERMISSION_HINT} (ffmpeg said: {error or 'nothing recorded'})")
+            log(f"{mic_hint} (ffmpeg said: {error or 'nothing recorded'})")
             return
         finished_path, finished_start = chunk_path, chunk_start
         if not stop.is_set():
             number += 1
             chunk_path = audio_dir / f"chunk_{number:04d}.wav"
             chunk_start = time.monotonic() - started
-            recorder = start_audio_recorder(chunk_path, chunk_seconds, device)
+            recorder = start_audio_recorder(chunk_path, chunk_seconds, device, log=log)
         try:
             added = session.add_audio_chunk(finished_path, finished_start, model_size=whisper_model)
             session.save()
@@ -512,14 +815,14 @@ def capture(
     every_seconds: float = 300,
     caller: Optional[ModelCaller] = None,
     display: int = 1,
-    audio_device: str = ":0",
+    audio_device: str = DEFAULT_AUDIO_DEVICE,
     whisper_model: str = "base",
     log: Callable[[str], None] = print,
 ) -> LiveSession:
-    """Capture the screen and the microphone on macOS until Ctrl-C, analysing as it goes.
+    """Capture the screen and the microphone until Ctrl-C, analysing as it goes.
 
     The main thread takes a screenshot every `interval` seconds with
-    `screencapture` and offers it to the session; one background thread
+    `take_screenshot` and offers it to the session; one background thread
     records the microphone in `audio_chunk_seconds` pieces with ffmpeg and
     transcribes each. `analyze` is tried after every screenshot and runs
     itself every `every_seconds`. Ctrl-C stops both, runs one last analysis
@@ -527,10 +830,13 @@ def capture(
     `recording.json` the session is resumed and its clock carries on from
     the saved duration.
 
-    Needs macOS Screen Recording and Microphone permission for the terminal;
-    without either, one clear line says which setting to switch on.
-    `audio_device` is ffmpeg's avfoundation audio index (":0" is the default
-    input; `ffmpeg -f avfoundation -list_devices true -i ""` lists them).
+    Works on macOS, Windows and Linux; see `take_screenshot` for the screen
+    backends and `audio_input_args` for the microphone input. On macOS the
+    terminal needs Screen Recording and Microphone permission; without
+    either, one clear line says which setting to switch on. `audio_device`
+    is ":0" for the default microphone; on macOS it is an avfoundation index
+    (`ffmpeg -f avfoundation -list_devices true -i ""` lists them), on
+    Windows a dshow name, on Linux a PulseAudio source or ALSA device.
     """
     out_dir = Path(out_dir)
     if (out_dir / "recording.json").exists():
@@ -556,7 +862,7 @@ def capture(
             now = tick - started
             ok, error = take_screenshot(shot_path, display=display)
             if not ok:
-                log(f"{SCREEN_PERMISSION_HINT} ({error})")
+                log(f"specto could not take a screenshot: {error}")
                 break
             kept = session.add_screenshot(shot_path, round(now, 3))
             shot_path.unlink(missing_ok=True)

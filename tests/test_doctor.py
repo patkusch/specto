@@ -32,6 +32,9 @@ def healthy(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     monkeypatch.setattr(doctor, "playwright_chromium_dir", lambda: "/Users/x/Library/Caches/ms-playwright/chromium-1234")
     monkeypatch.setattr(doctor, "system_name", lambda: "Darwin")
     monkeypatch.setattr(doctor, "screencapture_path", lambda: "/usr/sbin/screencapture")
+    monkeypatch.setattr(doctor, "tool_path", lambda name: None)
+    monkeypatch.setattr(doctor, "wayland_session", lambda: False)
+    monkeypatch.setattr(doctor, "screen_recording_allowed", lambda: True)
     monkeypatch.setattr(doctor, "free_disk_bytes", lambda folder=".": 50 * 10**9)
     return cache
 
@@ -41,7 +44,7 @@ def test_everything_ok(healthy, capsys) -> None:
     assert all(c.ok for c in checks)
     names = [c.name for c in checks]
     assert names == ["Python", "ffmpeg", "faster-whisper", "stable-ts", "OCR",
-                     "ANTHROPIC_API_KEY", "Playwright", "screencapture", "Disk space"]
+                     "ANTHROPIC_API_KEY", "Playwright", "Screen capture", "Microphone input", "Disk space"]
     assert main() == 0
     out = capsys.readouterr().out
     assert out.count("\nok ") + out.startswith("ok ") == len(checks)
@@ -179,16 +182,69 @@ def test_playwright_three_states(healthy) -> None:
     assert main() == 0
 
 
-def test_screencapture_states(healthy) -> None:
-    sc = next(c for c in run_checks() if c.name == "screencapture")
-    assert sc.ok and "live mode" in sc.detail
+def _screen():
+    return next(c for c in run_checks() if c.name == "Screen capture")
+
+
+def test_screen_capture_on_a_mac(healthy) -> None:
+    # healthy: mss not installed, screencapture present, permission granted
+    sc = _screen()
+    assert sc.ok and sc.detail.startswith("screencapture (/usr/sbin/screencapture)") and "live mode" in sc.detail
+    assert "permission granted" in sc.detail
+    doctor.module_installed = _installed("faster_whisper", "stable_whisper", "playwright", "mss")
+    sc = _screen()
+    assert sc.ok and sc.detail.startswith("mss (the mss library)") and "also present: screencapture" in sc.detail
+    doctor.screen_recording_allowed = lambda: False
+    sc = _screen()
+    assert not sc.ok and "permission not granted" in sc.detail and "Screen Recording" in sc.fix
+    doctor.screen_recording_allowed = lambda: None
+    assert _screen().ok and "on first use" in _screen().detail
     doctor.screencapture_path = lambda: None
-    sc = next(c for c in run_checks() if c.name == "screencapture")
-    assert not sc.ok and sc.fix
+    doctor.module_installed = _installed("faster_whisper", "stable_whisper", "playwright")
+    sc = _screen()
+    assert not sc.ok and "none found on Darwin" in sc.detail
+    assert 'specto[live]' in sc.fix and "/usr/sbin" in sc.fix
+    assert main() == 0  # optional either way
+
+
+def test_screen_capture_on_linux(healthy) -> None:
     doctor.system_name = lambda: "Linux"
-    sc = next(c for c in run_checks() if c.name == "screencapture")
-    assert not sc.ok and "Linux" in sc.detail and sc.fix is None
+    doctor.screencapture_path = lambda: None
+    sc = _screen()
+    assert not sc.ok and "none found on Linux" in sc.detail
+    assert "grim" in sc.fix and "imagemagick" in sc.fix and 'specto[live]' in sc.fix
+    doctor.tool_path = lambda name: "/usr/bin/import" if name == "import" else None
+    sc = _screen()
+    assert sc.ok and sc.detail.startswith("import (/usr/bin/import)")
+    doctor.wayland_session = lambda: True
+    doctor.tool_path = lambda name: f"/usr/bin/{name}"
+    doctor.module_installed = _installed("faster_whisper", "stable_whisper", "playwright", "mss")
+    sc = _screen()
+    assert sc.ok and sc.detail.startswith("grim (/usr/bin/grim)") and "Wayland" in sc.detail
+    assert "also present: mss, import" in sc.detail
     assert main() == 0
+
+
+def test_screen_capture_on_windows(healthy) -> None:
+    doctor.system_name = lambda: "Windows"
+    doctor.screencapture_path = lambda: None
+    sc = _screen()
+    assert not sc.ok and "none found on Windows" in sc.detail and "powershell" in sc.fix.lower()
+    doctor.tool_path = lambda name: r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE" if name == "powershell" else None
+    sc = _screen()
+    assert sc.ok and sc.detail.startswith("powershell (") and "permission" not in sc.detail
+    assert main() == 0
+
+
+def test_microphone_input_names_the_ffmpeg_input(healthy) -> None:
+    mic = next(c for c in run_checks() if c.name == "Microphone input")
+    assert mic.ok and "-f avfoundation -i :0" in mic.detail and "Microphone permission" in mic.detail
+    doctor.system_name = lambda: "Windows"
+    mic = next(c for c in run_checks() if c.name == "Microphone input")
+    assert mic.ok and "-f dshow -i audio=<name>" in mic.detail and "first microphone" in mic.detail
+    doctor.system_name = lambda: "Linux"
+    mic = next(c for c in run_checks() if c.name == "Microphone input")
+    assert mic.ok and "-f pulse -i default" in mic.detail and "hw:0" in mic.detail
 
 
 def test_disk_space_states(healthy) -> None:
@@ -234,3 +290,6 @@ def test_real_lookups_do_not_raise() -> None:
     assert doctor.free_disk_bytes(".") > 0
     assert isinstance(doctor.system_name(), str)
     assert doctor.whisper_model_cached("no-such-size") is None
+    assert doctor.tool_path("no-such-tool-xyz") is None
+    assert isinstance(doctor.wayland_session(), bool)
+    assert doctor.screen_recording_allowed() in (True, False, None)

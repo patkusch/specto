@@ -2,12 +2,24 @@
 from __future__ import annotations
 
 import re
+import sys
+import types
 from pathlib import Path
 
 import pytest
 
+from specto import live
 from specto.fake import FakeCaller
-from specto.live import LiveSession, analyze, replay, shot_time, take_screenshot
+from specto.live import (
+    LiveSession,
+    analyze,
+    audio_input_args,
+    parse_dshow_devices,
+    replay,
+    screenshot_backends,
+    shot_time,
+    take_screenshot,
+)
 from specto.model import Analysis, Question, Recording, TranscriptSegment, Word
 
 # (time in seconds, screen): four distinct screens, each shown twice in a row.
@@ -244,8 +256,183 @@ def test_analyze_runs_only_when_due(tmp_path: Path):
     assert session.analysis_rounds == 3
 
 
-def test_take_screenshot_reports_missing_command(tmp_path: Path):
-    ok, error = take_screenshot(tmp_path / "shot.jpg", command=str(tmp_path / "no-such-screencapture"))
+# ------------------------------------------------------------ screen and mic
+
+
+def _fake_mss_module(width: int = 64, height: int = 48, fail: Exception | None = None) -> types.ModuleType:
+    """A stand-in for the mss package: one monitor, a solid red frame, or a grab that raises."""
+
+    class Shot:
+        size = (width, height)
+        bgra = bytes([0, 0, 255, 255]) * (width * height)  # B, G, R, X: red
+
+    class MSS:
+        monitors = [{"left": 0, "top": 0, "width": width, "height": height}] * 2
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def grab(self, monitor):
+            if fail:
+                raise fail
+            assert monitor is self.monitors[1]
+            return Shot()
+
+    module = types.ModuleType("mss")
+    module.MSS = MSS
+    return module
+
+
+def test_take_screenshot_uses_mss_when_installed(tmp_path: Path, monkeypatch):
+    from PIL import Image
+
+    monkeypatch.setitem(sys.modules, "mss", _fake_mss_module())
+    monkeypatch.setattr(live, "macos_screen_recording_allowed", lambda: True)
+    shot = tmp_path / "shot.jpg"
+    ok, error = take_screenshot(shot, platform="darwin", command=str(tmp_path / "no-such-screencapture"))
+    assert ok is True and error == ""
+    with Image.open(shot) as img:
+        assert img.format == "JPEG" and img.size == (64, 48)
+        assert img.convert("RGB").getpixel((10, 10))[0] > 200  # red came through the BGRX unpacking
+    ok, error = take_screenshot(shot, display=3, backend="mss", platform="win32")
+    assert ok is False and error.startswith("mss: no display 3; this machine has 1")
+
+
+def test_take_screenshot_mss_refuses_without_mac_permission(tmp_path: Path, monkeypatch):
+    monkeypatch.setitem(sys.modules, "mss", _fake_mss_module())
+    monkeypatch.setattr(live, "macos_screen_recording_allowed", lambda: False)
+    ok, error = take_screenshot(tmp_path / "shot.jpg", backend="mss", platform="darwin")
     assert ok is False
-    assert "not found" in error
+    assert error.startswith("mss: Screen Recording permission not granted") and "wallpaper" in error
+    assert "System Settings > Privacy & Security > Screen Recording" in error
     assert not (tmp_path / "shot.jpg").exists()
+
+
+def test_take_screenshot_falls_back_to_screencapture_and_names_it(tmp_path: Path, monkeypatch):
+    monkeypatch.setitem(sys.modules, "mss", None)  # `import mss` raises ImportError
+    fake = tmp_path / "screencapture"
+    fake.write_text("#!/bin/sh\necho 'could not create image from display' >&2\nexit 1\n")
+    fake.chmod(0o755)
+    ok, error = take_screenshot(tmp_path / "shot.jpg", command=str(fake), platform="darwin")
+    assert ok is False
+    assert 'mss: not installed (pip install "specto[live]")' in error
+    assert "screencapture: could not create image from display" in error
+    assert "Screen Recording permission" in error
+    assert not (tmp_path / "shot.jpg").exists()
+
+
+def test_take_screenshot_reports_missing_command(tmp_path: Path):
+    ok, error = take_screenshot(
+        tmp_path / "shot.jpg", command=str(tmp_path / "no-such-screencapture"), backend="screencapture"
+    )
+    assert ok is False
+    assert error.startswith("screencapture: ") and "not found" in error
+    assert not (tmp_path / "shot.jpg").exists()
+
+
+def test_take_screenshot_grim_missing_on_linux_says_how_to_install(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(live, "GRIM", str(tmp_path / "no-such-grim"))
+    ok, error = take_screenshot(tmp_path / "shot.jpg", backend="grim", platform="linux")
+    assert ok is False
+    assert error.startswith("grim: ") and "not found" in error
+    assert "apt install grim" in error and "Wayland" in error
+    assert "On Linux install" in error
+    with pytest.raises(ValueError):
+        take_screenshot(tmp_path / "shot.jpg", backend="xdotool")
+
+
+def test_take_screenshot_rejects_an_empty_file(tmp_path: Path):
+    fake = tmp_path / "screencapture"
+    fake.write_text("#!/bin/sh\n: > \"$5\"\nexit 0\n")  # exits 0 but writes an empty file
+    fake.chmod(0o755)
+    ok, error = take_screenshot(tmp_path / "shot.jpg", command=str(fake), backend="screencapture")
+    assert ok is False and "screencapture: no image written" in error
+    assert not (tmp_path / "shot.jpg").exists()
+
+
+def test_screenshot_backend_order_per_platform():
+    assert screenshot_backends("darwin") == ["mss", "screencapture"]
+    assert screenshot_backends("Darwin") == ["mss", "screencapture"]
+    assert screenshot_backends("win32") == ["mss", "powershell"]
+    assert screenshot_backends("Windows") == ["mss", "powershell"]
+    assert screenshot_backends("linux", wayland=False) == ["mss", "grim", "import"]
+    assert screenshot_backends("Linux", wayland=True) == ["grim", "mss", "import"]
+
+
+def test_powershell_script_uses_system_drawing(tmp_path: Path):
+    script = live.powershell_screenshot_script(tmp_path / "it's.jpg", 1)
+    assert "[System.Windows.Forms.Screen]::PrimaryScreen" in script and "System.Drawing" in script
+    assert "it''s.jpg" in script and "\n" not in script
+    assert "AllScreens[1]" in live.powershell_screenshot_script(tmp_path / "x.jpg", 2)
+
+
+def test_audio_input_args_per_platform():
+    assert audio_input_args("darwin") == ["-f", "avfoundation", "-i", ":0"]
+    assert audio_input_args("darwin", ":1") == ["-f", "avfoundation", "-i", ":1"]
+    assert audio_input_args("win32", "Microphone (Realtek Audio)") == [
+        "-f", "dshow", "-i", "audio=Microphone (Realtek Audio)"
+    ]
+    with pytest.raises(ValueError, match="dshow"):
+        audio_input_args("win32")  # the default marker is not a dshow name
+    assert audio_input_args("linux") == ["-f", "pulse", "-i", "default"]
+    assert audio_input_args("linux", "alsa_input.pci-0000_00_1f.3.analog-stereo") == [
+        "-f", "pulse", "-i", "alsa_input.pci-0000_00_1f.3.analog-stereo"
+    ]
+    assert audio_input_args("linux", "hw:0") == ["-f", "alsa", "-i", "hw:0"]
+    assert audio_input_args("Linux", "plughw:1,0") == ["-f", "alsa", "-i", "plughw:1,0"]
+
+
+def test_parse_dshow_devices_both_ffmpeg_spellings():
+    new_style = (
+        "[dshow @ 000001] \"Integrated Camera\" (video)\n"
+        "[dshow @ 000001]   Alternative name \"@device_pnp_x\"\n"
+        "[dshow @ 000001] \"Microphone (Realtek Audio)\" (audio)\n"
+        "[dshow @ 000001]   Alternative name \"@device_cm_y\"\n"
+        "[dshow @ 000001] \"Headset (Jabra)\" (audio)\n"
+        "dummy: Immediate exit requested\n"
+    )
+    assert parse_dshow_devices(new_style) == ["Microphone (Realtek Audio)", "Headset (Jabra)"]
+    old_style = (
+        "[dshow @ 000001] DirectShow video devices (some may be both video and audio devices)\n"
+        "[dshow @ 000001]  \"Integrated Camera\"\n"
+        "[dshow @ 000001] DirectShow audio devices\n"
+        "[dshow @ 000001]  \"Microphone (Realtek Audio)\"\n"
+        "[dshow @ 000001]     Alternative name \"@device_cm_y\"\n"
+    )
+    assert parse_dshow_devices(old_style) == ["Microphone (Realtek Audio)"]
+    assert parse_dshow_devices("") == []
+
+
+def test_resolve_audio_device_picks_first_dshow_mic_and_says_so(monkeypatch):
+    monkeypatch.setattr(live, "list_dshow_audio_devices", lambda: ["Headset (Jabra)", "Line In"])
+    lines: list[str] = []
+    assert live.resolve_audio_device("win32", ":0", log=lines.append) == "Headset (Jabra)"
+    assert lines and "Headset (Jabra)" in lines[0] and "first microphone" in lines[0]
+    assert live.resolve_audio_device("win32", "Line In", log=lines.append) == "Line In"
+    assert live.resolve_audio_device("darwin", ":0", log=lines.append) == ":0"
+    assert len(lines) == 1  # only the automatic pick is logged
+    monkeypatch.setattr(live, "list_dshow_audio_devices", lambda: [])
+    with pytest.raises(RuntimeError, match="no dshow audio device"):
+        live.resolve_audio_device("win32", ":0", log=lines.append)
+
+
+def test_start_audio_recorder_builds_the_platform_command(tmp_path: Path, monkeypatch):
+    calls: list[list[str]] = []
+
+    class FakeProc:
+        def __init__(self, argv, **kwargs):
+            calls.append(argv)
+
+    monkeypatch.setattr(live.subprocess, "Popen", FakeProc)
+    monkeypatch.setattr(live, "ffmpeg_exe", lambda: "/x/ffmpeg")
+    monkeypatch.setattr(live, "list_dshow_audio_devices", lambda: ["Mic A"])
+    live.start_audio_recorder(tmp_path / "a.wav", 30, platform="darwin", log=lambda _: None)
+    live.start_audio_recorder(tmp_path / "b.wav", 30, platform="win32", log=lambda _: None)
+    live.start_audio_recorder(tmp_path / "c.wav", 2.5, "hw:1", platform="linux", log=lambda _: None)
+    assert calls[0][:1] == ["/x/ffmpeg"] and calls[0][-8:-2] == [":0", "-t", "30", "-ac", "1", "-ar"]
+    assert "avfoundation" in calls[0]
+    assert calls[1][calls[1].index("-f") + 1] == "dshow" and "audio=Mic A" in calls[1]
+    assert calls[2][calls[2].index("-f") + 1] == "alsa" and "hw:1" in calls[2] and "2.5" in calls[2]

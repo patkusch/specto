@@ -127,6 +127,24 @@ def screencapture_path() -> Optional[str]:
     return shutil.which("screencapture")
 
 
+def tool_path(name: str) -> Optional[str]:
+    """Where a command-line screenshot tool (grim, import, powershell) is, or None."""
+    return shutil.which(name)
+
+
+def wayland_session() -> bool:
+    from specto.live import wayland_session as _wayland
+
+    return _wayland()
+
+
+def screen_recording_allowed() -> Optional[bool]:
+    """macOS Screen Recording permission for this process: True, False, or None off macOS."""
+    from specto.live import macos_screen_recording_allowed
+
+    return macos_screen_recording_allowed()
+
+
 def python_version() -> tuple[int, int, int]:
     return sys.version_info[:3]
 
@@ -208,15 +226,65 @@ def check_playwright() -> Check:
                  fix="playwright install chromium")
 
 
-def check_screencapture() -> Check:
-    if system_name() != "Darwin":
-        return Check(name="screencapture", ok=False,
-                     detail=f"not on {system_name()} (optional; only for live mode on a Mac, which is not built yet)")
-    exe = screencapture_path()
-    if exe:
-        return Check(name="screencapture", ok=True, detail=f"present at {exe} (for live mode later)")
-    return Check(name="screencapture", ok=False, detail="not found (optional; for live mode later)",
-                 fix="it ships with macOS; check your PATH includes /usr/sbin")
+def check_screen_capture() -> Check:
+    """Which screen grab backend live mode will use here: mss, screencapture, grim, import, powershell or none."""
+    from specto.live import INSTALL_HINTS, normalize_platform, screenshot_backends
+
+    system = system_name()
+    platform = normalize_platform(system)
+    wayland = wayland_session() if platform == "linux" else False
+    order = screenshot_backends(platform, wayland=wayland)
+    found: list[tuple[str, str]] = []
+    for name in order:
+        if name == "mss":
+            if module_installed("mss"):
+                found.append((name, "the mss library"))
+        elif name == "screencapture":
+            exe = screencapture_path()
+            if exe:
+                found.append((name, exe))
+        else:
+            exe = tool_path(name)
+            if exe:
+                found.append((name, exe))
+    if not found:
+        fixes = " or ".join(INSTALL_HINTS[name] for name in order)
+        return Check(name="Screen capture", ok=False,
+                     detail=f"none found on {system} (optional; only live mode needs it)", fix=fixes)
+    first, where = found[0]
+    detail = f"{first} ({where}) will grab the screen in live mode"
+    if len(found) > 1:
+        detail += "; also present: " + ", ".join(name for name, _ in found[1:])
+    if platform == "darwin":
+        allowed = screen_recording_allowed()
+        if allowed is True:
+            detail += "; Screen Recording permission granted"
+        elif allowed is False:
+            return Check(name="Screen capture", ok=False, detail=detail + "; Screen Recording permission not granted",
+                         fix="System Settings > Privacy & Security > Screen Recording, switch on your terminal app")
+        else:
+            detail += "; macOS asks for Screen Recording permission on first use"
+    elif platform == "linux" and wayland:
+        detail += " (Wayland session)"
+    return Check(name="Screen capture", ok=True, detail=detail)
+
+
+def check_microphone_input() -> Check:
+    """Which ffmpeg input records the microphone on this platform."""
+    from specto.live import DEFAULT_AUDIO_DEVICE, audio_input_args, normalize_platform
+
+    platform = normalize_platform(system_name())
+    if platform == "win32":
+        detail = ("ffmpeg -f dshow -i audio=<name>; the first microphone ffmpeg lists is used unless "
+                  "--audio-device names one; Windows must allow desktop apps to use the microphone")
+    else:
+        args = " ".join(audio_input_args(platform, DEFAULT_AUDIO_DEVICE))
+        detail = f"ffmpeg {args}"
+        if platform == "darwin":
+            detail += "; macOS asks for Microphone permission on first use"
+        else:
+            detail += " (PulseAudio or PipeWire; pass --audio-device hw:0 for ALSA)"
+    return Check(name="Microphone input", ok=True, detail=detail)
 
 
 def check_disk(folder: Path | str = ".") -> Check:
@@ -240,7 +308,8 @@ CHECKS: list[Callable[[], Check]] = [
     check_ocr,
     check_api_key,
     check_playwright,
-    check_screencapture,
+    check_screen_capture,
+    check_microphone_input,
     check_disk,
 ]
 
