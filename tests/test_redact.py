@@ -303,6 +303,7 @@ def test_find_redactions_locates_an_example_value_by_search(tmp_path: Path):
     lines = ocr_lines_for_recording(recording, tmp_path, log=lambda _: None)
     analysis = _analysis()
     analysis.fields[0].example_value = PHONE   # the engine reads it without the space
+    analysis.fields[0].label = "Phone number"   # a long number counts as a phone only next to a phone label
 
     hits = find_redactions(recording, analysis, lines)
 

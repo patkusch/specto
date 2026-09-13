@@ -15,9 +15,9 @@ Northwind Onboarding is the tool the Onboarding Officer uses to set up a new cus
 - Requirements: 32
 - Acceptance criteria: 44
 - Questions: 17
-- Writing check: 1 requirement and 13 criteria have warnings; 47 notes
+- Writing check: 1 requirement and 2 criteria have warnings; 58 notes
 - Naming check: 71 terms in the glossary; 15 naming clashes to check on the Glossary sheet
-- Personal data: Personal data seen: 3 emails, 2 phone numbers, 5 postcodes, 2 dates of birth, 7 names, 2 addresses, 1 other id on 5 frames. Check before sharing.
+- Personal data: Personal data seen: 3 emails, 3 phone numbers, 5 postcodes, 3 dates of birth, 12 names, 2 addresses, 1 other id on 6 frames. Check before sharing.
 - Gaps: 7 gaps to close: 4 fields never mentioned, 3 actions leading nowhere; 11 notes.
 - Model: bring-your-own
 - Model calls: 2
@@ -25,7 +25,7 @@ Northwind Onboarding is the tool the Onboarding Officer uses to set up a new cus
 - Output tokens: 0
 - Cache read tokens: 0
 - Cache write tokens: 0
-- Generated: 2026-09-13 21:39
+- Generated: 2026-09-13 22:01
 
 ## The journey, step by step
 
@@ -214,7 +214,7 @@ Confirm that the customer record has been approved and show the customer referen
 Acceptance criteria:
 
 - AC001: Given the Onboarding Officer is on Customer Search and existing customers with surname Shah at postcode SW1A 1AA are on the system, when they enter postcode 'SW1A 1AA' and surname 'Shah' and press Search, then the results table lists those existing customers. ([frame 0 @ 00:07](frames/frame_0000.jpg))
-  - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; warn: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
+  - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
 - AC002: Given the Onboarding Officer is on Customer Search and no customer on the system matches the entered postcode and surname, when they press Search, then the results table lists no customers. ([frame 0 @ 00:07](frames/frame_0000.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.*
 
@@ -272,11 +272,11 @@ Acceptance criteria:
 Acceptance criteria:
 
 - AC007: Given the Onboarding Officer is on Customer Details and Postcode is blank, when they press Save and continue, then the system stays on Customer Details and does not save the customer. ([frame 1 @ 00:15](frames/frame_0001.jpg))
-  - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; warn: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
+  - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 - AC008: Given the Onboarding Officer is on Customer Details, when they look at the form, then First name, Last name, Date of birth, Account type and Postcode are each marked with *. ([frame 1 @ 00:15](frames/frame_0001.jpg))
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 - AC009: Given the Onboarding Officer has filled in First name, Last name, Date of birth, Account type and a valid Postcode only, when they press Save and continue, then the system saves the customer. ([frame 1 @ 00:15](frames/frame_0001.jpg))
-  - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; warn: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
+  - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
 
 ### R007: The system saves a new customer when Email address, Phone number, Address line 1, Address line 2 and Town / City are blank.
 
@@ -288,7 +288,7 @@ Acceptance criteria:
 Acceptance criteria:
 
 - AC010: Given the Onboarding Officer has filled in the five mandatory fields and left Email address, Phone number, Address line 1, Address line 2 and Town / City blank, when they press Save and continue, then the system saves the customer and opens Documents. ([frame 1 @ 00:25](frames/frame_0001.jpg))
-  - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; warn: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
+  - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
 ### R008: The system saves Customer Details only when the Postcode is in a valid UK postcode format.
 
@@ -299,9 +299,9 @@ Acceptance criteria:
 Acceptance criteria:
 
 - AC011: Given the Onboarding Officer has filled in the mandatory fields with Postcode 'SW1A 1AA', when they press Save and continue, then the system saves the customer. ([frame 1 @ 00:25](frames/frame_0001.jpg))
-  - *Writing check: warn: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
+  - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
 - AC012: Given the Onboarding Officer has filled in the mandatory fields with Postcode '12345', when they press Save and continue, then the system does not save the customer and stays on Customer Details. ([frame 1 @ 00:25](frames/frame_0001.jpg))
-  - *Writing check: warn: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
+  - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
 ### R009: The Account type dropdown offers exactly two options: Personal and Business.
 
@@ -336,7 +336,7 @@ Acceptance criteria:
 Acceptance criteria:
 
 - AC016: Given the Onboarding Officer has filled in Customer Details with all five mandatory fields and a valid Postcode, when they press Save and continue, then the system opens Documents. ([frame 1 @ 00:33](frames/frame_0001.jpg))
-  - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; warn: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
+  - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
 
 ### R012: The system adds the chosen file to the Uploaded documents table when the Onboarding Officer presses Upload with a file chosen and a Document type selected.
 
@@ -362,9 +362,9 @@ Acceptance criteria:
 Acceptance criteria:
 
 - AC019: Given the Onboarding Officer is on Documents, when they choose a PNG file and press Upload with a Document type selected, then the system adds the file to the Uploaded documents table. ([frame 2 @ 00:43](frames/frame_0002.jpg))
-  - *Writing check: warn: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
+  - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
 - AC020: Given the Onboarding Officer is on Documents, when they choose a DOCX file and press Upload with a Document type selected, then the system does not add the file to the Uploaded documents table. ([frame 2 @ 00:43](frames/frame_0002.jpg))
-  - *Writing check: warn: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
+  - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
 
 ### R014: The system accepts ID document files up to 10 MB in size.
 
@@ -375,9 +375,9 @@ Acceptance criteria:
 Acceptance criteria:
 
 - AC021: Given the Onboarding Officer is on Documents, when they choose a 9 MB JPG file and press Upload with a Document type selected, then the system adds the file to the Uploaded documents table. ([frame 2 @ 00:43](frames/frame_0002.jpg))
-  - *Writing check: warn: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
+  - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
 - AC022: Given the Onboarding Officer is on Documents, when they choose an 11 MB JPG file and press Upload with a Document type selected, then the system does not add the file to the Uploaded documents table. ([frame 2 @ 00:43](frames/frame_0002.jpg))
-  - *Writing check: warn: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
+  - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
 
 ### R015: The system shows File, Document type, Uploaded, Uploaded by and Status for each row of the Uploaded documents table.
 
@@ -745,7 +745,7 @@ What the analysis does not yet cover, so the next conversation with the expert c
 
 ## Personal data seen
 
-Personal data seen: 3 emails, 2 phone numbers, 5 postcodes, 2 dates of birth, 7 names, 2 addresses, 1 other id on 5 frames. Check before sharing.
+Personal data seen: 3 emails, 3 phone numbers, 5 postcodes, 3 dates of birth, 12 names, 2 addresses, 1 other id on 6 frames. Check before sharing.
 
 | Kind | Value (masked) | Where | Time | Frame |
 |---|---|---|---|---|
@@ -764,13 +764,20 @@ Personal data seen: 3 emails, 2 phone numbers, 5 postcodes, 2 dates of birth, 7 
 | person name | P*** S*** | frame text | 01:02 | ([frame 3 @ 01:02](frames/frame_0003.jpg)) |
 | date of birth | 04/**/**75 | frame text | 01:02 | ([frame 3 @ 01:02](frames/frame_0003.jpg)) |
 | email | pr***@example.com | frame text | 01:02 | ([frame 3 @ 01:02](frames/frame_0003.jpg)) |
-| phone | 07*** ******78 | frame text | 01:02 | ([frame 3 @ 01:02](frames/frame_0003.jpg)) |
+| phone | 07*********78 | frame text | 01:02 | ([frame 3 @ 01:02](frames/frame_0003.jpg)) |
 | address | 4* G*** S*** | frame text | 01:02 | ([frame 3 @ 01:02](frames/frame_0003.jpg)) |
 | uk postcode | SW** *AA | frame text | 01:02 | ([frame 3 @ 01:02](frames/frame_0003.jpg)) |
 | person name | J*** P*** O*** | frame text | 01:33 | ([frame 5 @ 01:33](frames/frame_0005.jpg)) |
 | email | pr***@example.com | frame text | 01:33 | ([frame 5 @ 01:33](frames/frame_0005.jpg)) |
 | uk postcode | SW** *AA | example value | 00:00 | ([frame 0 @ 00:00](frames/frame_0000.jpg)) |
+| person name | S*** | example value | 00:00 | ([frame 0 @ 00:00](frames/frame_0000.jpg)) |
+| person name | R*** S*** | example value | 00:00 | ([frame 0 @ 00:00](frames/frame_0000.jpg)) |
+| date of birth | 12/**/**79 | example value | 00:00 | ([frame 0 @ 00:00](frames/frame_0000.jpg)) |
+| person name | P*** | example value | 00:15 | ([frame 1 @ 00:15](frames/frame_0001.jpg)) |
+| person name | S*** | example value | 00:15 | ([frame 1 @ 00:15](frames/frame_0001.jpg)) |
 | address | 4* G*** S*** | example value | 00:15 | ([frame 1 @ 00:15](frames/frame_0001.jpg)) |
+| phone | 07*** ******78 | example value | 01:02 | ([frame 3 @ 01:02](frames/frame_0003.jpg)) |
+| person name | T*** N*** | example value | 01:17 | ([frame 4 @ 01:17](frames/frame_0004.jpg)) |
 
 ## Glossary
 

@@ -49,7 +49,7 @@
   },
   "writing": {
     "requirements_with_warnings": 1,
-    "criteria_with_warnings": 13,
+    "criteria_with_warnings": 2,
     "rules_seen": [
       "absolute",
       "implementation-word",

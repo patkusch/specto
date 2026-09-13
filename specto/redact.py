@@ -187,7 +187,7 @@ def _locate(
     for f in analysis.fields:
         if not f.example_value or f.keyframe_index not in lines_by_frame:
             continue
-        for found in _detect(f.example_value):
+        for found in _detect(f"{f.label}: {f.example_value}"):
             pieces = _mask_pairs([found])
             for raw, _masked in pieces:
                 for box in _boxes_of_value(lines_by_frame[f.keyframe_index], raw):

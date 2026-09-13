@@ -194,7 +194,7 @@ def test_scan_recording_sources_and_frames(recording, analysis):
 
     example_hits = [h for h in hits if h.source == "example value"]
     assert ("uk postcode", "SW** *AA", 0) in {(h.kind, h.value_masked, h.keyframe_index) for h in example_hits}
-    assert ("date of birth", "23/**/**79") not in {(h.kind, h.value_masked) for h in example_hits}  # bare value, no label
+    assert ("date of birth", "23/**/**79") in {(h.kind, h.value_masked) for h in example_hits}  # bare value, no label
     # F007's email is also in the frame text for frame 1, so it is listed once, as frame text.
     emails = [h for h in hits if h.kind == "email" and h.keyframe_index == 1]
     assert [(h.value_masked, h.source) for h in emails] == [("ja***@example.com", "frame text")]

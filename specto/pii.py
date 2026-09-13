@@ -224,8 +224,13 @@ def _find_phones(text: str) -> list[_Found]:
         digits = re.sub(r"\D", "", m.group(0))
         if m.group(0).startswith("+"):
             ok = 9 <= len(digits) <= 15
+        elif 10 <= len(digits) <= 11:
+            ok = True
         else:
-            ok = 10 <= len(digits) <= 11
+            # A longer number counts only when a label says it is a phone number,
+            # so a 13-digit order or product code does not get flagged.
+            before = text[max(0, m.start() - 40):m.start()]
+            ok = 12 <= len(digits) <= 13 and bool(re.search(r"phone|mobile|tel\b", before, re.I))
         if ok:
             found.append(_Found("phone", m.group(0), m.start(), m.end()))
     return found
@@ -627,7 +632,10 @@ def scan_recording(
 
     for field in analysis.fields:
         if field.example_value:
-            hits.extend(scan_text(field.example_value, "example value", field.keyframe_index, field.timestamp))
+            # The label goes in front so a value that only counts next to its
+            # label (a date of birth, a long phone number) is still recognised.
+            hits.extend(scan_text(f"{field.label}: {field.example_value}", "example value",
+                                  field.keyframe_index, field.timestamp))
 
     unique: list[PiiHit] = []
     seen: set[tuple[str, str, Optional[int]]] = set()
