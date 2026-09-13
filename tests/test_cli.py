@@ -234,3 +234,35 @@ def test_cli_gemini_provider_builds_a_gemini_caller(monkeypatch) -> None:
     assert isinstance(caller, GeminiCaller) and caller.model == "gemini-2.5-pro"
     args = argparse.Namespace(provider="gemini", model="gemini-2.5-flash", effort="high")
     assert make_caller(args).model == "gemini-2.5-flash"
+
+
+def test_cli_requests_and_load_round_trip(synthetic_video: Path, tmp_path: Path, capsys) -> None:
+    import json
+    from specto.byo import content_with_images
+    from specto.extract import AnalysisResponse, ChunkReading
+    from specto.fake import FakeCaller
+
+    vtt = tmp_path / "w.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    out = tmp_path / "o"
+    assert main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(out), "--ingest-only"]) == 0
+    assert main(["requests", str(out), "--frames-per-call", "2"]) == 0
+    reqs = out / "requests"
+    chunk_files = sorted(p for p in reqs.glob("chunk_*.json") if ".response" not in p.name)
+    assert len(chunk_files) >= 2
+    fake = FakeCaller()
+    for n, path in enumerate(chunk_files, start=1):
+        if n > 1:
+            assert main(["requests", str(out), "--regenerate", str(n)]) == 0
+        req = json.loads(path.read_text())
+        parsed, _ = fake(req["system"], content_with_images(out, req["content"]), ChunkReading)
+        (reqs / f"chunk_{n:02d}.response.json").write_text(parsed.model_dump_json())
+    assert main(["requests", str(out)]) == 0
+    req = json.loads((reqs / "consolidate.json").read_text())
+    parsed, _ = fake(req["system"], req["content"], AnalysisResponse)
+    (reqs / "consolidate.response.json").write_text(parsed.model_dump_json())
+    assert main(["status", str(out)]) == 0
+    assert main(["load", str(out)]) == 0
+    assert (out / "analysis.xlsx").exists()
+    ana = Analysis.model_validate_json((out / "analysis.json").read_text())
+    assert ana.usage.model == "bring-your-own"

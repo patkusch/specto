@@ -6,6 +6,8 @@
     specto score out/walkthrough expected.json   # compare with an answer key
     specto doctor                        # what is installed, what is missing
     specto merge out/day1 out/day2 --out out/all   # several sessions, one workbook
+    specto requests out/walkthrough      # write the model requests as files (no key needed)
+    specto load out/walkthrough          # read the answers back and write every output
     specto redact out/walkthrough        # paint over personal data on the frames
     specto answers out/walkthrough       # read the answers typed into the workbook
     specto resolve out/walkthrough       # answered questions become requirements
@@ -248,6 +250,65 @@ def cmd_restore(args: argparse.Namespace) -> int:
     return 0
 
 
+def _ocr_text_from(out_dir: Path) -> dict[int, str] | None:
+    from .pii import load_ocr_text
+
+    return load_ocr_text(out_dir) or None
+
+
+def cmd_requests(args: argparse.Namespace) -> int:
+    from .byo import ByoError, dump_consolidate_request, dump_requests, regenerate_chunk_request, requests_dir, status
+
+    out_dir = Path(args.out_dir)
+    try:
+        recording = _load(out_dir / "recording.json", Recording)
+        if args.regenerate:
+            regenerate_chunk_request(out_dir, args.regenerate)
+        elif not (requests_dir(out_dir) / "manifest.json").exists():
+            dump_requests(recording, out_dir, frames_per_call=args.frames_per_call, ocr_text=_ocr_text_from(out_dir))
+        else:
+            import json as _json
+
+            chunk_count = _json.loads((requests_dir(out_dir) / "manifest.json").read_text())["chunk_count"]
+            answered = all((requests_dir(out_dir) / f"chunk_{n:02d}.response.json").exists()
+                           for n in range(1, chunk_count + 1))
+            if answered:
+                dump_consolidate_request(recording, out_dir)
+            else:
+                dump_requests(recording, out_dir, frames_per_call=args.frames_per_call, ocr_text=_ocr_text_from(out_dir))
+        print(status(out_dir))
+    except ByoError as error:
+        print(str(error), file=sys.stderr)
+        return 2
+    return 0
+
+
+def cmd_load(args: argparse.Namespace) -> int:
+    from .byo import ByoError, load_responses
+    from .export import export_all
+
+    out_dir = Path(args.out_dir)
+    try:
+        recording = _load(out_dir / "recording.json", Recording)
+        analysis = load_responses(recording, out_dir)
+    except ByoError as error:
+        print(str(error), file=sys.stderr)
+        return 2
+    print(f"loaded: {len(analysis.screens)} screens, {len(analysis.fields)} fields, "
+          f"{len(analysis.requirements)} requirements, {len(analysis.acceptance_criteria)} criteria, "
+          f"{len(analysis.questions)} questions")
+    for name, p in export_all(analysis, recording, out_dir).items():
+        print(f"wrote {name}: {p}")
+    return 0
+
+
+def cmd_status(args: argparse.Namespace) -> int:
+    from .byo import status
+
+    print(status(Path(args.out_dir)))
+    return 0
+
+
 def cmd_merge(args: argparse.Namespace) -> int:
     from .export import export_all
     from .merge import merge_dirs, merge_report
@@ -345,6 +406,20 @@ def build_parser() -> argparse.ArgumentParser:
     rs2 = sub.add_parser("restore", help="put the untouched frames back after a redact")
     rs2.add_argument("out_dir")
     rs2.set_defaults(func=cmd_restore)
+
+    rq = sub.add_parser("requests", help="write the model requests as files, to answer with any model you can reach")
+    rq.add_argument("out_dir", help="an output folder after --ingest-only")
+    rq.add_argument("--frames-per-call", type=int, default=8)
+    rq.add_argument("--regenerate", type=int, metavar="N", help="rebuild chunk N's request using the answers to earlier chunks")
+    rq.set_defaults(func=cmd_requests)
+
+    ld = sub.add_parser("load", help="read the answer files back and write every output")
+    ld.add_argument("out_dir")
+    ld.set_defaults(func=cmd_load)
+
+    st = sub.add_parser("status", help="which requests are written, which are answered, what to do next")
+    st.add_argument("out_dir")
+    st.set_defaults(func=cmd_status)
 
     mg = sub.add_parser("merge", help="combine several finished runs into one workbook, no model call")
     mg.add_argument("sources", nargs="+", help="output folders of finished runs, in session order")

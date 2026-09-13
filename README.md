@@ -112,6 +112,28 @@ that actually changes over the recording and keeps only that, so the model
 reads the shared window and not the meeting around it. If it picks the
 wrong area, pass the box yourself as `--crop x,y,w,h` in pixels.
 
+## No key at all: answer the requests yourself
+
+```bash
+specto run walkthrough.mp4 --transcript walkthrough.vtt --ingest-only
+specto requests out/walkthrough      # writes requests/chunk_01.json, chunk_02.json ...
+```
+
+Some teams cannot put an API key on a machine but can paste into a chat
+window or run a model through their own gateway. Each request file holds
+the instructions, the frames to attach (by file name), the words spoken,
+and the exact shape the answer must take. Put the model's answer in
+`chunk_01.response.json`, run `specto requests out/walkthrough --regenerate 2`
+so the next request knows the screens already named, and carry on. When
+every chunk is answered, `specto requests` writes the final merge request;
+answer it, then:
+
+```bash
+specto load out/walkthrough          # reads the answers, writes every output
+```
+
+`specto status out/walkthrough` says what is answered and what comes next.
+
 ## Using Gemini instead of Claude
 
 ```bash
@@ -223,6 +245,7 @@ Ctrl-C) saves what it has read so far and picks up from there next time.
 | `specto export DIR` | rebuild every output from a finished analysis |
 | `specto score DIR KEY` | compare an output with an answer key |
 | `specto doctor` | what is installed and what is missing |
+| `specto requests DIR`, `specto load DIR`, `specto status DIR` | write the model requests as files, read the answers back, see what is left; no key needed |
 | `specto merge DIR DIR... --out DIR` | several sessions into one workbook: same screens, requirements and questions folded together, no model call |
 | `specto redact DIR` | paint over the personal data on the frames and mask it in the outputs; `specto restore DIR` undoes it |
 | `specto answers DIR` | read the Answer and Status columns typed into the workbook back in |
