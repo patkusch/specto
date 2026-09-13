@@ -20,6 +20,7 @@ looks at what was on screen at that moment, and produces one spreadsheet:
 | SME Questions | What the expert did not say and someone must ask before building |
 | Transcript | Everything said, with the time and the screen that was showing |
 | Glossary | Every role, screen, field and button named, where it first appeared, and a Definition column to fill in |
+| Gaps | What the analysis does not cover yet: screens with no requirement, fields never mentioned, requirements with no criteria, buttons that lead nowhere |
 | Personal Data | Every email, phone number, postcode, date of birth, card or account number, name and address that appeared on screen or was said, masked, with the frame it was on |
 
 ![A requirement card from report.html: the statement, the expert's quote, the frame it came from, and its acceptance criteria (layout shown with the stand-in model)](docs/report-requirements.png)

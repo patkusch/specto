@@ -291,9 +291,20 @@ def export_xlsx(analysis: Analysis, recording: Recording, out_dir: Path, filenam
             row[4] = FrameRef(hit.keyframe_index, hit.timestamp or 0.0)
     write_sheet(wb, "Personal Data", PII_HEADERS, prows, recording)
 
+    from .gaps import GAPS_HEADERS, find_gaps, gaps_rows
+
+    gaps = find_gaps(analysis)
+    grows = gaps_rows(gaps)[1:]
+    for row, gap in zip(grows, gaps):
+        row[5] = FrameRef(gap.keyframe_index, gap.timestamp)
+    write_sheet(wb, "Gaps", GAPS_HEADERS, grows, recording)
+
     path = out_dir / filename
     wb.save(path)
     return path
+
+
+from .gaps import find_gaps, gaps_summary  # noqa: E402
 
 
 def personal_data_line(analysis: Analysis, recording: Recording, out_dir: Optional[Path]) -> str:
@@ -333,6 +344,7 @@ def summary_rows(analysis: Analysis, recording: Recording, out_dir: Optional[Pat
         ("Writing check", summarize(lint_analysis(analysis))),
         ("Naming check", naming_check_line(analysis)),
         ("Personal data", personal_data_line(analysis, recording, out_dir)),
+        ("Gaps", gaps_summary(find_gaps(analysis))),
     ]
     if analysis.usage is not None:
         u = analysis.usage
@@ -451,6 +463,10 @@ def export_markdown(analysis: Analysis, recording: Recording, out_dir: Path, fil
     from .pii import load_ocr_text, pii_summary, scan_recording
 
     hits = scan_recording(recording, analysis, load_ocr_text(out_dir))
+    from .gaps import gaps_markdown
+
+    lines += [gaps_markdown(find_gaps(analysis)), ""]
+
     lines += ["## Personal data seen", "", pii_summary(hits), ""]
     if hits:
         lines += ["| Kind | Value (masked) | Where | Time | Frame |", "|---|---|---|---|---|"]

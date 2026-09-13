@@ -16,7 +16,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 SHEET_ORDER = [
     "Summary", "Journey", "Screens", "Data Fields", "Actions",
-    "Requirements", "Acceptance Criteria", "SME Questions", "Transcript", "Glossary", "Personal Data",
+    "Requirements", "Acceptance Criteria", "SME Questions", "Transcript", "Glossary", "Personal Data", "Gaps",
 ]
 
 HEADERS = {
@@ -299,3 +299,14 @@ def test_personal_data_sheet_and_summary(workbook, analysis, recording, tmp_path
 def test_markdown_has_screen_flow(analysis, recording, tmp_path):
     text = export_markdown(analysis, recording, tmp_path).read_text()
     assert "## Screen flow" in text and "```mermaid" in text and "flowchart LR" in text
+
+
+def test_gaps_sheet_summary_and_markdown(workbook, analysis, recording, tmp_path):
+    ws = workbook["Gaps"]
+    assert [c.value for c in ws[1]][:2] == ["What is missing", "Item"]
+    kinds = {row[0].value for row in ws.iter_rows(min_row=2)}
+    assert "field never mentioned" in kinds
+    items = {row[0].value: row[1].value for row in workbook["Summary"].iter_rows(min_row=2)}
+    assert items["Gaps"].startswith("5 gaps to close")
+    text = export_markdown(analysis, recording, tmp_path).read_text()
+    assert "## Gaps" in text
