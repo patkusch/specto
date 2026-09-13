@@ -87,6 +87,87 @@ def synthetic_video(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return encode_frames(frame_dir, work / "walkthrough.mp4")
 
 
+CANVAS = (960, 540)  # the whole meeting-recording frame
+SHARE_BOX = (160, 60, 640, 360)  # where the shared window sits in it: (x, y, w, h)
+
+
+def meeting_frame(screen: Image.Image, dot_on: bool) -> Image.Image:
+    """A fake Teams/Zoom recording frame: `screen` in the middle of a dark border,
+    a toolbar strip that never changes along the bottom, and a 6x6 dot in the
+    top-left corner that blinks (a "recording" light, or a cursor that moves)."""
+    frame = Image.new("RGB", CANVAS, (28, 28, 32))
+    frame.paste(screen, SHARE_BOX[:2])
+    draw = ImageDraw.Draw(frame)
+    draw.rectangle([0, 496, CANVAS[0], CANVAS[1]], fill=(60, 60, 66))  # toolbar
+    for i in range(6):  # toolbar "buttons"
+        x = 300 + i * 60
+        draw.ellipse([x, 506, x + 24, 530], fill=(150, 150, 160))
+    draw.rectangle([8, 8, 13, 13], fill=(255, 40, 40) if dot_on else (28, 28, 32))
+    return frame
+
+
+@pytest.fixture(scope="session")
+def bordered_video(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """The four screens of `synthetic_video` inside a 960x540 meeting frame (see `meeting_frame`)."""
+    work = tmp_path_factory.mktemp("bordered")
+    frame_dir = work / "png"
+    frame_dir.mkdir()
+    n = 0
+    for title, background, rows in SCREENS:
+        screen = draw_screen(title, background, rows)
+        for _ in range(FPS * SECONDS_PER_SCREEN):
+            meeting_frame(screen, dot_on=n % 2 == 0).save(frame_dir / f"img_{n:04d}.png")
+            n += 1
+    return encode_frames(frame_dir, work / "meeting.mp4")
+
+
+# Twelve screens that all differ in colour, title and row count.
+MANY_SCREENS = [
+    ("Customer Search", (40, 70, 140), 1),
+    ("Customer Details", (245, 245, 245), 5),
+    ("Approval Queue", (30, 120, 60), 3),
+    ("Done", (250, 235, 215), 0),
+    ("Reports", (90, 90, 120), 2),
+    ("Settings", (160, 60, 60), 4),
+    ("Audit Log", (20, 20, 20), 5),
+    ("Invoices", (235, 245, 235), 3),
+    ("Dashboard", (60, 60, 160), 0),
+    ("Users", (250, 250, 230), 4),
+    ("Help", (120, 90, 40), 1),
+    ("Logout", (230, 230, 250), 2),
+]
+VARIANT_SECONDS = 2  # each screen, then its variant, this long
+
+
+def variant_of(screen: Image.Image) -> Image.Image:
+    """The same screen with a small dropdown opened in the bottom right corner."""
+    variant = screen.copy()
+    draw = ImageDraw.Draw(variant)
+    draw.rectangle([470, 230, 610, 330], fill=(255, 255, 255), outline=(0, 0, 0))
+    for i in range(4):
+        draw.rectangle([478, 238 + i * 24, 602, 254 + i * 24], fill=(200, 200, 210))
+    return variant
+
+
+@pytest.fixture(scope="session")
+def variants_video(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A 48 second mp4: each of the twelve MANY_SCREENS for 2 s, then its variant for 2 s.
+
+    The distinct screens start at 0, 4, 8, ... 44 s; the variants at 2, 6, ... 46 s.
+    """
+    work = tmp_path_factory.mktemp("variants")
+    frame_dir = work / "png"
+    frame_dir.mkdir()
+    n = 0
+    for title, background, rows in MANY_SCREENS:
+        screen = draw_screen(title, background, rows)
+        for img in (screen, variant_of(screen)):
+            for _ in range(FPS * VARIANT_SECONDS):
+                img.save(frame_dir / f"img_{n:04d}.png")
+                n += 1
+    return encode_frames(frame_dir, work / "variants.mp4")
+
+
 @pytest.fixture(scope="session")
 def static_video(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """A 25 second mp4 of one unchanging screen, for the sampling fallback."""

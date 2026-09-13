@@ -12,6 +12,7 @@ import pytest
 
 from specto.ingest import (
     content_hash,
+    detect_share_region,
     dhash,
     extract_keyframes,
     hamming,
@@ -189,9 +190,10 @@ def test_hash_mode_deletes_samples_it_did_not_keep(synthetic_video: Path, tmp_pa
     names = sorted(p.name for p in (tmp_path / "frames").iterdir())
     assert names == [f"frame_{i:04d}.jpg" for i in range(len(frames))]  # 12 samples in, 4 files left
     assert not list(tmp_path.glob("**/sample_*.jpg"))
-    # The same holds when max_frames thins the kept ones further.
+    # The same holds when max_frames thins the kept ones further (frame 0 stays, the
+    # survivor is whichever screen differs most from its neighbours, not the last by time).
     frames = extract_keyframes(synthetic_video, tmp_path, detect="hash", max_frames=2)
-    assert [f.timestamp for f in frames] == [0.0, 9.0]
+    assert len(frames) == 2 and frames[0].timestamp == 0.0 and frames[1].timestamp in (3.0, 6.0, 9.0)
     assert sorted(p.name for p in (tmp_path / "frames").iterdir()) == ["frame_0000.jpg", "frame_0001.jpg"]
 
 
@@ -206,6 +208,78 @@ def test_hash_distance_can_be_raised_to_ignore_small_changes(typed_form_video: P
 def test_unknown_detector_is_refused(synthetic_video: Path, tmp_path: Path):
     with pytest.raises(ValueError, match="detect must be"):
         extract_keyframes(synthetic_video, tmp_path, detect="magic")
+
+
+# ---------------------------------------------------------- cropping to the shared window
+
+def _close(box, expected, tolerance=4):
+    return all(abs(a - b) <= tolerance for a, b in zip(box, expected))
+
+
+def test_detect_share_region_finds_the_shared_window(bordered_video: Path):
+    """Border, toolbar and the 6x6 blinking dot are outside the box; the shared screens are inside."""
+    from conftest import SHARE_BOX
+
+    box = detect_share_region(bordered_video)
+    assert box is not None and _close(box, SHARE_BOX), box
+    assert all(v % 2 == 0 for v in box)
+
+
+def test_detect_share_region_leaves_a_full_frame_alone(synthetic_video: Path, static_video: Path, capsys):
+    assert detect_share_region(synthetic_video) is None  # the whole picture changes: nothing to crop
+    assert "no border to crop" in capsys.readouterr().out
+    assert detect_share_region(static_video) is None  # nothing changes at all
+    assert "nothing in the picture changes" in capsys.readouterr().out
+
+
+def test_crop_auto_keeps_the_shared_window_only(bordered_video: Path, tmp_path: Path, capsys):
+    from conftest import SHARE_BOX
+
+    frames = extract_keyframes(bordered_video, tmp_path / "auto", detect="hash", crop="auto")
+    out = capsys.readouterr().out
+    assert "cropping to the 640x360 area at 160,60, the rest of the frame never changes" in out
+    assert [f.timestamp for f in frames] == [0.0, 3.0, 6.0, 9.0]
+    assert all(_close((f.width, f.height), SHARE_BOX[2:]) for f in frames), [(f.width, f.height) for f in frames]
+    # An explicit box does the same, and the scene detector gets the same crop.
+    explicit = extract_keyframes(bordered_video, tmp_path / "box", detect="scene", crop=SHARE_BOX)
+    assert "cropping to the 640x360 area at 160,60" in capsys.readouterr().out
+    assert [f.timestamp for f in explicit] == [0.0, 3.0, 6.0, 9.0]
+    assert [(f.width, f.height) for f in explicit] == [SHARE_BOX[2:]] * 4
+    # Without a crop the frames are the whole 960x540 meeting picture.
+    whole = extract_keyframes(bordered_video, tmp_path / "whole", detect="hash")
+    assert [(f.width, f.height) for f in whole] == [(960, 540)] * len(whole)
+
+
+def test_crop_applies_to_the_static_fallback_and_scales_after(static_video: Path, tmp_path: Path):
+    frames = extract_keyframes(static_video, tmp_path, crop=(100, 50, 400, 200), max_width=200, fallback_interval=5)
+    assert len(frames) >= 4
+    assert [(f.width, f.height) for f in frames] == [(200, 100)] * len(frames)
+
+
+def test_bad_crop_is_refused(synthetic_video: Path, tmp_path: Path):
+    with pytest.raises(ValueError, match="crop must be"):
+        extract_keyframes(synthetic_video, tmp_path, crop="middle")
+    with pytest.raises(ValueError, match="crop must be"):
+        extract_keyframes(synthetic_video, tmp_path, crop=(1, 2, 3))
+    with pytest.raises(ValueError, match="w, h > 0"):
+        extract_keyframes(synthetic_video, tmp_path, crop=(0, 0, 0, 100))
+
+
+# ---------------------------------------------------------- long recordings: max_frames
+
+def test_max_frames_drops_the_least_changed_frames_first(variants_video: Path, tmp_path: Path, capsys):
+    """12 screens, each followed by a near-identical variant: the cap keeps the 12 screens, not every other frame."""
+    frames = extract_keyframes(variants_video, tmp_path / "all", detect="hash")
+    assert len(frames) == 24  # the variants differ enough to be kept by the detector
+    capsys.readouterr()
+
+    frames = extract_keyframes(variants_video, tmp_path / "capped", detect="hash", max_frames=12)
+    out = capsys.readouterr().out
+    assert [f.timestamp for f in frames] == [float(t) for t in range(0, 48, 4)]
+    line = next(l for l in out.splitlines() if "dropped 12 frames that differed from their neighbour by" in l)
+    largest = int(line.split(" by ")[1].split(" ")[0])
+    assert 8 < largest < 40, line  # the variants, not a screen change (those are 70 bits and more apart)
+    assert sorted(p.name for p in (tmp_path / "capped" / "frames").iterdir()) == [f"frame_{i:04d}.jpg" for i in range(12)]
 
 
 def test_content_hash_sees_colour_and_text_but_not_noise(tmp_path: Path):

@@ -104,6 +104,14 @@ to the model next to the image, so small labels and values are not lost when
 the frame is scaled down. It is on by default when installed; `--no-ocr` turns
 it off.
 
+## A meeting recording with the share in the middle
+
+A Teams or Zoom recording shows the shared window inside a border with a
+toolbar and a strip of faces. `--crop auto` finds the part of the picture
+that actually changes over the recording and keeps only that, so the model
+reads the shared window and not the meeting around it. If it picks the
+wrong area, pass the box yourself as `--crop x,y,w,h` in pixels.
+
 ## No recording, just screenshots
 
 ```bash
@@ -202,7 +210,8 @@ Ctrl-C) saves what it has read so far and picks up from there next time.
 | `--reader-model ID` | a cheaper model for reading the frames, e.g. `claude-sonnet-5`; the final merge still uses `--model` | same as `--model` |
 | `--effort` | how hard the model thinks: low, medium, high, xhigh, max | `high` |
 | `--frames-per-call N` | images per model call | 8 |
-| `--max-frames N` | cap on still images kept | 120 |
+| `--max-frames N` | cap on still images kept; over the cap, the frames that changed least from their neighbour are dropped first | 240 |
+| `--crop x,y,w,h` or `--crop auto` | keep only part of the picture; `auto` finds the shared window and drops the meeting border, toolbar and gallery strip | whole picture |
 | `--detect hash|scene` | find screen changes by image fingerprint, or by ffmpeg brightness | `hash` |
 | `--hash-distance N` | how different a frame must be to count as new; lower catches typed text | 8 |
 | `--sample-fps X` | frames looked at per second in hash mode | 1 |

@@ -45,6 +45,18 @@ def cmd_run(args: argparse.Namespace) -> int:
         print(f"ingest: {len(recording.keyframes)} screenshots kept, {len(recording.segments)} notes or "
               f"transcript segments, laid out over {recording.duration:.0f}s")
     else:
+        crop = None
+        if args.crop:
+            if args.crop.strip().lower() == "auto":
+                crop = "auto"
+            else:
+                try:
+                    crop = tuple(int(v) for v in args.crop.split(","))
+                except ValueError:
+                    crop = ()
+                if len(crop) != 4:
+                    print("--crop must be x,y,w,h in pixels or 'auto'", file=sys.stderr)
+                    return 2
         recording = ingest(
             source,
             out_dir,
@@ -56,6 +68,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             detect=args.detect,
             hash_distance=args.hash_distance,
             sample_fps=args.sample_fps,
+            crop=crop,
         )
         print(f"ingest: {len(recording.keyframes)} frames, {len(recording.segments)} transcript segments, "
               f"{recording.duration:.0f}s of video")
@@ -258,7 +271,8 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
     run.add_argument("--reader-model", help="a cheaper model for reading the frames, e.g. claude-sonnet-5; the merge still uses --model")
     run.add_argument("--frames-per-call", type=int, default=8, help="frames sent per model call (default 8)")
-    run.add_argument("--max-frames", type=int, default=120, help="cap on still frames kept (default 120)")
+    run.add_argument("--max-frames", type=int, default=240, help="cap on still frames kept; the least-changed frames go first (default 240)")
+    run.add_argument("--crop", metavar="x,y,w,h|auto", help="keep only this part of the picture (pixels), or 'auto' to find the shared window and drop the border, toolbar and gallery strip around it")
     run.add_argument("--detect", default="hash", choices=["hash", "scene"],
                      help="how screen changes are found: image hash (default) or ffmpeg brightness")
     run.add_argument("--hash-distance", type=int, default=8, help="how different a frame must be to count as new (default 8; lower catches typed text)")

@@ -200,3 +200,14 @@ def test_cli_max_cost_stops_before_the_model(synthetic_video: Path, tmp_path: Pa
     assert "stopped: the estimate is" in capsys.readouterr().err
     assert not (out / "analysis.json").exists()
     assert main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(out), "--fake", "--max-cost", "50"]) == 0
+
+
+def test_cli_crop_flag_is_validated(synthetic_video: Path, tmp_path: Path, capsys) -> None:
+    vtt = tmp_path / "w.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    assert main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(tmp_path / "bad"), "--fake", "--crop", "1,2,3"]) == 2
+    assert "--crop must be" in capsys.readouterr().err
+    out = tmp_path / "ok"
+    assert main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(out), "--fake", "--crop", "0,0,320,180"]) == 0
+    rec = Recording.model_validate_json((out / "recording.json").read_text())
+    assert rec.keyframes and rec.keyframes[0].width == 320

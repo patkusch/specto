@@ -7,14 +7,16 @@ is no ffprobe in that bundle, so duration is read from ffmpeg's own output.
 """
 from __future__ import annotations
 
+import heapq
 import re
 import subprocess
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional
 
 import imageio_ffmpeg
-from PIL import Image
+from PIL import Image, ImageChops
 
 from specto.align import build_moments
 from specto.diff import annotate_recording  # change regions between consecutive stills
@@ -22,6 +24,16 @@ from specto.model import Keyframe, Recording, TranscriptSegment
 from specto.transcript import parse_transcript, transcribe
 
 DUPLICATE_DISTANCE = 6  # Hamming distance on a 64-bit hash at or below this means "same picture"
+
+Crop = tuple[int, int, int, int]  # (x, y, w, h) in source pixels
+
+# detect_share_region: a pixel "changes" when its grey level differs from the first
+# sample by more than this (0-255); a row or column counts when at least this share
+# of its pixels change; the box must cover between these shares of the frame.
+CHANGE_THRESHOLD = 24
+STRIP_FRACTION = 0.02
+SHARE_MIN = 0.25
+SHARE_MAX = 0.90
 
 _DURATION_RE = re.compile(r"Duration:\s*(\d+):(\d\d):(\d\d(?:\.\d+)?)")
 _TIME_RE = re.compile(r"time=\s*(\d+):(\d\d):(\d\d(?:\.\d+)?)")
@@ -145,15 +157,29 @@ def _clear(frames_dir: Path, pattern: str) -> None:
         old.unlink()
 
 
-def _grab_frames(video_path: str, frames_dir: Path, select_expr: str, max_width: int) -> list[tuple[Path, float]]:
+def _picture_filters(crop: Optional[Crop], max_width: Optional[int]) -> list[str]:
+    """The crop and scale steps of an ffmpeg filter chain, crop first so the scale sees the cropped size."""
+    steps: list[str] = []
+    if crop is not None:
+        x, y, w, h = crop
+        steps.append(f"crop={w}:{h}:{x}:{y}")
+    if max_width is not None:
+        steps.append(f"scale=w='min(iw,{max_width})':h=-2")
+    return steps
+
+
+def _grab_frames(
+    video_path: str, frames_dir: Path, select_expr: str, max_width: Optional[int], crop: Optional[Crop] = None
+) -> list[tuple[Path, float]]:
     """Run ffmpeg once with a `select` filter and return (file, timestamp) pairs.
 
     `showinfo` sits right after `select`, so it prints one line per kept frame
-    and the n-th line belongs to the n-th file ffmpeg writes. Scaling comes
-    after both so the timestamps are the source frame's own.
+    and the n-th line belongs to the n-th file ffmpeg writes. Cropping and
+    scaling come after both so the timestamps are the source frame's own.
+    `max_width=None` keeps the source size.
     """
     _clear(frames_dir, "raw_*.jpg")
-    filters = f"select='{select_expr}',showinfo,scale=w='min(iw,{max_width})':h=-2"
+    filters = ",".join([f"select='{select_expr}'", "showinfo", *_picture_filters(crop, max_width)])
     stderr = _run_ffmpeg(
         [
             "-i", video_path,
@@ -172,7 +198,9 @@ def _grab_frames(video_path: str, frames_dir: Path, select_expr: str, max_width:
     return list(zip(files, timestamps))
 
 
-def _sample_frames(video_path: str, frames_dir: Path, sample_fps: float, max_width: int) -> list[tuple[Path, float]]:
+def _sample_frames(
+    video_path: str, frames_dir: Path, sample_fps: float, max_width: int, crop: Optional[Crop] = None
+) -> list[tuple[Path, float]]:
     """Write one frame every 1/sample_fps seconds and return (file, timestamp) pairs.
 
     ffmpeg's `fps` filter puts its output on an exact grid, so the n-th file
@@ -181,7 +209,7 @@ def _sample_frames(video_path: str, frames_dir: Path, sample_fps: float, max_wid
     is fine; only their paths are held in memory.
     """
     _clear(frames_dir, "sample_*.jpg")
-    filters = f"fps={sample_fps:g},scale=w='min(iw,{max_width})':h=-2"
+    filters = ",".join([f"fps={sample_fps:g}", *_picture_filters(crop, max_width)])
     _run_ffmpeg(
         [
             "-i", video_path,
@@ -196,16 +224,17 @@ def _sample_frames(video_path: str, frames_dir: Path, sample_fps: float, max_wid
 
 
 def _detect_scene(
-    video_path: str, frames_dir: Path, scene_threshold: float, min_gap: float, max_width: int
+    video_path: str, frames_dir: Path, scene_threshold: float, min_gap: float, max_width: int, crop: Optional[Crop] = None
 ) -> tuple[list[tuple[Path, float]], int]:
     """ffmpeg scene detection (brightness change), then near-duplicate and gap removal.
 
     Returns the kept (file, timestamp) pairs and how many frames the detector
     found before thinning, which decides whether the screen counts as static.
-    Rejected files are deleted as we go.
+    Rejected files are deleted as we go. The scene score is taken on the
+    cropped picture, so a participant tile outside the crop cannot trigger it.
     """
     scene_expr = f"gt(scene,{scene_threshold})+eq(n,0)"
-    grabbed = _grab_frames(video_path, frames_dir, scene_expr, max_width)
+    grabbed = _grab_frames(video_path, frames_dir, scene_expr, max_width, crop)
     print(f"ingest: scene detection found {len(grabbed)} frames (threshold {scene_threshold})")
     if len(grabbed) < 3:
         return grabbed, len(grabbed)
@@ -233,7 +262,13 @@ def _detect_scene(
 
 
 def _detect_hash(
-    video_path: str, frames_dir: Path, sample_fps: float, hash_distance: int, min_gap: float, max_width: int
+    video_path: str,
+    frames_dir: Path,
+    sample_fps: float,
+    hash_distance: int,
+    min_gap: float,
+    max_width: int,
+    crop: Optional[Crop] = None,
 ) -> tuple[list[tuple[Path, float]], int]:
     """Sample the video on a fixed grid and keep each frame that differs from the last kept one.
 
@@ -248,7 +283,7 @@ def _detect_hash(
     from the last kept frame, gap or no gap: fewer than three of those means
     the screen never really changed.
     """
-    samples = _sample_frames(video_path, frames_dir, sample_fps, max_width)
+    samples = _sample_frames(video_path, frames_dir, sample_fps, max_width, crop)
     kept: list[tuple[Path, float]] = []
     changed = 0
     previous_hash: Optional[str] = None
@@ -272,6 +307,130 @@ def _detect_hash(
     return kept, changed
 
 
+def detect_share_region(
+    video_path: str | Path, samples: int = 12, log: Callable[[str], None] = print
+) -> Optional[Crop]:
+    """Find the part of the picture that changes over the recording: the shared window.
+
+    A meeting recording of a screen share has the shared window in the middle
+    and, around it, things that never change: a dark border, a toolbar, the
+    gallery strip. This takes `samples` frames spread evenly over the video
+    and marks every pixel whose grey level ever differs from the first
+    sample's by more than CHANGE_THRESHOLD. Rows and columns where fewer than
+    STRIP_FRACTION of the pixels are marked do not count (a cursor, a blinking
+    icon, a small participant tile), and the box is the span of the rows and
+    columns that do, pushed out to even numbers so the video encoder is happy.
+
+    Returns (x, y, w, h) in source pixels, or None when there is nothing
+    worth cropping: the box covers more than SHARE_MAX of the frame (no
+    border to remove) or less than SHARE_MIN of it (too small to be a shared
+    window, so probably wrong). Both cases are explained through `log`.
+    """
+    video_path = str(video_path)
+    duration = probe_duration(video_path)
+    interval = max(duration / samples, 0.05)
+    select_expr = f"isnan(prev_selected_t)+gte(t-prev_selected_t,{interval:.3f})"
+    with tempfile.TemporaryDirectory(prefix="specto_share_") as tmp:
+        grabbed = _grab_frames(video_path, Path(tmp), select_expr, max_width=None)
+        if len(grabbed) < 2:
+            log("ingest: too few frames to tell which part of the picture changes, keeping the whole frame")
+            return None
+        with Image.open(grabbed[0][0]) as img:
+            first = img.convert("L")
+        changed = Image.new("L", first.size, 0)  # per pixel: the most it ever differed from the first sample
+        for path, _ in grabbed[1:]:
+            with Image.open(path) as img:
+                changed = ImageChops.lighter(changed, ImageChops.difference(first, img.convert("L")))
+
+    width, height = changed.size
+    mask = changed.point(lambda v: 255 if v > CHANGE_THRESHOLD else 0)
+    # A BOX resize down to one column (or one row) averages each row (or column):
+    # the value is 255 times the share of pixels in it that changed.
+    row_shares = mask.resize((1, height), Image.Resampling.BOX).tobytes()
+    col_shares = mask.resize((width, 1), Image.Resampling.BOX).tobytes()
+    cutoff = STRIP_FRACTION * 255
+    busy_rows = [i for i, share in enumerate(row_shares) if share >= cutoff]
+    busy_cols = [i for i, share in enumerate(col_shares) if share >= cutoff]
+    if not busy_rows or not busy_cols:
+        log("ingest: nothing in the picture changes over the recording, keeping the whole frame")
+        return None
+    x0, x1 = busy_cols[0], busy_cols[-1] + 1
+    y0, y1 = busy_rows[0], busy_rows[-1] + 1
+    x0, y0 = x0 - x0 % 2, y0 - y0 % 2
+    x1, y1 = min(width, x1 + x1 % 2), min(height, y1 + y1 % 2)
+    box = (x0, y0, x1 - x0, y1 - y0)
+    share = (box[2] * box[3]) / (width * height)
+    if share > SHARE_MAX:
+        log(f"ingest: the changing area is {share:.0%} of the {width}x{height} frame, so there is no border to crop")
+        return None
+    if share < SHARE_MIN:
+        log(
+            f"ingest: the changing area is only {share:.0%} of the {width}x{height} frame, "
+            f"too small for a shared window, so the whole frame is kept"
+        )
+        return None
+    return box
+
+
+def _thin_by_distance(kept: list[tuple[Path, float]], max_frames: int) -> tuple[list[tuple[Path, float]], int]:
+    """Drop the frames that differ least from the frame before them until `max_frames` are left.
+
+    Every frame gets a `content_hash` and a score: the distance from the
+    previous surviving frame. The lowest score goes first and the frame after
+    it is re-scored against its new neighbour, so three frames that each
+    drift a little from the last are not all lost in one go. Frame 0 is never
+    dropped. Dropped files are deleted. Returns the survivors, in order, and
+    the largest score among the dropped frames, so the log can say how much
+    was thrown away.
+    """
+    n = len(kept)
+    hashes = [content_hash(path) for path, _ in kept]
+    prev = list(range(-1, n - 1))
+    nxt = list(range(1, n + 1))
+    alive = [True] * n
+    distance = [0] + [hamming(hashes[i], hashes[i - 1]) for i in range(1, n)]
+    heap = [(distance[i], i) for i in range(1, n)]
+    heapq.heapify(heap)
+    remaining, largest = n, 0
+    while remaining > max_frames and heap:
+        score, i = heapq.heappop(heap)
+        if not alive[i] or score != distance[i]:  # already dropped, or re-scored since it was queued
+            continue
+        alive[i] = False
+        remaining -= 1
+        largest = max(largest, score)
+        kept[i][0].unlink()
+        before, after = prev[i], nxt[i]
+        nxt[before] = after
+        if after < n:
+            prev[after] = before
+            distance[after] = hamming(hashes[after], hashes[before])
+            heapq.heappush(heap, (distance[after], after))
+    return [kept[i] for i in range(n) if alive[i]], largest
+
+
+def _resolve_crop(video_path: str, crop: Optional[Crop | str]) -> Optional[Crop]:
+    """Turn the `crop` argument of `extract_keyframes` into a box, or None for the whole frame."""
+    if crop is None:
+        return None
+    if isinstance(crop, str):
+        if crop != "auto":
+            raise ValueError(f"crop must be (x, y, w, h) or 'auto', not {crop!r}")
+        box = detect_share_region(video_path)
+        if box is not None:
+            x, y, w, h = box
+            print(f"ingest: cropping to the {w}x{h} area at {x},{y}, the rest of the frame never changes")
+        return box
+    try:
+        x, y, w, h = (int(v) for v in crop)
+    except (TypeError, ValueError):
+        raise ValueError(f"crop must be (x, y, w, h) or 'auto', not {crop!r}") from None
+    if x < 0 or y < 0 or w <= 0 or h <= 0:
+        raise ValueError(f"crop must have x, y >= 0 and w, h > 0, not {crop!r}")
+    print(f"ingest: cropping to the {w}x{h} area at {x},{y}")
+    return (x, y, w, h)
+
+
 def extract_keyframes(
     video_path: str | Path,
     out_dir: str | Path,
@@ -280,9 +439,10 @@ def extract_keyframes(
     hash_distance: int = 8,
     scene_threshold: float = 0.3,
     min_gap: float = 1.5,
-    max_frames: int = 120,
+    max_frames: int = 240,
     max_width: int = 1280,
     fallback_interval: float = 10.0,
+    crop: Optional[Crop | str] = None,
 ) -> list[Keyframe]:
     """Write one JPEG per screen change to `out_dir/frames/` and describe each.
 
@@ -297,13 +457,22 @@ def extract_keyframes(
       with `scene_threshold`; frames whose 8x8 `dhash` is within
       DUPLICATE_DISTANCE of the previous kept one are dropped.
 
-    Both then drop frames closer than `min_gap` seconds to the previous kept
-    one (frame 0 is always kept) and, if still more than `max_frames`, keep an
-    even spread over time. A recording of a screen that never changes gives
-    fewer than three frames in either mode, so then we sample one frame every
-    `fallback_interval` seconds instead (no duplicate removal, because those
-    frames are meant to look alike). Frames end up as frames/frame_NNNN.jpg,
-    numbered contiguously from 0 in time order; everything else is deleted.
+    `crop` cuts the picture down before anything looks at it: (x, y, w, h) in
+    source pixels, or "auto" to keep only the part that changes over the
+    recording (see `detect_share_region`), which on a meeting recording is
+    the shared window without the border, toolbar and gallery strip around
+    it. Frame sizes are the cropped size, scaled down to `max_width` if wider.
+
+    Both detectors then drop frames closer than `min_gap` seconds to the
+    previous kept one (frame 0 is always kept). If more than `max_frames` are
+    left, the ones that differ least from their neighbour go first, so a long
+    session loses its cursor moves and tooltips before it loses a screen; the
+    log says how many went and how different the most different of them was.
+    A recording of a screen that never changes gives fewer than three frames
+    in either mode, so then we sample one frame every `fallback_interval`
+    seconds instead (no duplicate removal, because those frames are meant to
+    look alike). Frames end up as frames/frame_NNNN.jpg, numbered
+    contiguously from 0 in time order; everything else is deleted.
     """
     video_path = str(video_path)
     out_dir = Path(out_dir)
@@ -311,30 +480,29 @@ def extract_keyframes(
     frames_dir.mkdir(parents=True, exist_ok=True)
     for pattern in ("raw_*.jpg", "sample_*.jpg"):  # leftovers from a run that crashed part-way
         _clear(frames_dir, pattern)
+    if detect not in ("hash", "scene"):
+        raise ValueError(f"detect must be 'hash' or 'scene', not {detect!r}")
+    box = _resolve_crop(video_path, crop)
 
     if detect == "hash":
-        kept, detected = _detect_hash(video_path, frames_dir, sample_fps, hash_distance, min_gap, max_width)
-    elif detect == "scene":
-        kept, detected = _detect_scene(video_path, frames_dir, scene_threshold, min_gap, max_width)
+        kept, detected = _detect_hash(video_path, frames_dir, sample_fps, hash_distance, min_gap, max_width, box)
     else:
-        raise ValueError(f"detect must be 'hash' or 'scene', not {detect!r}")
+        kept, detected = _detect_scene(video_path, frames_dir, scene_threshold, min_gap, max_width, box)
 
     if detected < 3:
         for path, _ in kept:
             path.unlink()
         sample_expr = f"isnan(prev_selected_t)+gte(t-prev_selected_t,{fallback_interval})"
-        kept = _grab_frames(video_path, frames_dir, sample_expr, max_width)
+        kept = _grab_frames(video_path, frames_dir, sample_expr, max_width, box)
         print(f"ingest: static screen, sampled {len(kept)} frames every {fallback_interval:g}s instead")
 
     if len(kept) > max_frames:
-        step = (len(kept) - 1) / (max_frames - 1) if max_frames > 1 else len(kept)
-        chosen = sorted({round(i * step) for i in range(max_frames)})
-        chosen_set = set(chosen)
-        for i, (path, _) in enumerate(kept):
-            if i not in chosen_set:
-                path.unlink()
-        kept = [kept[i] for i in chosen]
-        print(f"ingest: thinned to {len(kept)} frames spread evenly over time (max {max_frames})")
+        before = len(kept)
+        kept, largest = _thin_by_distance(kept, max_frames)
+        print(
+            f"ingest: dropped {before - len(kept)} frames that differed from their neighbour by {largest} or less "
+            f"to stay within {max_frames} frames; raise max_frames if that is too much"
+        )
 
     _clear(frames_dir, "frame_*.jpg")
     keyframes: list[Keyframe] = []
@@ -371,7 +539,7 @@ def ingest(
     faster-whisper with `whisper_model`; pass `whisper_model=None` to go without
     a transcript. Extra keyword arguments go to `extract_keyframes` (`detect`,
     `sample_fps`, `hash_distance`, `scene_threshold`, `min_gap`, `max_frames`,
-    `max_width`, `fallback_interval`). If the
+    `max_width`, `fallback_interval`, `crop`). If the
     output already exists it is loaded and returned, unless `force` is set.
     """
     video_path = Path(video_path)
