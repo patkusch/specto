@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import re
 import subprocess
+from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 import imageio_ffmpeg
 from PIL import Image
@@ -412,4 +413,236 @@ def ingest(
     # ---
     recording_json.write_text(recording.model_dump_json(indent=2), encoding="utf-8")
     print(f"ingest: wrote {recording_json}")
+    return recording
+
+
+# ---------------------------------------------------------- screenshot folders
+#
+# Sometimes there is no recording: the expert sent a folder of screenshots and
+# a written walkthrough, or the analyst took screenshots during the call. The
+# same recording.json is built from those, with the frames fed through the
+# live store so duplicates are dropped and change boxes are computed the same
+# way as for a video.
+
+FOLDER_STEP = 10.0  # seconds between screenshots whose names carry no time, and after the last one
+NOTES_SUFFIXES = (".txt", ".md")
+
+# A name that is a number of seconds: `12`, `shot_12`, `shot_0012.5`, `screenshot-12`, `t12`.
+# `IMG_0001` is a counter, not a time, so only these prefixes (or none) count.
+_SECONDS_NAME_RE = re.compile(r"^(?:shot|screenshot|t|time|sec|secs)?[ _-]?\d+(?:\.\d+)?$", re.I)
+# A date and time in the name: `2026-09-12T10-04-33`, `Screenshot 2026-09-12 at 10.04.33 AM`,
+# `Screenshot 2026-09-12 100433` (Windows). Seconds are counted from the earliest such name.
+_ISO_NAME_RE = re.compile(
+    r"(?<!\d)(\d{4})-(\d{2})-(\d{2})[T _]+(?:at[ _]+)?(\d{2})[-:.]?(\d{2})[-:.]?(\d{2})(?:[.,](\d{1,6}))?(?:[ _]?([AaPp][Mm]))?"
+)
+_NOTE_MARKER_RE = re.compile(r"^\s*(?:[-*+•]|\d+[.)])\s+")
+_HEADING_RE = re.compile(r"^\s*#{1,6}\s+")
+
+
+def _natural_key(name: str) -> list[tuple[int, int | str]]:
+    """Sort key that puts `IMG_2` before `IMG_10`: digit runs compare as numbers."""
+    return [(0, int(part)) if part.isdigit() else (1, part.lower()) for part in re.split(r"(\d+)", name)]
+
+
+def _iso_stamp(stem: str) -> Optional[datetime]:
+    match = _ISO_NAME_RE.search(stem)
+    if not match:
+        return None
+    year, month, day, hour, minute, second, fraction, meridian = match.groups()
+    hour = int(hour)
+    if meridian:
+        hour = hour % 12 + (12 if meridian.lower() == "pm" else 0)
+    micro = int((fraction or "0").ljust(6, "0")[:6])
+    try:
+        return datetime(int(year), int(month), int(day), hour, int(minute), int(second), micro)
+    except ValueError:  # a date-looking run of digits that is not a date
+        return None
+
+
+def screenshot_times(
+    paths: list[Path], step: float = FOLDER_STEP, log: Callable[[str], None] = print
+) -> list[tuple[Path, float]]:
+    """Give every screenshot a time in seconds and return (file, time) pairs in time order.
+
+    A name that carries a time keeps it: a plain number of seconds (`shot_12.png`,
+    `shot_0012.5.png`, `12.png`) or a date and time (`2026-09-12T10-04-33.png`,
+    counted from the earliest such name). Files whose names carry no time
+    (`IMG_0001.png`) follow the last timed one in name order, `step` seconds
+    apart; when no name carries a time they start at 0, and the log says so.
+    """
+    from specto.live import shot_time  # here, not at the top: live imports this module
+
+    ordered = sorted(paths, key=lambda p: _natural_key(p.name))
+    timed: dict[Path, float] = {}
+    stamped: dict[Path, datetime] = {}
+    for path in ordered:
+        if _SECONDS_NAME_RE.match(path.stem):
+            timed[path] = shot_time(path)
+            continue
+        stamp = _iso_stamp(path.stem)
+        if stamp is not None:
+            stamped[path] = stamp
+    if stamped:
+        first = min(stamped.values())
+        for path, stamp in stamped.items():
+            timed[path] = (stamp - first).total_seconds()
+    untimed = [p for p in ordered if p not in timed]
+    if not timed:
+        log(f"ingest: no screenshot name carries a time, so they are spaced {step:g}s apart in name order")
+        return [(path, i * step) for i, path in enumerate(untimed)]
+    result = sorted(timed.items(), key=lambda item: (item[1], _natural_key(item[0].name)))
+    if untimed:
+        last = result[-1][1]
+        log(
+            f"ingest: {len(timed)} screenshot names carry a time; the other {len(untimed)} "
+            f"follow in name order at {step:g}s steps after {last:g}s"
+        )
+        result += [(path, last + (i + 1) * step) for i, path in enumerate(untimed)]
+    return result
+
+
+def split_notes(text: str) -> list[str]:
+    """Break a notes file with no timestamps into the pieces that go with one screen each.
+
+    A paragraph (lines between blank lines) is one note. A paragraph whose lines
+    all start with a bullet or a number (`- `, `* `, `1. `, `2) `) is one note
+    per line, marker removed. A heading on its own is not a note; it is put in
+    front of the next note as `Heading: text`.
+    """
+    notes: list[str] = []
+    heading: Optional[str] = None
+    for paragraph in re.split(r"\n\s*\n", text.replace("\r\n", "\n")):
+        lines = [line.strip() for line in paragraph.split("\n") if line.strip()]
+        if not lines:
+            continue
+        if all(_HEADING_RE.match(line) for line in lines):
+            heading = " ".join(_HEADING_RE.sub("", line) for line in lines)
+            continue
+        if all(_NOTE_MARKER_RE.match(line) for line in lines):
+            pieces = [_NOTE_MARKER_RE.sub("", line) for line in lines]
+        else:
+            pieces = [" ".join(_HEADING_RE.sub("", line) for line in lines)]
+        if heading:
+            pieces[0] = f"{heading}: {pieces[0]}"
+            heading = None
+        notes.extend(pieces)
+    return notes
+
+
+def spread_notes(notes: list[str], keyframes: list[Keyframe], duration: float) -> list[TranscriptSegment]:
+    """Turn untimed notes into segments laid over the frames in order.
+
+    Note i goes with frame i when there are as many notes as frames; otherwise
+    frame `i * frames // notes`, so both lists are walked at the same pace.
+    Each segment spans its frame's interval (up to the next frame, or
+    `duration` for the last); several notes on one frame share that interval
+    in equal parts so they stay in order.
+    """
+    if not notes or not keyframes:
+        return []
+    ordered = sorted(keyframes, key=lambda k: k.timestamp)
+    ends = [k.timestamp for k in ordered[1:]] + [max(duration, ordered[-1].timestamp)]
+    groups: list[list[str]] = [[] for _ in ordered]
+    for i, note in enumerate(notes):
+        groups[i * len(ordered) // len(notes)].append(note)
+    segments: list[TranscriptSegment] = []
+    for keyframe, end, group in zip(ordered, ends, groups):
+        span = (end - keyframe.timestamp) / len(group) if group else 0.0
+        for j, note in enumerate(group):
+            start = keyframe.timestamp + j * span
+            segments.append(TranscriptSegment(start=round(start, 3), end=round(start + span, 3), text=note))
+    return segments
+
+
+def ingest_folder(
+    folder: str | Path,
+    out_dir: str | Path,
+    transcript_path: Optional[str | Path] = None,
+    force: bool = False,
+    hash_distance: int = 8,
+    min_gap: float = 0.0,
+    log: Callable[[str], None] = print,
+) -> Recording:
+    """Build `out_dir/recording.json` from a folder of screenshots instead of a video.
+
+    The screenshots are the png, jpg and webp files in `folder`, timed from
+    their names (see `screenshot_times`). They go through the live store's
+    `add_screenshot`, so a screenshot that repeats the one before it is
+    dropped, the kept ones are scaled and saved as `frames/frame_NNNN.jpg`,
+    and each gets its change box and close-up. `min_gap` is 0 here because
+    every screenshot was taken on purpose.
+
+    `transcript_path` is read like any transcript (.vtt, .srt, .json, timed
+    .txt). A .txt or .md with no timestamps is taken as written notes: its
+    paragraphs are spread over the frames in order (see `split_notes` and
+    `spread_notes`). With no transcript there are no segments; screenshots
+    have no audio to transcribe. The duration is the last frame's time plus
+    FOLDER_STEP seconds and the source is the folder's name. An existing
+    recording.json is loaded and returned unless `force` is set.
+    """
+    from specto.live import SCREENSHOT_SUFFIXES, LiveSession  # here, not at the top: live imports this module
+
+    folder = Path(folder)
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    recording_json = out_dir / "recording.json"
+    if recording_json.exists() and not force:
+        log(f"ingest: {recording_json} already exists, loading it (use force=True to redo)")
+        return Recording.model_validate_json(recording_json.read_text(encoding="utf-8"))
+
+    shots = [
+        p for p in folder.iterdir()
+        if p.is_file() and p.suffix.lower() in SCREENSHOT_SUFFIXES and not p.name.startswith(".")
+    ]
+    if not shots:
+        raise FileNotFoundError(f"no screenshots (png, jpg, webp) in {folder}")
+
+    frames_dir = out_dir / "frames"
+    frames_dir.mkdir(parents=True, exist_ok=True)
+    for pattern in ("frame_*.jpg", "crop_*.jpg", "pending.jpg"):  # a previous run, or one that crashed part-way
+        _clear(frames_dir, pattern)
+    source = folder.name or folder.resolve().name
+    session = LiveSession(out_dir, hash_distance=hash_distance, min_gap=min_gap, source=source)
+    dropped = 0
+    for path, timestamp in screenshot_times(shots, log=log):
+        if session.add_screenshot(path, timestamp) is None:
+            dropped += 1
+    keyframes = session.recording.keyframes
+    log(
+        f"ingest: {len(shots)} screenshots in {folder}, {len(keyframes)} kept as frames, "
+        f"{dropped} dropped as repeats of the frame before"
+    )
+    duration = keyframes[-1].timestamp + FOLDER_STEP
+
+    segments: list[TranscriptSegment] = []
+    transcript_source = "none"
+    if transcript_path is not None:
+        transcript_path = Path(transcript_path)
+        transcript_source = "file"
+        segments = parse_transcript(transcript_path)
+        if segments:
+            log(f"ingest: {transcript_path.name} carries its own times, so its {len(segments)} segments are placed by time")
+        elif transcript_path.suffix.lower() in NOTES_SUFFIXES:
+            notes = split_notes(transcript_path.read_text(encoding="utf-8-sig"))
+            segments = spread_notes(notes, keyframes, duration)
+            log(
+                f"ingest: {transcript_path.name} has no timestamps, so its {len(notes)} notes "
+                f"are spread over the {len(keyframes)} frames in order"
+            )
+        else:
+            log(f"ingest: {transcript_path.name} holds no segments")
+    else:
+        log("ingest: no transcript given, frames only (screenshots have no audio to transcribe)")
+
+    moments = build_moments(keyframes, segments, duration)
+    recording = Recording(
+        source=source,
+        duration=duration,
+        keyframes=keyframes,
+        segments=segments,
+        moments=moments,
+        transcript_source=transcript_source,
+    )
+    recording_json.write_text(recording.model_dump_json(indent=2), encoding="utf-8")
+    log(f"ingest: wrote {recording_json}")
     return recording

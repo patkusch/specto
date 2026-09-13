@@ -92,6 +92,18 @@ to the model next to the image, so small labels and values are not lost when
 the frame is scaled down. It is on by default when installed; `--no-ocr` turns
 it off.
 
+## No recording, just screenshots
+
+```bash
+specto run shots/ --transcript notes.md
+```
+
+When the expert sent a folder of screenshots and some written notes instead
+of a recording, point specto at the folder. Times come from the file names
+when they carry one (`shot_12.png`, a date-time), otherwise the screenshots
+are spaced ten seconds apart in name order. Notes without timestamps are
+spread over the screenshots in order, one paragraph per picture.
+
 ## During a call, not after it
 
 ```bash

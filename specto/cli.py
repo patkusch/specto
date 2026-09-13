@@ -32,23 +32,32 @@ def cmd_run(args: argparse.Namespace) -> int:
     from .extract import ClaudeCaller, extract
     from .ingest import ingest
 
-    out_dir = Path(args.out or Path("out") / Path(args.video).stem)
+    source = Path(args.video)
+    out_dir = Path(args.out or Path("out") / (source.name or "run"))
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    recording = ingest(
-        args.video,
-        out_dir,
-        transcript_path=args.transcript,
-        whisper_model=args.whisper_model,
-        force=args.force,
-        max_frames=args.max_frames,
-        scene_threshold=args.scene_threshold,
-        detect=args.detect,
-        hash_distance=args.hash_distance,
-        sample_fps=args.sample_fps,
-    )
-    print(f"ingest: {len(recording.keyframes)} frames, {len(recording.segments)} transcript segments, "
-          f"{recording.duration:.0f}s of video")
+    if source.is_dir():
+        from .ingest import ingest_folder
+
+        recording = ingest_folder(source, out_dir, transcript_path=args.transcript,
+                                  force=args.force, hash_distance=args.hash_distance)
+        print(f"ingest: {len(recording.keyframes)} screenshots kept, {len(recording.segments)} notes or "
+              f"transcript segments, laid out over {recording.duration:.0f}s")
+    else:
+        recording = ingest(
+            source,
+            out_dir,
+            transcript_path=args.transcript,
+            whisper_model=args.whisper_model,
+            force=args.force,
+            max_frames=args.max_frames,
+            scene_threshold=args.scene_threshold,
+            detect=args.detect,
+            hash_distance=args.hash_distance,
+            sample_fps=args.sample_fps,
+        )
+        print(f"ingest: {len(recording.keyframes)} frames, {len(recording.segments)} transcript segments, "
+              f"{recording.duration:.0f}s of video")
 
     ocr_text = None
     if args.ocr:
@@ -206,8 +215,9 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     run = sub.add_parser("run", help="watch a recording and write the workbook")
-    run.add_argument("video", help="video file (mp4, mov, mkv, webm)")
-    run.add_argument("--transcript", help="transcript file (.vtt, .srt, .txt, .json); transcribed locally if omitted")
+    run.add_argument("video", help="video file (mp4, mov, mkv, webm), or a folder of screenshots (png, jpg, webp)")
+    run.add_argument("--transcript", help="transcript file (.vtt, .srt, .txt, .json); transcribed locally if omitted. "
+                     "With a screenshot folder, plain notes (.txt or .md without timestamps) are spread over the screenshots")
     run.add_argument("--out", help="output folder (default: out/<video name>)")
     run.add_argument("--model", default="claude-opus-5", help="Claude model id (default: claude-opus-5)")
     run.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])

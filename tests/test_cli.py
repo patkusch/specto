@@ -143,3 +143,21 @@ def test_cli_answers_then_resolve_with_fake_model(synthetic_video: Path, tmp_pat
     assert main(["resolve", str(out), "--fake"]) == 0
     resolved = Analysis.model_validate_json((out / "analysis.json").read_text())
     assert len(resolved.requirements) > len(before.requirements)
+
+
+def test_cli_run_from_a_folder_of_screenshots(tmp_path: Path) -> None:
+    from PIL import Image, ImageDraw
+
+    shots = tmp_path / "shots"
+    shots.mkdir()
+    for n, (colour, label) in enumerate((((40, 70, 140), "Search"), ((245, 245, 245), "Details"), ((30, 120, 60), "Queue")), start=1):
+        img = Image.new("RGB", (640, 360), colour)
+        ImageDraw.Draw(img).text((40, 40), label, fill=(0, 0, 0) if sum(colour) > 380 else (255, 255, 255))
+        img.save(shots / f"IMG_000{n}.png")
+    notes = tmp_path / "notes.md"
+    notes.write_text("We search by postcode.\n\nThen we check the details.\n\nSave sends it to the queue.\n")
+    out = tmp_path / "o"
+    assert main(["run", str(shots), "--transcript", str(notes), "--out", str(out), "--fake"]) == 0
+    rec = Recording.model_validate_json((out / "recording.json").read_text())
+    assert len(rec.keyframes) == 3 and len(rec.segments) == 3
+    assert (out / "analysis.xlsx").exists()

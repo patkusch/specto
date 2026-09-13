@@ -10,7 +10,18 @@ from pathlib import Path
 from specto.align import build_moments
 import pytest
 
-from specto.ingest import content_hash, dhash, extract_keyframes, hamming, ingest, probe_duration
+from specto.ingest import (
+    content_hash,
+    dhash,
+    extract_keyframes,
+    hamming,
+    ingest,
+    ingest_folder,
+    probe_duration,
+    screenshot_times,
+    split_notes,
+    spread_notes,
+)
 from specto.model import Keyframe, Recording, TranscriptSegment
 
 VTT = """WEBVTT
@@ -287,3 +298,214 @@ def test_ingest_without_transcript(synthetic_video: Path, tmp_path: Path):
     assert recording.transcript_source == "none"
     assert recording.segments == []
     assert all(m.segments == [] for m in recording.moments)
+
+
+# ---------------------------------------------------------- screenshot folders
+
+# Six distinct screens for the folder tests: colour and row count both differ.
+FOLDER_SCREENS = [
+    ("Customer Search", (40, 70, 140), 1),
+    ("Customer Details", (245, 245, 245), 5),
+    ("Approval Queue", (30, 120, 60), 3),
+    ("Done", (250, 235, 215), 0),
+    ("Reports", (90, 90, 120), 2),
+    ("Settings", (160, 60, 60), 4),
+]
+NOTES_MD = """# Onboarding walkthrough
+
+First we open the customer search and type the postcode.
+
+Then the details page opens with every field.
+
+Save sends the record to the approval queue.
+
+The done page confirms it,
+and shows the reference number.
+
+Finally the reports page lists what was approved today.
+"""
+
+
+def _write_shots(folder: Path, names: list[str], screens=None) -> Path:
+    """Write one screenshot per name, drawing FOLDER_SCREENS (or `screens`) in order."""
+    from conftest import draw_screen
+
+    folder.mkdir(parents=True, exist_ok=True)
+    for name, (title, background, rows) in zip(names, screens or FOLDER_SCREENS):
+        draw_screen(title, background, rows).save(folder / name)
+    return folder
+
+
+def test_screenshot_times_reads_seconds_and_spaces_the_rest(tmp_path: Path):
+    log: list[str] = []
+    names = ["shot_0.png", "shot_10.png", "shot_0025.0.png", "IMG_0001.png", "IMG_0002.png", "IMG_0003.png"]
+    paths = [tmp_path / n for n in names]
+    timed = screenshot_times(paths, log=log.append)
+    assert [(p.name, t) for p, t in timed] == [
+        ("shot_0.png", 0.0), ("shot_10.png", 10.0), ("shot_0025.0.png", 25.0),
+        ("IMG_0001.png", 35.0), ("IMG_0002.png", 45.0), ("IMG_0003.png", 55.0),
+    ]
+    assert log == ["ingest: 3 screenshot names carry a time; the other 3 follow in name order at 10s steps after 25s"]
+
+
+def test_screenshot_times_with_no_times_uses_natural_name_order(tmp_path: Path):
+    log: list[str] = []
+    paths = [tmp_path / n for n in ("IMG_10.png", "IMG_2.png", "IMG_1.png", "Screenshot (3).png")]
+    timed = screenshot_times(paths, log=log.append)
+    assert [(p.name, t) for p, t in timed] == [
+        ("IMG_1.png", 0.0), ("IMG_2.png", 10.0), ("IMG_10.png", 20.0), ("Screenshot (3).png", 30.0),
+    ]
+    assert log == ["ingest: no screenshot name carries a time, so they are spaced 10s apart in name order"]
+
+
+def test_screenshot_times_reads_iso_timestamps_relative_to_the_earliest(tmp_path: Path):
+    names = [
+        "2026-09-12T10-05-03.png",
+        "2026-09-12T10-04-33.png",
+        "Screenshot 2026-09-12 at 10.04.45 AM.png",  # macOS spelling
+        "Screenshot 2026-09-12 100530.png",  # Windows spelling
+    ]
+    timed = screenshot_times([tmp_path / n for n in names], log=lambda _: None)
+    assert [(p.name, t) for p, t in timed] == [
+        ("2026-09-12T10-04-33.png", 0.0),
+        ("Screenshot 2026-09-12 at 10.04.45 AM.png", 12.0),
+        ("2026-09-12T10-05-03.png", 30.0),
+        ("Screenshot 2026-09-12 100530.png", 57.0),
+    ]
+
+
+def test_ingest_folder_mixed_names_drops_the_repeat(tmp_path: Path):
+    """Three timed names, three IMG names, and the fifth screenshot repeats the fourth."""
+    screens = FOLDER_SCREENS[:4] + [FOLDER_SCREENS[3]] + [FOLDER_SCREENS[4]]
+    names = ["shot_0.png", "shot_10.png", "shot_0025.0.png", "IMG_0001.png", "IMG_0002.png", "IMG_0003.png"]
+    shots = _write_shots(tmp_path / "shots", names, screens)
+    log: list[str] = []
+
+    recording = ingest_folder(shots, tmp_path / "out", log=log.append)
+    assert isinstance(recording, Recording)
+    assert recording.source == "shots"
+    assert [k.timestamp for k in recording.keyframes] == [0.0, 10.0, 25.0, 35.0, 55.0]
+    assert [k.path for k in recording.keyframes] == [f"frames/frame_{i:04d}.jpg" for i in range(5)]
+    assert [k.index for k in recording.keyframes] == [0, 1, 2, 3, 4]
+    assert all((tmp_path / "out" / k.path).exists() for k in recording.keyframes)
+    assert recording.duration == 65.0
+    assert recording.transcript_source == "none"
+    assert recording.segments == []
+    assert [m.keyframe_index for m in recording.moments] == [0, 1, 2, 3, 4]
+    assert [(m.start, m.end) for m in recording.moments] == [(0, 10), (10, 25), (25, 35), (35, 55), (55, 65)]
+    assert recording.keyframes[0].change_from_previous is None
+    assert all(k.change_from_previous is not None for k in recording.keyframes[1:])
+    assert any("the other 3 follow in name order at 10s steps after 25s" in line for line in log)
+    assert any("6 screenshots" in line and "5 kept" in line and "1 dropped" in line for line in log)
+    assert any("no transcript given" in line for line in log)
+    assert sorted(p.name for p in (tmp_path / "out" / "frames").iterdir() if p.name.startswith("frame_")) == [
+        f"frame_{i:04d}.jpg" for i in range(5)
+    ]
+    assert not (tmp_path / "out" / "frames" / "pending.jpg").exists()
+    written = json.loads((tmp_path / "out" / "recording.json").read_text())
+    assert written["source"] == "shots" and len(written["keyframes"]) == 5
+
+
+def test_ingest_folder_iso_names(tmp_path: Path):
+    names = ["2026-09-12T10-04-33.png", "2026-09-12T10-04-45.png", "2026-09-12T10-05-03.png"]
+    shots = _write_shots(tmp_path / "walk", names)
+    recording = ingest_folder(shots, tmp_path / "out", log=lambda _: None)
+    assert [k.timestamp for k in recording.keyframes] == [0.0, 12.0, 30.0]
+    assert recording.duration == 40.0
+    assert recording.source == "walk"
+
+
+def test_split_notes_paragraphs_bullets_and_headings():
+    notes = split_notes(NOTES_MD)
+    assert notes == [
+        "Onboarding walkthrough: First we open the customer search and type the postcode.",
+        "Then the details page opens with every field.",
+        "Save sends the record to the approval queue.",
+        "The done page confirms it, and shows the reference number.",
+        "Finally the reports page lists what was approved today.",
+    ]
+    bulleted = "Steps\n\n- open search\n- type postcode\n\n1. press Find\n2) read the list\n\n## Later\n\nplain paragraph\n"
+    assert split_notes(bulleted) == ["Steps", "open search", "type postcode", "press Find", "read the list", "Later: plain paragraph"]
+    assert split_notes("\n\n  \n") == []
+
+
+def test_spread_notes_matches_counts_or_goes_proportional():
+    frames = [_kf(0, 0.0), _kf(1, 10.0), _kf(2, 25.0)]
+    same = spread_notes(["a", "b", "c"], frames, duration=35.0)
+    assert [(s.start, s.end, s.text) for s in same] == [(0.0, 10.0, "a"), (10.0, 25.0, "b"), (25.0, 35.0, "c")]
+    fewer = spread_notes(["a", "b"], frames, duration=35.0)
+    assert [(s.start, s.end, s.text) for s in fewer] == [(0.0, 10.0, "a"), (10.0, 25.0, "b")]
+    more = spread_notes(["a", "b", "c", "d", "e"], frames, duration=35.0)
+    assert [(s.start, s.end, s.text) for s in more] == [
+        (0.0, 5.0, "a"), (5.0, 10.0, "b"), (10.0, 17.5, "c"), (17.5, 25.0, "d"), (25.0, 35.0, "e"),
+    ]  # 2, 2, 1: the frames fill at the same pace as the notes
+    assert spread_notes([], frames, 35.0) == [] and spread_notes(["a"], [], 35.0) == []
+
+
+def test_ingest_folder_spreads_untimed_notes_over_the_frames(tmp_path: Path):
+    shots = _write_shots(tmp_path / "shots", [f"shot_{t}.png" for t in (0, 10, 25, 40, 70)])
+    notes = tmp_path / "notes.md"
+    notes.write_text(NOTES_MD, encoding="utf-8")
+    log: list[str] = []
+
+    recording = ingest_folder(shots, tmp_path / "out", transcript_path=notes, log=log.append)
+    assert recording.transcript_source == "file"
+    assert len(recording.keyframes) == 5
+    assert len(recording.segments) == 5
+    assert [(s.start, s.end) for s in recording.segments] == [(0, 10), (10, 25), (25, 40), (40, 70), (70, 80)]
+    assert recording.segments[0].text.startswith("Onboarding walkthrough: First we open the customer search")
+    assert recording.segments[-1].text == "Finally the reports page lists what was approved today."
+    assert [len(m.segments) for m in recording.moments] == [1, 1, 1, 1, 1]
+    for moment, segment in zip(recording.moments, recording.segments):
+        assert moment.segments == [segment]
+        assert (moment.start, moment.end) == (segment.start, segment.end)
+    assert any("notes.md has no timestamps, so its 5 notes are spread over the 5 frames in order" in line for line in log)
+
+
+def test_ingest_folder_still_parses_a_timed_transcript(tmp_path: Path):
+    shots = _write_shots(tmp_path / "shots", [f"shot_{t}.png" for t in (0, 3, 6, 9)])
+    vtt = tmp_path / "talk.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    log: list[str] = []
+
+    recording = ingest_folder(shots, tmp_path / "out", transcript_path=vtt, log=log.append)
+    assert recording.transcript_source == "file"
+    assert [s.text for s in recording.segments] == [
+        "This is the customer search screen.",
+        "Now the customer details with all the fields.",
+        "Then it lands in the approval queue.",
+        "And we are done.",
+    ]
+    assert [len(m.segments) for m in recording.moments] == [1, 1, 1, 1]
+    assert recording.moments[1].segments[0].start == 3.2  # placed by its own time, not spread
+    assert any("talk.vtt carries its own times" in line for line in log)
+    assert not any("spread over" in line for line in log)
+
+
+def test_ingest_folder_reuses_unless_forced(tmp_path: Path):
+    shots = _write_shots(tmp_path / "shots", [f"shot_{t}.png" for t in (0, 10, 20)])
+    out = tmp_path / "out"
+    first = ingest_folder(shots, out, log=lambda _: None)
+    assert len(first.keyframes) == 3
+
+    (out / "frames" / "frame_0000.jpg").unlink()  # prove the second call does no work
+    log: list[str] = []
+    again = ingest_folder(shots, out, log=log.append)
+    assert again == first
+    assert any("already exists" in line for line in log)
+    assert not (out / "frames" / "frame_0000.jpg").exists()
+
+    forced = ingest_folder(shots, out, force=True, log=lambda _: None)
+    assert forced == first
+    assert (out / "frames" / "frame_0000.jpg").exists()
+    assert sorted(p.name for p in (out / "frames").iterdir() if p.name.startswith("frame_")) == [
+        f"frame_{i:04d}.jpg" for i in range(3)
+    ]
+
+
+def test_ingest_folder_with_no_screenshots_fails_loudly(tmp_path: Path):
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    (empty / "notes.txt").write_text("nothing to see", encoding="utf-8")
+    with pytest.raises(FileNotFoundError, match="no screenshots"):
+        ingest_folder(empty, tmp_path / "out", log=lambda _: None)
