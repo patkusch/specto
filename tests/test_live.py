@@ -8,7 +8,7 @@ import pytest
 
 from specto.fake import FakeCaller
 from specto.live import LiveSession, analyze, replay, shot_time, take_screenshot
-from specto.model import Analysis, Recording, TranscriptSegment, Word
+from specto.model import Analysis, Question, Recording, TranscriptSegment, Word
 
 # (time in seconds, screen): four distinct screens, each shown twice in a row.
 SHOTS = [
@@ -107,18 +107,52 @@ def test_replay_analyses_at_each_boundary_and_at_the_end(replayed):
     assert saved.questions == session.last_analysis.questions
 
 
-def test_live_questions_lists_newest_first(replayed):
+def test_live_questions_lists_blocking_first_then_newest(replayed):
     session, caller, out = replayed
     text = (out / "live_questions.md").read_text()
     assert text.startswith("# Questions to ask before the call ends")
     ids = re.findall(r"^## (Q\d+) at (\d\d:\d\d)", text, re.M)
-    assert [i for i, _ in ids] == ["Q002", "Q001"]
-    times = [t for _, t in ids]
-    assert times == sorted(times, reverse=True)
+    # Q001 is older but blocks R001, so it comes before the newer Q002, which blocks nothing.
+    assert [i for i, _ in ids] == ["Q001", "Q002"]
     by_id = {q.id: q for q in session.last_analysis.questions}
+    (blocked,) = by_id["Q001"].blocks_requirement_ids
+    assert by_id["Q002"].blocks_requirement_ids == []
+    assert by_id["Q001"].timestamp < by_id["Q002"].timestamp
     for qid, _ in ids:
         assert by_id[qid].question in text
         assert by_id[qid].why_it_matters in text
+    assert f"(blocks {blocked})" in text
+    q2 = text[text.index("## Q002"):]
+    assert "(blocks" not in q2
+
+
+def test_live_questions_block_ids_are_renumbered(replayed):
+    session, caller, out = replayed
+    by_id = {q.id: q for q in session.last_analysis.questions}
+    requirement_ids = {r.id for r in session.last_analysis.requirements}
+    assert by_id["Q001"].blocks_requirement_ids == ["R001"]
+    assert set(by_id["Q001"].blocks_requirement_ids) <= requirement_ids
+
+
+def test_write_live_questions_orders_by_blocks_then_newest(tmp_path: Path):
+    from specto.live import write_live_questions
+
+    base = dict(why_it_matters="Because.", keyframe_index=0, screen_id=None, category="other")
+    analysis = Analysis(
+        title="t", summary="s",
+        questions=[
+            Question(id="Q001", question="Old, blocks none", timestamp=10, blocks_requirement_ids=[], **base),
+            Question(id="Q002", question="Newer, blocks none", timestamp=50, blocks_requirement_ids=[], **base),
+            Question(id="Q003", question="Old, blocks two", timestamp=20, blocks_requirement_ids=["R001", "R003"], **base),
+            Question(id="Q004", question="Newest, blocks one", timestamp=60, blocks_requirement_ids=["R002"], **base),
+        ],
+    )
+    text = write_live_questions(analysis, tmp_path / "q.md", 70).read_text()
+    ids = re.findall(r"^## (Q\d+) at", text, re.M)
+    assert ids == ["Q003", "Q004", "Q002", "Q001"]
+    assert "Old, blocks two (blocks R001, R003)" in text
+    assert "Newest, blocks one (blocks R002)" in text
+    assert "Newer, blocks none\n" in text
 
 
 def test_load_resumes_and_continues_numbering(replayed):

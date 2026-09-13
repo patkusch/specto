@@ -23,7 +23,10 @@ from typing import Optional
 
 from PIL import Image
 
-from specto.export import criteria_by_requirement, frame_for_segment, frame_path, screen_names, summary_rows
+from specto.export import (
+    blocks_text, criteria_by_requirement, frame_for_segment, frame_path, questions_to_ask_first, screen_names,
+    summary_rows,
+)
 from specto.lint import Finding, format_findings, lint_analysis
 from specto.model import Analysis, Recording
 from specto.timefmt import mmss
@@ -282,15 +285,17 @@ class _Page:
     def questions(self) -> None:
         a = self.analysis
         self.add('<section id="questions">\n<h2>SME questions</h2>\n'
-                 '<p class="muted">The Answer column can be typed into in the browser; print to PDF to keep the answers.</p>\n')
+                 '<p class="muted">Questions that hold up the most requirements come first. '
+                 'The Answer column can be typed into in the browser; print to PDF to keep the answers.</p>\n')
         if not a.questions:
             self.add("<p class=\"muted\">No questions recorded.</p>\n</section>\n")
             return
         self.add("<table class=\"questions\">\n<thead><tr><th>Id</th><th>Question</th><th>Why it matters</th><th>Category</th>"
-                 "<th>Screen</th><th>What was said</th><th>Frame</th><th>Answer</th></tr></thead>\n<tbody>\n")
-        for q in a.questions:
+                 "<th>Screen</th><th>Blocks</th><th>What was said</th><th>Frame</th><th>Answer</th></tr></thead>\n<tbody>\n")
+        for q in questions_to_ask_first(a):
             self.add(f'<tr id="{esc(q.id)}"><td class="id">{esc(q.id)}</td><td>{esc(q.question)}</td><td>{esc(q.why_it_matters)}</td>'
-                     f"<td>{esc(q.category)}</td><td>{self.screen(q.screen_id)}</td><td>{esc(q.context_quote)}</td>"
+                     f"<td>{esc(q.category)}</td><td>{self.screen(q.screen_id)}</td>"
+                     f'<td class="blocks">{esc(blocks_text(q))}</td><td>{esc(q.context_quote)}</td>'
                      f"<td>{self.time_and_thumb(q.keyframe_index, q.timestamp)}</td>"
                      f'<td class="answer" contenteditable="true" aria-label="Answer to {esc(q.id)}">{esc(q.answer or "")}</td></tr>\n')
         self.add("</tbody>\n</table>\n</section>\n")

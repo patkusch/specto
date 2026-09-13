@@ -118,6 +118,10 @@ What good looks like
   same moment as its requirement unless a different frame shows it better.
 - questions: the deduplicated list of what to ask the expert. Merge questions
   that ask the same thing. Keep the timestamp and quote that raised each one.
+  Each question lists blocks_requirement_ids: the ids of the final
+  requirements that cannot be finalised until it is answered (an empty list
+  when it blocks none). Only use ids from the requirements list in this same
+  response. This is how the analyst decides which questions to ask first.
 
 Ids and cross-references
 Use the ids from the chunk notes where they exist and keep them consistent:

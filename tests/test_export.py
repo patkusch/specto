@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -28,8 +29,8 @@ HEADERS = {
                      "Time", "Frame", "Acceptance criteria", "Writing check"],
     "Acceptance Criteria": ["Id", "Requirement id", "Requirement", "Given", "When", "Then", "Time", "Frame",
                             "Writing check"],
-    "SME Questions": ["Id", "Question", "Why it matters", "Category", "Screen", "What was said", "Time", "Frame",
-                      "Answer", "Status"],
+    "SME Questions": ["Id", "Question", "Why it matters", "Category", "Screen", "Blocks", "What was said", "Time",
+                      "Frame", "Answer", "Status"],
     "Transcript": ["Time", "Speaker", "Text", "Frame"],
 }
 
@@ -132,6 +133,41 @@ def test_questions_sheet_has_answer_and_status_columns(workbook):
     assert headers[-2:] == ["Answer", "Status"]
     for row in ws.iter_rows(min_row=2, min_col=len(headers) - 1):
         assert all(c.value in (None, "") for c in row)
+
+
+def with_blocking_questions(analysis: Analysis) -> Analysis:
+    """Three questions, blocking 2, 0 and 1 requirements, listed in the wrong order on purpose."""
+    base = analysis.questions[0]
+    analysis.questions = [
+        base.model_copy(update={"id": "Q001", "question": "Blocks nothing?", "blocks_requirement_ids": []}),
+        base.model_copy(update={"id": "Q002", "question": "Blocks one?", "blocks_requirement_ids": ["R002"]}),
+        base.model_copy(update={"id": "Q003", "question": "Blocks two?", "blocks_requirement_ids": ["R001", "R003"]}),
+    ]
+    return analysis
+
+
+def test_questions_sheet_blocks_column_and_order(analysis, recording, tmp_path):
+    analysis = with_blocking_questions(analysis)
+    ws = load_workbook(export_xlsx(analysis, recording, tmp_path))["SME Questions"]
+    headers = header_row(ws)
+    assert headers[headers.index("Screen") + 1] == "Blocks"
+    id_col, blocks_col = headers.index("Id"), headers.index("Blocks")
+    rows = [[c.value for c in row] for row in ws.iter_rows(min_row=2)]
+    assert [r[id_col] for r in rows] == ["Q003", "Q002", "Q001"]
+    assert [r[blocks_col] or "" for r in rows] == ["R001, R003", "R002", ""]
+
+
+def test_markdown_questions_ordered_with_blocks_note(analysis, recording, tmp_path):
+    analysis = with_blocking_questions(analysis)
+    text = export_markdown(analysis, recording, tmp_path).read_text()
+    section = text[text.index("## Questions for the expert"):]
+    headings = re.findall(r"^### (Q\d+):", section, re.M)
+    assert headings == ["Q003", "Q002", "Q001"]
+    assert "- Blocks R001, R003" in section
+    assert "- Blocks R002" in section
+    q1 = section[section.index("### Q001"):]
+    q1 = q1[:q1.index("### ")] if "### " in q1 else q1
+    assert "Blocks" not in q1
 
 
 def test_freeze_panes_and_autofilter_on_every_sheet(workbook):

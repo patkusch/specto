@@ -17,7 +17,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
 from specto.lint import format_findings, lint_analysis, summarize
-from specto.model import Analysis, Recording, TranscriptSegment
+from specto.model import Analysis, Question, Recording, TranscriptSegment
 from specto.timefmt import mmss
 
 HEADER_FILL = PatternFill(start_color="DDEBF7", end_color="DDEBF7", fill_type="solid")
@@ -148,6 +148,20 @@ def screen_names(analysis: Analysis) -> dict[str, str]:
     return {s.id: s.name for s in analysis.screens}
 
 
+def questions_to_ask_first(analysis: Analysis) -> list[Question]:
+    """The questions ordered for the analyst: most blocked requirements first, then by id.
+
+    A question that holds up three requirements matters more than one that
+    holds up none, so it goes to the top of every list of questions.
+    """
+    return sorted(analysis.questions, key=lambda q: (-len(q.blocks_requirement_ids), q.id))
+
+
+def blocks_text(question: Question) -> str:
+    """The blocked requirement ids as one string, e.g. 'R001, R003'; empty when none."""
+    return ", ".join(question.blocks_requirement_ids)
+
+
 def _name(names: dict[str, str], screen_id: Optional[str]) -> str:
     if not screen_id:
         return ""
@@ -245,11 +259,11 @@ def export_xlsx(analysis: Analysis, recording: Recording, out_dir: Path, filenam
 
     write_sheet(
         wb, "SME Questions",
-        ["Id", "Question", "Why it matters", "Category", "Screen", "What was said", "Time", "Frame",
+        ["Id", "Question", "Why it matters", "Category", "Screen", "Blocks", "What was said", "Time", "Frame",
          "Answer", "Status"],
-        [[q.id, q.question, q.why_it_matters, q.category, _name(names, q.screen_id), q.context_quote,
-          mmss(q.timestamp), FrameRef(q.keyframe_index, q.timestamp), q.answer,
-          q.status if q.status != "open" else ""] for q in analysis.questions],
+        [[q.id, q.question, q.why_it_matters, q.category, _name(names, q.screen_id), blocks_text(q),
+          q.context_quote, mmss(q.timestamp), FrameRef(q.keyframe_index, q.timestamp), q.answer,
+          q.status if q.status != "open" else ""] for q in questions_to_ask_first(analysis)],
         recording,
     )
 
@@ -419,11 +433,14 @@ def export_markdown(analysis: Analysis, recording: Recording, out_dir: Path, fil
                 lines.append(f"  - *Writing check: {format_findings(checks[ac.id])}*")
         lines.append("")
 
-    lines += ["## Questions for the expert", ""]
-    for q in analysis.questions:
+    lines += ["## Questions for the expert", "",
+              "Questions that hold up the most requirements come first.", ""]
+    for q in questions_to_ask_first(analysis):
         lines += [f"### {q.id}: {q.question}", ""]
         where = f" (screen {_name(names, q.screen_id)})" if q.screen_id else ""
         lines.append(f"- Why it matters: {q.why_it_matters}")
+        if q.blocks_requirement_ids:
+            lines.append(f"- Blocks {blocks_text(q)}")
         lines.append(f"- Category: {q.category}{where}. {link(q.keyframe_index, q.timestamp)}")
         if q.context_quote:
             lines.append(f'- What was said: "{q.context_quote}"')

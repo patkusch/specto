@@ -237,6 +237,7 @@ def _rebase(
     for question in a.questions:
         question.id = pid(question.id)
         question.screen_id = pid(question.screen_id)
+        question.blocks_requirement_ids = [pid(r) for r in question.blocks_requirement_ids]
         question.keyframe_index = frame(question.keyframe_index, f"question {question.id}")
         question.timestamp += time_offset
     return a
@@ -345,6 +346,8 @@ def _merge_analyses(
     for criterion in criteria:
         criterion.requirement_id = requirement_map.get(criterion.requirement_id, criterion.requirement_id)
 
+    for question in questions:
+        question.blocks_requirement_ids = [requirement_map.get(r, r) for r in question.blocks_requirement_ids]
     questions, _ = _dedupe(questions, lambda q: _norm(q.question))
 
     actors: list[str] = []

@@ -568,6 +568,14 @@ def renumber(analysis: Analysis, log: Callable[[str], None] = print) -> Analysis
     for question in analysis.questions:
         question.id = question_ids[question.id]
         question.screen_id = screen_ref(question.screen_id)
+        kept_ids = []
+        for old_id in question.blocks_requirement_ids:
+            new_id = requirement_ids.get(old_id)
+            if new_id is None:
+                log(f"question {question.id} says it blocks requirement {old_id}, which does not exist; dropped")
+                continue
+            kept_ids.append(new_id)
+        question.blocks_requirement_ids = kept_ids
 
     kept: list[AcceptanceCriterion] = []
     for criterion in analysis.acceptance_criteria:

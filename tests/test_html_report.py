@@ -124,6 +124,21 @@ def test_questions_have_editable_answer_cells(analysis, recording, tmp_path):
         assert 'contenteditable="true"' in row
 
 
+def test_questions_table_has_blocks_column_and_order(analysis, recording, tmp_path):
+    base = analysis.questions[0]
+    analysis.questions = [
+        base.model_copy(update={"id": "Q001", "question": "Blocks nothing?", "blocks_requirement_ids": []}),
+        base.model_copy(update={"id": "Q002", "question": "Blocks one?", "blocks_requirement_ids": ["R002"]}),
+        base.model_copy(update={"id": "Q003", "question": "Blocks two?", "blocks_requirement_ids": ["R001", "R003"]}),
+    ]
+    text = export_html(analysis, recording, tmp_path).read_text(encoding="utf-8")
+    table = text[text.index('<table class="questions">'):]
+    table = table[:table.index("</table>")]
+    assert "<th>Screen</th><th>Blocks</th>" in table
+    assert re.findall(r'<tr id="(Q\d+)">', table) == ["Q003", "Q002", "Q001"]
+    assert re.findall(r'<td class="blocks">([^<]*)</td>', table) == ["R001, R003", "R002", ""]
+
+
 def test_transcript_rows_and_filter_box(analysis, recording, tmp_path):
     text = export_html(analysis, recording, tmp_path).read_text(encoding="utf-8")
     section = text[text.index('<section id="transcript">'):text.index("</main>")]

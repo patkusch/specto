@@ -306,25 +306,32 @@ def analyze(
 
 
 def write_live_questions(analysis: Analysis, path: str | Path, duration: float) -> Path:
-    """Write the open questions, newest first, as a short Markdown file.
+    """Write the open questions as a short Markdown file.
 
     Meant to sit open in a window during the call: one heading per question
-    with its id and time, then the question and why it matters.
+    with its id and time, then the question and why it matters. Questions that
+    hold up the most requirements come first, so the analyst asks those before
+    the expert leaves; among equals the newest comes first.
     """
     path = Path(path)
-    questions = sorted(analysis.questions, key=lambda q: (q.timestamp, q.id), reverse=True)
+    questions = sorted(
+        analysis.questions,
+        key=lambda q: (-len(q.blocks_requirement_ids), -q.timestamp, q.id),
+    )
     lines = [
         f"# {QUESTIONS_HEADING}",
         "",
-        f"Updated at {mmss(duration)} into the call. {len(questions)} open question{'s' if len(questions) != 1 else ''}, newest first.",
+        f"Updated at {mmss(duration)} into the call. {len(questions)} open question{'s' if len(questions) != 1 else ''}, "
+        "most blocking first, then newest first.",
         "",
     ]
     if not questions:
         lines.append("Nothing to ask yet.")
     for question in questions:
+        blocks = f" (blocks {', '.join(question.blocks_requirement_ids)})" if question.blocks_requirement_ids else ""
         lines.append(f"## {question.id} at {mmss(question.timestamp)}")
         lines.append("")
-        lines.append(question.question.strip())
+        lines.append(question.question.strip() + blocks)
         lines.append("")
         lines.append(f"Why it matters: {question.why_it_matters.strip()}")
         lines.append("")

@@ -184,8 +184,8 @@ class FakeCaller:
                 {"id": "AC007", "requirement_id": "R020", "given": "a customer form with no postcode", "when": "the clerk presses Save", "then": "the form is not saved and the postcode is flagged", "timestamp": t1, "keyframe_index": k1},
             ],
             "questions": [
-                {"id": "Q004", "question": "What happens if Save fails?", "why_it_matters": "The error path is not shown.", "context_quote": "we press save", "timestamp": t1, "keyframe_index": k1, "screen_id": "S03", "category": "edge case"},
-                {"id": "Q008", "question": "Who is allowed to approve?", "why_it_matters": "Permissions decide who sees the queue.", "context_quote": None, "timestamp": t2, "keyframe_index": k2, "screen_id": "S09", "category": "permissions"},
+                {"id": "Q004", "question": "What happens if Save fails?", "why_it_matters": "The error path is not shown.", "context_quote": "we press save", "timestamp": t1, "keyframe_index": k1, "screen_id": "S03", "category": "edge case", "blocks_requirement_ids": ["R010"]},
+                {"id": "Q008", "question": "Who is allowed to approve?", "why_it_matters": "Permissions decide who sees the queue.", "context_quote": None, "timestamp": t2, "keyframe_index": k2, "screen_id": "S09", "category": "permissions", "blocks_requirement_ids": []},
             ],
         }
 
