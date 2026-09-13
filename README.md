@@ -207,6 +207,8 @@ Ctrl-C) saves what it has read so far and picks up from there next time.
 | `--scene-threshold X` | brightness change that counts as a new screen, scene mode only | 0.3 |
 | `--ocr / --no-ocr` | read the text on each frame for the model | on |
 | `--ingest-only` | stop after frames and transcript | |
+| `--estimate` | print the expected cost for each model and stop | |
+| `--max-cost USD` | stop before the model if the estimate is above this | |
 | `--fake` | stand-in model, no key needed | |
 | `--force` | redo every stage | |
 
@@ -232,6 +234,9 @@ Before any real run specto prints what it expects to spend, and
 ```bash
 specto run walkthrough.mp4 --transcript walkthrough.vtt --estimate
 ```
+
+`--max-cost 5` stops before the model whenever the estimate is above five
+dollars, so a long recording cannot run up a bill by accident.
 
 `specto doctor` lists what is installed and what is missing (ffmpeg, the
 speech model, OCR, the API key) and what to do about each.

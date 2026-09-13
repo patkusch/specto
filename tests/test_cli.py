@@ -189,3 +189,14 @@ def test_cli_redact_then_restore(tmp_path: Path) -> None:
     assert "priya" not in (out / "ocr.json").read_text().lower()
     assert main(["restore", str(out)]) == 0
     assert (out / "frames" / "frame_0000.jpg").read_bytes() == before
+
+
+def test_cli_max_cost_stops_before_the_model(synthetic_video: Path, tmp_path: Path, capsys) -> None:
+    vtt = tmp_path / "w.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    out = tmp_path / "o"
+    rc = main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(out), "--fake", "--max-cost", "0.0001"])
+    assert rc == 3
+    assert "stopped: the estimate is" in capsys.readouterr().err
+    assert not (out / "analysis.json").exists()
+    assert main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(out), "--fake", "--max-cost", "50"]) == 0

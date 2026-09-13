@@ -79,6 +79,14 @@ def cmd_run(args: argparse.Namespace) -> int:
                                                ocr_text=ocr_text)))
         print("stopped before the model; drop --estimate to run it")
         return 0
+    if args.max_cost is not None and not (out_dir / "analysis.json").exists():
+        expected = estimate(recording, out_dir, model=args.model, frames_per_call=args.frames_per_call,
+                            ocr_text=ocr_text).total_cost_usd
+        if expected > args.max_cost:
+            print(f"stopped: the estimate is ${expected:.2f} and --max-cost is ${args.max_cost:.2f}. "
+                  f"Raise the cap, lower --max-frames, or pick a cheaper --model or --reader-model.",
+                  file=sys.stderr)
+            return 3
 
     reader = None
     if args.fake:
@@ -261,6 +269,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--whisper-model", default="base", help="faster-whisper model size when transcribing locally")
     run.add_argument("--ingest-only", action="store_true", help="stop after frames and transcript")
     run.add_argument("--estimate", action="store_true", help="print the expected cost for each model and stop before calling one")
+    run.add_argument("--max-cost", type=float, metavar="USD", help="stop before the model if the estimate is above this many dollars")
     run.add_argument("--fake", action="store_true", help="use a fake model (no API key needed) to check the pipeline")
     run.add_argument("--force", action="store_true", help="redo every stage even if outputs exist")
     run.set_defaults(func=cmd_run)
