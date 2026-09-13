@@ -161,3 +161,31 @@ def test_cli_run_from_a_folder_of_screenshots(tmp_path: Path) -> None:
     rec = Recording.model_validate_json((out / "recording.json").read_text())
     assert len(rec.keyframes) == 3 and len(rec.segments) == 3
     assert (out / "analysis.xlsx").exists()
+
+
+def test_cli_redact_then_restore(tmp_path: Path) -> None:
+    import pytest
+    from PIL import Image, ImageDraw
+    from specto.ocr import ocr_available
+
+    if not ocr_available():
+        pytest.skip("OCR extra not installed")
+    shots = tmp_path / "shots"
+    shots.mkdir()
+    img = Image.new("RGB", (1280, 720), (250, 250, 250))
+    d = ImageDraw.Draw(img)
+    from PIL import ImageFont
+    font = ImageFont.load_default(size=28)
+    d.text((60, 80), "Customer Details", fill=(20, 20, 20), font=font)
+    d.text((60, 160), "Email address   priya.shah@example.com", fill=(20, 20, 20), font=font)
+    d.text((60, 220), "Phone   07000 12345678", fill=(20, 20, 20), font=font)
+    img.save(shots / "shot_0.png")
+    out = tmp_path / "o"
+    assert main(["run", str(shots), "--out", str(out), "--fake"]) == 0
+    before = (out / "frames" / "frame_0000.jpg").read_bytes()
+    assert main(["redact", str(out)]) == 0
+    assert (out / "frames" / "original" / "frame_0000.jpg").read_bytes() == before
+    assert (out / "frames" / "frame_0000.jpg").read_bytes() != before
+    assert "priya" not in (out / "ocr.json").read_text().lower()
+    assert main(["restore", str(out)]) == 0
+    assert (out / "frames" / "frame_0000.jpg").read_bytes() == before

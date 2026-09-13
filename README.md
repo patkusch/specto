@@ -38,8 +38,18 @@ is written next to the workbook.
 An expert walking through a real system shows real customer records. The
 Personal Data sheet lists what personal data the recording captured and on
 which frame, with the values masked. Check it before the workbook, the
-report or the frames folder is shared or stored, and delete the frames it
-points at if that data should not leave the team.
+report or the frames folder is shared or stored. Then:
+
+```bash
+specto redact out/walkthrough
+```
+
+paints over every email, phone number, postcode, date of birth, card or
+account number, name and address on the still frames, masks the same values
+inside the outputs, and rewrites the workbook and reports. The untouched
+frames are kept under `frames/original/` until you delete that folder (do
+that before the output leaves the team); `specto restore` puts them back.
+Needs the OCR extra.
 
 ## Try it
 
@@ -176,6 +186,7 @@ Ctrl-C) saves what it has read so far and picks up from there next time.
 | `specto score DIR KEY` | compare an output with an answer key |
 | `specto doctor` | what is installed and what is missing |
 | `specto merge DIR DIR... --out DIR` | several sessions into one workbook: same screens, requirements and questions folded together, no model call |
+| `specto redact DIR` | paint over the personal data on the frames and mask it in the outputs; `specto restore DIR` undoes it |
 | `specto answers DIR` | read the Answer and Status columns typed into the workbook back in |
 | `specto resolve DIR` | turn the answered questions into requirements and criteria, and raise any follow-ups |
 

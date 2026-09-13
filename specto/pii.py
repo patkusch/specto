@@ -17,12 +17,12 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Iterable, Literal, Optional
 
 from pydantic import BaseModel, Field
 
 from specto.model import Analysis, Recording
-from specto.ocr import OCR_CACHE_NAME
+from specto.ocr import OCR_CACHE_NAME, TextLine
 from specto.timefmt import mmss
 
 Kind = Literal[
@@ -57,6 +57,8 @@ KIND_WORDS: dict[str, tuple[str, str]] = {
     "other id": ("other id", "other ids"),
 }
 
+Box = tuple[int, int, int, int]  # x, y, w, h in pixels of the saved frame
+
 CONTEXT_CHARS = 60
 PII_HEADERS = ["Kind", "Value (masked)", "Where", "Time", "Frame", "Context"]
 
@@ -70,6 +72,7 @@ class PiiHit(BaseModel):
     keyframe_index: Optional[int] = None
     timestamp: Optional[float] = None
     context: str = Field(default="", description="Up to 60 characters around the hit, with every found value masked")
+    box: Optional[Box] = Field(default=None, description="Where on the frame: x, y, w, h in frame pixels, when known")
 
 
 # ------------------------------------------------------------------- masking
@@ -324,18 +327,36 @@ DETECTORS = [
 # ------------------------------------------------------------------ scanning
 
 
+def _detect(text: str) -> list[_Found]:
+    """Every detector over one text, in reading order."""
+    found: list[_Found] = []
+    for detect in DETECTORS:
+        found.extend(detect(text))
+    found.sort(key=lambda f: (f.start, KINDS.index(f.kind)))
+    return found
+
+
+def _mask_pairs(found: Iterable[_Found]) -> list[tuple[str, str]]:
+    """(raw, masked) for every piece of text a set of hits covers, longest raw first.
+
+    A sort code and account number are one hit but two pieces of text, so
+    each piece gets its own masked form.
+    """
+    pieces: list[tuple[str, str]] = []
+    for f in found:
+        raws = f.extra_raw or (f.raw,)
+        masked = mask_value(f.kind, f.raw)
+        for raw in raws:
+            pieces.append((raw, masked if len(raws) == 1 else _mask_alnum(raw)))
+    return sorted(pieces, key=lambda p: -len(p[0]))
+
+
 def _context(text: str, found: _Found, all_found: list[_Found]) -> str:
     """Up to CONTEXT_CHARS characters around a hit, every found value masked, one line."""
     half = CONTEXT_CHARS // 2
     lo, hi = max(0, found.start - half), min(len(text), found.end + half)
     snippet = text[lo:hi]
-    pieces: list[tuple[str, str]] = []
-    for f in all_found:
-        raws = f.extra_raw or (f.raw,)
-        masked = mask_value(f.kind, f.raw)
-        for raw in raws:
-            pieces.append((raw, masked if len(raws) == 1 else _mask_alnum(raw)))
-    for raw, masked in sorted(pieces, key=lambda p: -len(p[0])):
+    for raw, masked in _mask_pairs(all_found):
         snippet = snippet.replace(raw, masked)
         # A snippet may start or end part-way through a value; hide the leftover.
         for k in range(len(raw) - 1, 3, -1):
@@ -355,10 +376,7 @@ def scan_text(
     """Every personal-data pattern in one piece of text, masked, one hit per value."""
     if not text:
         return []
-    found: list[_Found] = []
-    for detect in DETECTORS:
-        found.extend(detect(text))
-    found.sort(key=lambda f: (f.start, KINDS.index(f.kind)))
+    found = _detect(text)
 
     hits: list[PiiHit] = []
     seen: set[tuple[str, str]] = set()
@@ -379,6 +397,201 @@ def scan_text(
             )
         )
     return hits
+
+
+# ------------------------------------------------------- scanning with boxes
+
+
+def union_boxes(boxes: Iterable[Box]) -> Box:
+    """The smallest box that holds every box given."""
+    boxes = list(boxes)
+    left = min(b[0] for b in boxes)
+    top = min(b[1] for b in boxes)
+    right = max(b[0] + b[2] for b in boxes)
+    bottom = max(b[1] + b[3] for b in boxes)
+    return (left, top, right - left, bottom - top)
+
+
+def _boxes_overlap(a: Box, b: Box) -> bool:
+    return a[0] < b[0] + b[2] and b[0] < a[0] + a[2] and a[1] < b[1] + b[3] and b[1] < a[1] + a[3]
+
+
+Group = tuple[list[TextLine], Optional[list[str]]]  # lines in order, and the text placed before each one
+
+
+def _joined(lines: list[TextLine], separators: Optional[list[str]] = None) -> tuple[str, list[tuple[int, int]]]:
+    """The lines as one text, with each line's character range.
+
+    `separators[i]` goes before line i (a newline when not given, so the text
+    reads one line per row).
+    """
+    parts: list[str] = []
+    spans: list[tuple[int, int]] = []
+    pos = 0
+    for i, line in enumerate(lines):
+        sep = "\n" if i and separators is None else (separators[i] if separators else "")
+        parts.append(sep)
+        pos += len(sep)
+        spans.append((pos, pos + len(line.text)))
+        parts.append(line.text)
+        pos += len(line.text)
+    return "".join(parts), spans
+
+
+def _rows(lines: list[TextLine]) -> list[list[TextLine]]:
+    """Group boxes into rows the way `merge_rows` does, left to right within a row."""
+    rows: list[list[TextLine]] = []
+    for line in sorted(lines, key=lambda l: (l.y, l.x)):
+        centre = line.y + line.h / 2
+        for row in rows:
+            top = min(l.y for l in row)
+            bottom = max(l.bottom for l in row)
+            row_centre = (top + bottom) / 2
+            if top <= centre <= bottom or line.y <= row_centre <= line.bottom:
+                row.append(line)
+                break
+        else:
+            rows.append([line])
+    for row in rows:
+        row.sort(key=lambda l: l.x)
+    return rows
+
+
+def _box_for_span(lines: list[TextLine], spans: list[tuple[int, int]], start: int, end: int) -> Box:
+    """The union of the boxes of the lines that a character range touches."""
+    boxes = [
+        (line.x, line.y, line.w, line.h)
+        for line, (lo, hi) in zip(lines, spans)
+        if lo < end and hi > start
+    ]
+    return union_boxes(boxes)
+
+
+@dataclass
+class _Placed:
+    """A detector hit on a frame, with the box of the line(s) it sat on."""
+
+    found: _Found
+    box: Box
+    text: str                # the joined text the hit was found in, for the context
+    all_found: list[_Found]  # every hit in that text, so the context can mask them all
+
+
+def _line_groups(lines: list[TextLine]) -> list[Group]:
+    """Two readings of the frame: one line per box, then boxes joined along their rows.
+
+    In the row reading, two boxes on one row join with no gap when they sit
+    close together (a value split as "priya.shah@" and "example.com") and
+    with two spaces when they are apart (a label and its value), as
+    `merge_rows` does. Each box keeps its own character range, so a hit's
+    box covers only the boxes the value sat in.
+    """
+    if not lines:
+        return []
+    ordered = sorted(lines, key=lambda l: (l.y, l.x))
+    by_row: list[TextLine] = []
+    separators: list[str] = []
+    for row in _rows(ordered):
+        for i, line in enumerate(row):
+            if i == 0:
+                separators.append("\n" if by_row else "")
+            else:
+                prev = row[i - 1]
+                close = line.x - prev.right < max(prev.h, line.h)
+                separators.append("" if close else "  ")
+            by_row.append(line)
+    return [(ordered, None), (by_row, separators)]
+
+
+def _place_in_lines(lines: list[TextLine]) -> list[_Placed]:
+    """Every detector hit over the lines, each with its box.
+
+    The lines are scanned joined one per row, so a value that runs over two
+    rows (a sort code on one, the account number on the next) is found and
+    takes the union of both boxes. The same value found again with an
+    overlapping box keeps the tighter box.
+    """
+    placed: list[_Placed] = []
+    for group, separators in _line_groups(lines):
+        text, spans = _joined(group, separators)
+        all_found = _detect(text)
+        for f in all_found:
+            placed.append(_Placed(f, _box_for_span(group, spans, f.start, f.end), text, all_found))
+    return _dedupe_placed(placed)
+
+
+def _dedupe_placed(placed: list[_Placed]) -> list[_Placed]:
+    kept: list[_Placed] = []
+    for p in placed:
+        masked = mask_value(p.found.kind, p.found.raw)
+        for i, k in enumerate(kept):
+            if (k.found.kind, mask_value(k.found.kind, k.found.raw)) != (p.found.kind, masked):
+                continue
+            if k.box == p.box:
+                break
+            if _boxes_overlap(k.box, p.box):
+                if p.box[2] * p.box[3] < k.box[2] * k.box[3]:
+                    kept[i] = p
+                break
+        else:
+            kept.append(p)
+    kept.sort(key=lambda p: (p.box[1], p.box[0], KINDS.index(p.found.kind)))
+    return kept
+
+
+def scan_frame_lines(
+    lines: list[TextLine],
+    keyframe_index: Optional[int] = None,
+    timestamp: Optional[float] = None,
+) -> list[PiiHit]:
+    """Every personal-data pattern in the text lines of one frame, masked, with a box each.
+
+    Like `scan_text` over the frame's text, but each hit carries the pixel box
+    of the OCR line it was found on (the union of the boxes when a value spans
+    two lines). The same value in two places on the frame is two hits.
+    """
+    hits: list[PiiHit] = []
+    for p in _place_in_lines(lines):
+        hits.append(
+            PiiHit(
+                kind=p.found.kind,
+                value_masked=mask_value(p.found.kind, p.found.raw),
+                source="frame text",
+                keyframe_index=keyframe_index,
+                timestamp=timestamp,
+                context=_context(p.text, p.found, p.all_found),
+                box=p.box,
+            )
+        )
+    return hits
+
+
+def locate_hits(hits: list[PiiHit], lines_by_frame: dict[int, list[TextLine]]) -> list[PiiHit]:
+    """Give frame-text hits their boxes, from the OCR lines of their frame.
+
+    A hit only carries the masked value, so the frame's lines are scanned
+    again and matched on kind and masked value. A hit found in two places
+    comes back as two hits, one per box. Hits that cannot be located, and
+    hits from the transcript or example values, come back unchanged.
+    """
+    located: list[PiiHit] = []
+    by_frame: dict[int, list[PiiHit]] = {}
+    for hit in hits:
+        if hit.source != "frame text" or hit.box is not None or hit.keyframe_index not in lines_by_frame:
+            located.append(hit)
+            continue
+        if hit.keyframe_index not in by_frame:
+            by_frame[hit.keyframe_index] = scan_frame_lines(lines_by_frame[hit.keyframe_index], hit.keyframe_index, hit.timestamp)
+        matches = [
+            h for h in by_frame[hit.keyframe_index]
+            if (h.kind, h.value_masked) == (hit.kind, hit.value_masked)
+        ]
+        if not matches:
+            located.append(hit)
+            continue
+        for match in matches:
+            located.append(hit.model_copy(update={"box": match.box}))
+    return located
 
 
 def _keyframe_timestamps(recording: Recording) -> dict[int, float]:

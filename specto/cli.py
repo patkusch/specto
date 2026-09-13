@@ -6,6 +6,7 @@
     specto score out/walkthrough expected.json   # compare with an answer key
     specto doctor                        # what is installed, what is missing
     specto merge out/day1 out/day2 --out out/all   # several sessions, one workbook
+    specto redact out/walkthrough        # paint over personal data on the frames
     specto answers out/walkthrough       # read the answers typed into the workbook
     specto resolve out/walkthrough       # answered questions become requirements
     specto live --out out/call           # during a call: screen + mic, questions every 5 minutes
@@ -185,6 +186,32 @@ def cmd_resolve(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_redact(args: argparse.Namespace) -> int:
+    from .export import export_all
+    from .redact import redact_dir
+
+    out_dir = Path(args.out_dir)
+    report = redact_dir(out_dir, style=args.style)
+    kinds = ", ".join(f"{n} {k}" for k, n in sorted(report.kinds.items())) or "nothing found"
+    print(f"redact: {report.boxes_painted} spot(s) painted on {report.frames_touched} frame(s), "
+          f"{report.text_replacements} text value(s) masked ({kinds})")
+    print(f"the untouched frames are kept under {out_dir / 'frames' / 'original'}; delete that folder and "
+          f"ocr_lines.json before the output leaves the team, or run 'specto restore' to put them back")
+    analysis = _load(out_dir / "analysis.json", Analysis)
+    recording = _load(out_dir / "recording.json", Recording)
+    for name, p in export_all(analysis, recording, out_dir).items():
+        print(f"wrote {name}: {p}")
+    return 0
+
+
+def cmd_restore(args: argparse.Namespace) -> int:
+    from .redact import restore_dir
+
+    n = restore_dir(Path(args.out_dir))
+    print(f"restore: {n} frame(s) put back from frames/original" if n else "restore: nothing to put back")
+    return 0
+
+
 def cmd_merge(args: argparse.Namespace) -> int:
     from .export import export_all
     from .merge import merge_dirs, merge_report
@@ -268,6 +295,15 @@ def build_parser() -> argparse.ArgumentParser:
     rs.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
     rs.add_argument("--fake", action="store_true", help="stand-in model, no key needed")
     rs.set_defaults(func=cmd_resolve)
+
+    rd = sub.add_parser("redact", help="paint over the personal data on the frames and mask it in the outputs")
+    rd.add_argument("out_dir")
+    rd.add_argument("--style", default="box", choices=["box", "blur"], help="opaque box (default, cannot be undone) or a heavy blur")
+    rd.set_defaults(func=cmd_redact)
+
+    rs2 = sub.add_parser("restore", help="put the untouched frames back after a redact")
+    rs2.add_argument("out_dir")
+    rs2.set_defaults(func=cmd_restore)
 
     mg = sub.add_parser("merge", help="combine several finished runs into one workbook, no model call")
     mg.add_argument("sources", nargs="+", help="output folders of finished runs, in session order")
