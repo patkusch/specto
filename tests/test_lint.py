@@ -147,11 +147,11 @@ def test_empty_clause_warns(part):
     assert f'"{part}"' in findings[0].message
 
 
-def test_and_is_a_note_in_given_and_then_but_a_warning_in_when():
+def test_and_is_a_note_in_every_part_of_a_criterion():
     given = lint_criterion(ac(given="a clerk is logged in and on the customer screen"))
     assert [(f.rule, f.severity) for f in given] == [("joined-clauses", "info")]
     when = lint_criterion(ac(when="the clerk fills in the postcode and presses Save"))
-    assert [(f.rule, f.severity) for f in when] == [("joined-clauses", "warn")]
+    assert [(f.rule, f.severity) for f in when] == [("joined-clauses", "info")]
     then = lint_criterion(ac(then="the record is saved and an email is sent"))
     assert [(f.rule, f.severity) for f in then] == [("joined-clauses", "info")]
 
