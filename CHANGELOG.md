@@ -2,6 +2,21 @@
 
 Newest first. Dates are when the change was pushed.
 
+## 0.4.0 (2026-09-13)
+
+- A model run that dies halfway resumes from the last finished chunk; a
+  chunk cut off at the output limit is read again as two halves;
+  `--reader-model` uses a cheaper model for reading the frames.
+- Questions ranked by how many requirements each one holds up, in the
+  workbook, the reports and the live questions file.
+- Gaps sheet: screens with no requirement, fields never mentioned,
+  requirements with no criteria, buttons that lead nowhere, and more.
+- `specto redact` paints over personal data on the frames and masks it in
+  the outputs; `specto restore` undoes it.
+- `specto run` accepts a folder of screenshots and written notes when there
+  is no recording.
+- Pictures of the output at the top of the README.
+
 ## 0.3.0 (2026-09-12)
 
 - Glossary sheet built from the analysis, with a naming check for

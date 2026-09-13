@@ -87,7 +87,13 @@ personal-data and screen-flow sheets (done). Still open: speaker labels
 from audio.
 
 ### Phase 5: hardening
-Three to five real recordings, a cost line per run, one-command install.
+Three to five real recordings, a cost line per run (done: the estimate
+before every run), one-command install. Done 2026-09-13 without a key:
+resume after a crash, split of chunks the model cannot finish, a cheaper
+reader model, question ranking by blocked requirements, a Gaps sheet,
+redaction of personal data on the frames, and screenshot-folder input.
+Still needs a key and real recordings: the first real run, prompt tuning
+against the score, and the README pictures regenerated from real output.
 
 ## What we reuse from elsewhere, and what we checked and kept our own
 
