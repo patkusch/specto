@@ -22,6 +22,12 @@ looks at what was on screen at that moment, and produces one spreadsheet:
 | Glossary | Every role, screen, field and button named, where it first appeared, and a Definition column to fill in |
 | Personal Data | Every email, phone number, postcode, date of birth, card or account number, name and address that appeared on screen or was said, masked, with the frame it was on |
 
+![A requirement card from report.html: the statement, the expert's quote, the frame it came from, and its acceptance criteria (layout shown with the stand-in model)](docs/report-requirements.png)
+
+![The SME questions table in report.html, most blocking first, with an Answer column to type into (layout shown with the stand-in model)](docs/report-questions.png)
+
+![One frame from the example recording, the Customer Details screen](docs/frame-example.png)
+
 Every row links to a still image from the recording, so a reader can check any
 claim against the screen in one click. The reports also carry a screen-flow
 picture: the screens as boxes in the order the expert reached them, with the
