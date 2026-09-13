@@ -2,6 +2,20 @@
 
 Newest first. Dates are when the change was pushed.
 
+## 0.5.0 (2026-09-13)
+
+- Live mode runs on Windows and Linux as well as macOS, and on a Mac
+  without Screen Recording permission it stops with a clear line instead of
+  recording an empty desktop.
+- `--crop auto` finds the shared window inside a meeting recording and
+  drops the border, toolbar and gallery strip; `--crop x,y,w,h` sets it by
+  hand. Over the frame cap (now 240), the least-changed frames go first.
+- File transcripts are cut at the screen change too, with word times
+  estimated from word length.
+- `--max-cost` stops before the model when the estimate is above a cap.
+- Every response shape is checked against the SDK's structured-output
+  schema rules in the test suite.
+
 ## 0.4.0 (2026-09-13)
 
 - A model run that dies halfway resumes from the last finished chunk; a
