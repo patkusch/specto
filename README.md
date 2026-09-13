@@ -130,16 +130,30 @@ spread over the screenshots in order, one paragraph per picture.
 specto live --out out/todays-call
 ```
 
-On a Mac this grabs the shared screen every three seconds and records the
-microphone in thirty-second pieces, keeps only the moments the screen
-changed, and every five minutes runs the whole session so far through the
-same analysis. `out/todays-call/live_questions.md` holds just the open
-questions, newest first, so it can sit in a window and be asked before the
-expert leaves. Press Ctrl-C to stop; the full workbook and reports are
-written at the end. macOS will ask once for Screen Recording and Microphone
-permission for your terminal. If the folder already exists the session is
-resumed. To try it without a call, `--replay DIR --transcript FILE` feeds a
-folder of screenshots named `shot_<seconds>.png` through the same path.
+Live mode runs on macOS, Windows and Linux. It grabs the shared screen every
+three seconds and records the microphone in thirty-second pieces, keeps only
+the moments the screen changed, and every five minutes runs the whole
+session so far through the same analysis. `out/todays-call/live_questions.md`
+holds just the open questions, most blocking first, so it can sit in a
+window and be asked before the expert leaves. Press Ctrl-C to stop; the
+full workbook and reports are written at the end. If the folder already
+exists the session is resumed. To try it without a call,
+`--replay DIR --transcript FILE` feeds a folder of screenshots named
+`shot_<seconds>.png` through the same path.
+
+For the screen, install the small `mss` library with
+`pip install -e ".[live]"`; it works on all three systems. Without it specto
+falls back to what the system already has: `screencapture` on macOS,
+PowerShell on Windows, and `grim` (Wayland) or ImageMagick's `import` (X11)
+on Linux. For the microphone, the bundled ffmpeg uses the input each system
+has; on Windows the first microphone it lists is used and the log says
+which, and `--audio-device` picks another.
+
+On macOS, give your terminal Screen Recording and Microphone permission
+first (System Settings, Privacy & Security). Without Screen Recording, live
+mode stops with a line saying so rather than recording an empty desktop.
+`specto doctor` shows which screen backend and microphone input will be
+used on your machine and, on a Mac, whether the permission is granted.
 
 ## After the follow-up call
 
@@ -260,7 +274,7 @@ that further.
 
 ## Limits
 
-- Live mode is macOS only. Each analysis round reuses what the model
+- On Linux, `grim` and `import` capture every monitor together, so `--display` only selects a monitor when `mss` is installed. Each analysis round reuses what the model
   already read, so only the newest frames and one merge call are paid for
   each time.
 - It writes a first draft. The Requirements sheet carries a confidence column:
