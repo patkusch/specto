@@ -437,3 +437,76 @@ def test_old_chunk_readings_file_without_keys_is_ignored(tmp_path: Path) -> None
     assert load_prior_readings(tmp_path / "chunk_readings.json") == {}
     (tmp_path / "chunk_readings.json").write_text("not json")
     assert load_prior_readings(tmp_path / "chunk_readings.json") == {}
+
+
+def _recording_for_resume(tmp_path):
+    from PIL import Image
+    from specto.model import Keyframe, Moment, Recording, TranscriptSegment
+
+    (tmp_path / "frames").mkdir(exist_ok=True)
+    keyframes, moments = [], []
+    for i in range(6):
+        Image.new("RGB", (64, 48), (i * 30, 90, 120)).save(tmp_path / "frames" / f"frame_{i:04d}.jpg")
+        keyframes.append(Keyframe(index=i, timestamp=float(i * 10), path=f"frames/frame_{i:04d}.jpg", width=64, height=48))
+        moments.append(Moment(keyframe_index=i, start=i * 10.0, end=i * 10.0 + 10,
+                              segments=[TranscriptSegment(start=i * 10.0, end=i * 10.0 + 3, text=f"screen {i}")]))
+    return Recording(source="r.mp4", duration=60.0, keyframes=keyframes, moments=moments,
+                     segments=[m.segments[0] for m in moments])
+
+
+def test_extract_resumes_from_readings_saved_by_a_run_that_died(tmp_path):
+    from specto.extract import ChunkReading, ExtractionError, extract, load_prior_readings
+    from specto.fake import FakeCaller
+
+    recording = _recording_for_resume(tmp_path)
+
+    class DiesOnThirdChunk(FakeCaller):
+        def __call__(self, system, content_blocks, output_model):
+            if output_model is ChunkReading and len(self.calls) == 2:
+                raise ExtractionError("network went away")
+            return super().__call__(system, content_blocks, output_model)
+
+    dying = DiesOnThirdChunk()
+    with pytest.raises(ExtractionError):
+        extract(recording, tmp_path, caller=dying, frames_per_call=2, log=lambda _: None)
+    saved = load_prior_readings(tmp_path / "chunk_readings.json")
+    assert len(saved) == 2, "the two finished chunks were saved before the crash"
+
+    fresh = FakeCaller()
+    extract(recording, tmp_path, caller=fresh, frames_per_call=2, reuse_readings=True, log=lambda _: None)
+    chunk_calls = [c for c in fresh.calls if c["output_model"] is ChunkReading]
+    assert len(chunk_calls) == 1, "only the third chunk was read again"
+
+
+def test_extract_splits_a_chunk_the_model_cannot_finish(tmp_path):
+    from specto.extract import ChunkReading, ExtractionError, extract
+    from specto.fake import FakeCaller
+
+    recording = _recording_for_resume(tmp_path)
+
+    class TruncatesBigChunks(FakeCaller):
+        def __call__(self, system, content_blocks, output_model):
+            frames = sum(1 for b in content_blocks if b.get("type") == "image")
+            if output_model is ChunkReading and frames > 2:
+                raise ExtractionError("The model hit its output limit before finishing. Use fewer frames per call or raise max_tokens.")
+            return super().__call__(system, content_blocks, output_model)
+
+    caller = TruncatesBigChunks()
+    analysis = extract(recording, tmp_path, caller=caller, frames_per_call=4, log=lambda _: None)
+    chunk_calls = [c for c in caller.calls if c["output_model"] is ChunkReading]
+    # chunk 1 (4 frames) is cut off (not recorded) then read as 2+2; chunk 2 (2 frames) reads at once
+    assert len(chunk_calls) == 3
+    assert analysis.screens
+
+
+def test_extract_uses_the_reader_for_chunks_and_the_caller_for_the_merge(tmp_path):
+    from specto.extract import ChunkReading, extract
+    from specto.fake import FakeCaller
+
+    recording = _recording_for_resume(tmp_path)
+    reader, merger = FakeCaller(), FakeCaller()
+    reader.model, merger.model = "cheap", "strong"
+    analysis = extract(recording, tmp_path, caller=merger, reader=reader, frames_per_call=3, log=lambda _: None)
+    assert all(c["output_model"] is ChunkReading for c in reader.calls) and len(reader.calls) == 2
+    assert len(merger.calls) == 1 and merger.calls[0]["output_model"] is not ChunkReading
+    assert analysis.usage.model == "cheap for reading, strong for the merge"

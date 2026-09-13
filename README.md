@@ -143,7 +143,9 @@ sends newly answered questions.
 Each stage saves its result in the output folder. Running the same command
 again skips the stages already done, so a prompt change re-runs only the
 extraction, and a workbook layout change re-runs only the export
-(`specto export out/walkthrough`). `--force` redoes everything.
+(`specto export out/walkthrough`). A model run that dies halfway (network,
+Ctrl-C) saves what it has read so far and picks up from there next time.
+`--force` redoes everything, including the model reads.
 
 ## Commands
 
@@ -165,6 +167,7 @@ extraction, and a workbook layout change re-runs only the export
 | `--transcript FILE` | `.vtt`, `.srt`, timestamped `.txt`, or a meeting-tool `.json` | transcribe locally |
 | `--out DIR` | where to write | `out/<video name>` |
 | `--model ID` | Claude model | `claude-opus-5` |
+| `--reader-model ID` | a cheaper model for reading the frames, e.g. `claude-sonnet-5`; the final merge still uses `--model` | same as `--model` |
 | `--effort` | how hard the model thinks: low, medium, high, xhigh, max | `high` |
 | `--frames-per-call N` | images per model call | 8 |
 | `--max-frames N` | cap on still images kept | 120 |

@@ -384,6 +384,7 @@ def read_chunks(
     log: Callable[[str], None] = print,
     ocr_text: Optional[dict[int, str]] = None,
     prior: Optional[dict[str, ChunkReading]] = None,
+    save_path: Optional[Path | str] = None,
 ) -> list[ChunkReading]:
     """Walk the moments in chunks and ask the model what each chunk shows.
 
@@ -391,7 +392,10 @@ def read_chunks(
     `ocr_text` (keyframe_index -> text read off the frame) is passed through to
     each chunk's content when given. `prior` holds readings from an earlier run
     keyed by `chunk_key`; a chunk whose key matches is reused without a call,
-    which is what keeps a long live session affordable.
+    which is what keeps a long live session affordable. With `save_path`, the
+    readings so far are written after every call, so a run that dies halfway
+    (network, Ctrl-C, a refusal) can be picked up where it stopped. A chunk the
+    model cannot finish within its output limit is split in two and read again.
     """
     out_dir = Path(out_dir)
     if not recording.moments:
@@ -408,10 +412,20 @@ def read_chunks(
         content = build_chunk_content(
             recording, chunk, out_dir, number, len(chunks), readings, ocr_text=ocr_text
         )
-        parsed, call_usage = caller(SYSTEM_PROMPT_READ, content, ChunkReading)
+        try:
+            parsed, call_usage = caller(SYSTEM_PROMPT_READ, content, ChunkReading)
+        except ExtractionError as error:
+            cut_off = "cut off" in str(error) or "output limit" in str(error)
+            if not cut_off or len(chunk) < 2:
+                raise
+            log(f"chunk {number}/{len(chunks)}: too much for one answer, reading it as two halves")
+            reading, call_usage = _read_in_halves(recording, chunk, out_dir, caller, readings, ocr_text, log)
+            parsed = reading
         reading = ChunkReading.model_validate(parsed.model_dump())
         readings.append(reading)
         _add_usage(usage, call_usage)
+        if save_path is not None:
+            save_readings(save_path, chunks[: len(readings)], readings)
         log(
             f"chunk {number}/{len(chunks)}: {len(chunk)} frames, "
             f"in {call_usage.get('input_tokens', 0)} out {call_usage.get('output_tokens', 0)}, "
@@ -419,6 +433,25 @@ def read_chunks(
             f"write {call_usage.get('cache_creation_input_tokens', 0)}"
         )
     return readings
+
+
+
+def _read_in_halves(recording, chunk, out_dir, caller, readings, ocr_text, log) -> tuple[ChunkReading, dict]:
+    """Read a chunk as two smaller calls and join the answers. Used when the
+    model hit its output limit on the whole chunk."""
+    mid = len(chunk) // 2
+    merged = ChunkReading()
+    total: dict = {}
+    for part in (chunk[:mid], chunk[mid:]):
+        content = build_chunk_content(recording, part, out_dir, 0, 0, readings + [merged], ocr_text=ocr_text)
+        parsed, call_usage = caller(SYSTEM_PROMPT_READ, content, ChunkReading)
+        piece = ChunkReading.model_validate(parsed.model_dump())
+        for field in ("screens", "fields", "actions", "journey", "requirement_candidates", "questions"):
+            getattr(merged, field).extend(getattr(piece, field))
+        for key, value in call_usage.items():
+            if isinstance(value, int):
+                total[key] = total.get(key, 0) + value
+    return merged, total
 
 
 # ---------------------------------------------------------------------- pass 2
@@ -572,6 +605,7 @@ def extract(
     log: Callable[[str], None] = print,
     ocr_text: Optional[dict[int, str]] = None,
     reuse_readings: bool = False,
+    reader: Optional[ModelCaller] = None,
 ) -> Analysis:
     """Run both passes and write analysis.json; reuse it on a re-run unless force.
 
@@ -580,7 +614,10 @@ def extract(
     shown to the model next to each frame; it is not stored in the Analysis.
     With `reuse_readings`, chunks already read in an earlier run (same frames,
     same words) are taken from chunk_readings.json instead of being sent again;
-    live mode uses this so each round only pays for what is new.
+    live mode uses this so each round only pays for what is new, and a run that
+    stopped halfway resumes from the readings it saved. `reader`, when given,
+    is the model used for the per-chunk reading (a cheaper one works well
+    there); `caller` still does the final merge.
     """
     out_dir = Path(out_dir)
     analysis_path = out_dir / "analysis.json"
@@ -589,14 +626,20 @@ def extract(
         return Analysis.model_validate_json(analysis_path.read_text())
 
     caller = caller or ClaudeCaller()
-    usage = Usage(model=getattr(caller, "model", "unknown"))
+    reader = reader or caller
+    model_name = getattr(caller, "model", "unknown")
+    if reader is not caller and getattr(reader, "model", None) != model_name:
+        model_name = f"{getattr(reader, 'model', 'unknown')} for reading, {model_name} for the merge"
+    usage = Usage(model=model_name)
+    out_dir.mkdir(parents=True, exist_ok=True)
     readings_path = out_dir / "chunk_readings.json"
     prior = load_prior_readings(readings_path) if reuse_readings else {}
+    if prior:
+        log(f"resuming: {len(prior)} chunk reading(s) saved earlier will be reused where the frames and words match")
     readings = read_chunks(
-        recording, out_dir, caller, frames_per_call=frames_per_call, usage=usage, log=log,
-        ocr_text=ocr_text, prior=prior,
+        recording, out_dir, reader, frames_per_call=frames_per_call, usage=usage, log=log,
+        ocr_text=ocr_text, prior=prior, save_path=readings_path,
     )
-    out_dir.mkdir(parents=True, exist_ok=True)
     save_readings(readings_path, split_chunks(recording, frames_per_call), readings)
     analysis = consolidate(recording, readings, caller, usage=usage, log=log)
     analysis.usage = usage

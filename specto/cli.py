@@ -70,6 +70,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         print("stopped before the model; drop --estimate to run it")
         return 0
 
+    reader = None
     if args.fake:
         from .fake import FakeCaller
         caller = FakeCaller()
@@ -79,9 +80,14 @@ def cmd_run(args: argparse.Namespace) -> int:
                   file=sys.stderr)
             return 2
         caller = ClaudeCaller(model=args.model, effort=args.effort)
+        if args.reader_model and args.reader_model != args.model:
+            reader = ClaudeCaller(model=args.reader_model, effort=args.effort)
 
+    if args.force and (out_dir / "chunk_readings.json").exists():
+        (out_dir / "chunk_readings.json").unlink()
     analysis = extract(recording, out_dir, caller=caller, force=args.force,
-                       frames_per_call=args.frames_per_call, ocr_text=ocr_text)
+                       frames_per_call=args.frames_per_call, ocr_text=ocr_text,
+                       reuse_readings=True, reader=reader)
     if analysis.usage:
         u = analysis.usage
         print(f"extract: {u.calls} model calls, {u.input_tokens} in / {u.output_tokens} out tokens, "
@@ -205,6 +211,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--out", help="output folder (default: out/<video name>)")
     run.add_argument("--model", default="claude-opus-5", help="Claude model id (default: claude-opus-5)")
     run.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
+    run.add_argument("--reader-model", help="a cheaper model for reading the frames, e.g. claude-sonnet-5; the merge still uses --model")
     run.add_argument("--frames-per-call", type=int, default=8, help="frames sent per model call (default 8)")
     run.add_argument("--max-frames", type=int, default=120, help="cap on still frames kept (default 120)")
     run.add_argument("--detect", default="hash", choices=["hash", "scene"],
