@@ -85,9 +85,11 @@ only gets what was said while it was showing. Word times land within about a
 third of a second; `pip install -e ".[whisper-precise]"` adds stable-ts, which
 lands them about three times closer at the price of a 600 MB download.
 
-Transcript files from meeting tools (`.vtt`, `.srt`) carry no word times, so
-those sentences go with the screen showing at their midpoint. They are still
-the faster and usually more accurate route when you have them.
+Transcript files from meeting tools (`.vtt`, `.srt`, `.json`) carry no word
+times, so when a sentence runs across a screen change specto spreads its
+words evenly over the sentence's time (a long word gets a little more) and
+cuts it there, which lands within a word or two of the right place. They are
+still the faster and usually more accurate route when you have them.
 
 To check the pipeline without spending anything, `--fake` runs it with a
 stand-in model. There is a ready-made example recording in the repo, a

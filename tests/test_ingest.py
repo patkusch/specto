@@ -239,7 +239,7 @@ def test_build_moments_assigns_by_midpoint():
         TranscriptSegment(start=19.0, end=25.0, text="midpoint 22 -> third"),
         TranscriptSegment(start=40.0, end=41.0, text="after the end -> last"),
     ]
-    moments = build_moments(keyframes, segments, duration=30.0)
+    moments = build_moments(keyframes, segments, duration=30.0, estimate_word_times=False)
     assert [m.keyframe_index for m in moments] == [0, 1, 2]
     assert [(m.start, m.end) for m in moments] == [(0.0, 10.0), (10.0, 20.0), (20.0, 30.0)]
     assert [s.text for s in moments[0].segments] == ["first", "straddles, midpoint 9.5 -> first"]
