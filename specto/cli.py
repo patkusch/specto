@@ -28,9 +28,31 @@ def _load(path: Path, model):
     return model.model_validate_json(path.read_text(encoding="utf-8"))
 
 
+def make_caller(args: argparse.Namespace, model: str | None = None):
+    """The model caller for the chosen provider, or None (with a message) when no key is set."""
+    model = model or args.model
+    if getattr(args, "provider", "claude") == "gemini":
+        from .gemini import GeminiCaller, gemini_available
+
+        if not gemini_available():
+            print("GEMINI_API_KEY (or GOOGLE_API_KEY) is not set. Get a key at https://aistudio.google.com/apikey, "
+                  "or pass --fake to try without the model.", file=sys.stderr)
+            return None
+        if model.startswith("claude-"):
+            model = "gemini-2.5-pro"
+        return GeminiCaller(model=model)
+    from .extract import ClaudeCaller
+
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        print("ANTHROPIC_API_KEY is not set. Export it, pass --provider gemini with a Gemini key, "
+              "or pass --fake to try without the model.", file=sys.stderr)
+        return None
+    return ClaudeCaller(model=model, effort=args.effort)
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     from .export import export_all
-    from .extract import ClaudeCaller, extract
+    from .extract import extract
     from .ingest import ingest
 
     source = Path(args.video)
@@ -106,13 +128,11 @@ def cmd_run(args: argparse.Namespace) -> int:
         from .fake import FakeCaller
         caller = FakeCaller()
     else:
-        if not os.environ.get("ANTHROPIC_API_KEY"):
-            print("ANTHROPIC_API_KEY is not set. Export it, or pass --fake to try the pipeline without the model.",
-                  file=sys.stderr)
+        caller = make_caller(args)
+        if caller is None:
             return 2
-        caller = ClaudeCaller(model=args.model, effort=args.effort)
         if args.reader_model and args.reader_model != args.model:
-            reader = ClaudeCaller(model=args.reader_model, effort=args.effort)
+            reader = make_caller(args, args.reader_model)
 
     if args.force and (out_dir / "chunk_readings.json").exists():
         (out_dir / "chunk_readings.json").unlink()
@@ -152,12 +172,9 @@ def cmd_live(args: argparse.Namespace) -> int:
         from .fake import FakeCaller
         caller = FakeCaller()
     else:
-        if not os.environ.get("ANTHROPIC_API_KEY"):
-            print("ANTHROPIC_API_KEY is not set. Export it, or pass --fake to try live mode without the model.",
-                  file=sys.stderr)
+        caller = make_caller(args)
+        if caller is None:
             return 2
-        from .extract import ClaudeCaller
-        caller = ClaudeCaller(model=args.model, effort=args.effort)
 
     if args.replay:
         replay(out_dir, args.replay, args.transcript, caller, every_seconds=args.every)
@@ -192,11 +209,9 @@ def cmd_resolve(args: argparse.Namespace) -> int:
         from .fake import FakeCaller
         caller = FakeCaller()
     else:
-        if not os.environ.get("ANTHROPIC_API_KEY"):
-            print("ANTHROPIC_API_KEY is not set. Export it, or pass --fake to try without the model.", file=sys.stderr)
+        caller = make_caller(args)
+        if caller is None:
             return 2
-        from .extract import ClaudeCaller
-        caller = ClaudeCaller(model=args.model, effort=args.effort)
     response = resolve_dir(out_dir, caller=caller)
     print(f"resolve: {len(response.new_requirements)} new requirement(s), {len(response.updated_statements)} updated, "
           f"{len(response.new_acceptance_criteria)} new criteria, {len(response.follow_up_questions)} follow-up question(s)")
@@ -268,6 +283,7 @@ def build_parser() -> argparse.ArgumentParser:
                      "With a screenshot folder, plain notes (.txt or .md without timestamps) are spread over the screenshots")
     run.add_argument("--out", help="output folder (default: out/<video name>)")
     run.add_argument("--model", default="claude-opus-5", help="Claude model id (default: claude-opus-5)")
+    run.add_argument("--provider", default="claude", choices=["claude", "gemini"], help="which model service to call (default claude)")
     run.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
     run.add_argument("--reader-model", help="a cheaper model for reading the frames, e.g. claude-sonnet-5; the merge still uses --model")
     run.add_argument("--frames-per-call", type=int, default=8, help="frames sent per model call (default 8)")
@@ -303,6 +319,7 @@ def build_parser() -> argparse.ArgumentParser:
     live.add_argument("--audio-device", default=":0", help="ffmpeg avfoundation audio device (default :0)")
     live.add_argument("--whisper-model", default="base")
     live.add_argument("--model", default="claude-opus-5")
+    live.add_argument("--provider", default="claude", choices=["claude", "gemini"], help="which model service to call (default claude)")
     live.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
     live.add_argument("--fake", action="store_true", help="stand-in model, no key needed")
     live.set_defaults(func=cmd_live)
@@ -315,6 +332,7 @@ def build_parser() -> argparse.ArgumentParser:
     rs = sub.add_parser("resolve", help="turn answered questions into requirements and criteria")
     rs.add_argument("out_dir")
     rs.add_argument("--model", default="claude-opus-5")
+    rs.add_argument("--provider", default="claude", choices=["claude", "gemini"], help="which model service to call (default claude)")
     rs.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
     rs.add_argument("--fake", action="store_true", help="stand-in model, no key needed")
     rs.set_defaults(func=cmd_resolve)

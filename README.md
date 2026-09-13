@@ -112,6 +112,20 @@ that actually changes over the recording and keeps only that, so the model
 reads the shared window and not the meeting around it. If it picks the
 wrong area, pass the box yourself as `--crop x,y,w,h` in pixels.
 
+## Using Gemini instead of Claude
+
+```bash
+export GEMINI_API_KEY=...   # or GOOGLE_API_KEY; a free key comes from https://aistudio.google.com/apikey
+specto run walkthrough.mp4 --transcript walkthrough.vtt --provider gemini --model gemini-2.5-pro
+```
+
+The same stages run against Google's Gemini; `gemini-2.5-flash` is the
+cheaper choice for the frame-reading pass. If the first call fails with a
+403 saying the API "has not been used in project", open that Google Cloud
+project's APIs & Services, Library, enable the Generative Language API, and
+run it again. An existing Google API key from another product (Maps,
+YouTube) works once that API is enabled on its project.
+
 ## No recording, just screenshots
 
 ```bash
@@ -220,7 +234,8 @@ Ctrl-C) saves what it has read so far and picks up from there next time.
 |---|---|---|
 | `--transcript FILE` | `.vtt`, `.srt`, timestamped `.txt`, or a meeting-tool `.json` | transcribe locally |
 | `--out DIR` | where to write | `out/<video name>` |
-| `--model ID` | Claude model | `claude-opus-5` |
+| `--provider claude|gemini` | which model service to call | `claude` |
+| `--model ID` | model id for the provider | `claude-opus-5` |
 | `--reader-model ID` | a cheaper model for reading the frames, e.g. `claude-sonnet-5`; the final merge still uses `--model` | same as `--model` |
 | `--effort` | how hard the model thinks: low, medium, high, xhigh, max | `high` |
 | `--frames-per-call N` | images per model call | 8 |

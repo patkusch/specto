@@ -211,3 +211,26 @@ def test_cli_crop_flag_is_validated(synthetic_video: Path, tmp_path: Path, capsy
     assert main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(out), "--fake", "--crop", "0,0,320,180"]) == 0
     rec = Recording.model_validate_json((out / "recording.json").read_text())
     assert rec.keyframes and rec.keyframes[0].width == 320
+
+
+def test_cli_gemini_provider_needs_a_key(synthetic_video: Path, tmp_path: Path, monkeypatch, capsys) -> None:
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    vtt = tmp_path / "w.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    rc = main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(tmp_path / "o"), "--provider", "gemini"])
+    assert rc == 2
+    assert "GEMINI_API_KEY" in capsys.readouterr().err
+
+
+def test_cli_gemini_provider_builds_a_gemini_caller(monkeypatch) -> None:
+    import argparse
+    from specto.cli import make_caller
+    from specto.gemini import GeminiCaller
+
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    args = argparse.Namespace(provider="gemini", model="claude-opus-5", effort="high")
+    caller = make_caller(args)
+    assert isinstance(caller, GeminiCaller) and caller.model == "gemini-2.5-pro"
+    args = argparse.Namespace(provider="gemini", model="gemini-2.5-flash", effort="high")
+    assert make_caller(args).model == "gemini-2.5-flash"

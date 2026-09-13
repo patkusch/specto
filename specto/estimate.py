@@ -33,6 +33,9 @@ PRICES: dict[str, tuple[float, float]] = {
     "claude-sonnet-5": (2.0, 10.0),
     "claude-haiku-4-5": (1.0, 5.0),
     "claude-fable-5-1": (10.0, 50.0),
+    # Gemini (via --provider gemini), checked 2026-09-13 against the Gemini API price list.
+    "gemini-2.5-pro": (1.25, 10.0),
+    "gemini-2.5-flash": (0.30, 2.50),
 }
 CACHE_READ_FRACTION = 0.10
 COMPARED_MODELS = ("claude-haiku-4-5", "claude-sonnet-5", "claude-opus-5", "claude-fable-5-1")
