@@ -1,41 +1,59 @@
+<div align="center">
+
 # specto
 
-Watches a recording of an expert walking through a system and writes down
-what the system must do.
+### Requirements from a screen walkthrough
 
-563 offline tests. Runs without an API key. Nothing leaves your machine
-except the frames and words you choose to send to a model service.
+**An expert talks through the system for two minutes.**
+**specto writes the requirements, the acceptance criteria, and the seventeen questions nobody asked.**
 
-![Left: a frame of the example walkthrough. Right: the requirement, the acceptance criterion and the question specto wrote from that moment, each linked to the frame](docs/hero.png)
+<br/>
 
-On the two example recordings, the readings recovered 93 to 100 percent of
-what a hand-written answer key asks for. The full numbers are two sections
-down.
+[![specto turning a recorded walkthrough into ranked questions and requirements](./docs/demo.gif)](./docs/demo.gif)
 
-An expert shares their screen and talks through the process: "this is where
-we look up the customer, we type the postcode here, then Save sends it to
-the approvals queue". Someone then has to turn that into requirements by
-hand. specto does the first draft. It listens to the words, looks at what
-was on screen at that moment, and writes one workbook and one web page a
-delivery team can build from.
+**A real reading of the example recording.** Every row linked to the frame it came from.
+[The thirty-second version](#the-thirty-second-version) · [Run it yourself](#run-it-yourself) · [Scoreboard](docs/scoreboard.html)
 
-![A requirement card from report.html: the statement, the expert's quote, the frame it came from, and its acceptance criteria ](docs/report-requirements.png)
+<br/>
 
-![The SME questions table in report.html, most blocking first, with an Answer column to type into ](docs/report-questions.png)
+[![Model](https://img.shields.io/badge/Claude_Opus_5_or_Gemini-1A1A1A?style=for-the-badge)](#using-gemini-instead-of-claude)
+[![License](https://img.shields.io/badge/License-MIT-1A1A1A?style=for-the-badge)](./LICENSE)
+[![Recall](https://img.shields.io/badge/answer--key_recall-0.93_to_1.00-2ea043?style=for-the-badge)](#does-it-work)
+[![Tests](https://img.shields.io/badge/offline_tests-563-2ea043?style=for-the-badge)](#development)
+[![CI](https://github.com/patkusch/specto/actions/workflows/ci.yml/badge.svg)](https://github.com/patkusch/specto/actions/workflows/ci.yml)
 
-![One frame from the example recording, the Customer Details screen](docs/frame-example.png)
+</div>
 
-Every row links to the still image it came from, so a reader can check any
-claim against the screen in one click. Three rows from the example, as
-written:
+---
 
-| You get | For example |
-|---|---|
-| Requirements, in the expert's own words | *As an Onboarding Officer, I need to search existing customers by postcode and surname before I create a record, so that I do not create a duplicate customer.* From "You put in the postcode and the surname and hit Search, and it lists anyone we already have, so you don't create a duplicate." (frame 0 at 00:07) |
-| Acceptance criteria a tester can run | *Given an existing customer with surname Lunmere and postcode SW1A 1AA is on file, when the officer enters that postcode and surname and presses Search, then the results table shows that customer as a row.* |
-| Questions nobody answered, ranked by what they hold up | *Are there validation rules on Date of birth, Email address and Phone number, and what does the officer see when a mandatory field is empty?* Holds up two requirements. |
+## The thirty-second version
 
-The workbook has these sheets:
+An onboarding officer records a two-minute walkthrough of the customer tool. At 1:02, on the Review and Submit screen, she says:
+
+> *"You read it through, and if it all looks right you press Submit for approval."*
+
+The frame on screen at that moment shows the ID document still marked **Pending check**, with Submit available. Nobody mentions that. specto ranks it as the first question to ask, because two requirements cannot be finalised until it is answered:
+
+> **Q010 · validation rule · holds up R015, R018 · frame 3 at 01:02**
+> Can a record be submitted for approval, and approved, while its ID document is still Pending check? The record on screen was submitted with the ID still pending.
+
+Twenty-four seconds later she says *"Only team leads can approve. The Approve button doesn't show for the rest of us."* The frame shows two green **Approve** buttons while signed in as an Onboarding Officer. specto writes the rule she stated as requirement R018, and the acceptance criterion that frame fails:
+
+> **AC027** · Given a user in the Onboarding Officer role is signed in, when the user opens the Approval Queue, then no row shows an Approve button.
+
+A tester running that criterion against the screen finds the contradiction in one step. An earlier reading of the same recording raised it as a question outright; readings vary, which is why every row carries its frame so a reviewer can check.
+
+<div align="center">
+
+[![The findings column: questions ranked by how many requirements each holds up](./docs/questions.png)](./docs/questions.png)
+
+</div>
+
+---
+
+## What it produces
+
+One workbook and one web page a delivery team can build from:
 
 | Sheet | What is in it |
 |---|---|
@@ -45,21 +63,25 @@ The workbook has these sheets:
 | Actions | Every button and link the expert used, and where it led |
 | Requirements | What the system must do, in the expert's own words, with a picture of the moment |
 | Acceptance Criteria | How to check each requirement is met (Given / When / Then) |
-| SME Questions | What the expert did not say and someone must ask before building |
+| SME Questions | What the expert did not say and someone must ask before building, ranked by what each holds up |
 | Transcript | Everything said, with the time and the screen that was showing |
 | Glossary | Every role, screen, field and button named, where it first appeared, and a Definition column to fill in |
-| Gaps | What the analysis does not cover yet: screens with no requirement, fields never mentioned, requirements with no criteria, buttons that lead nowhere |
-| Personal Data | Every email, phone number, postcode, date of birth, card or account number, name and address that appeared on screen or was said, masked, with the frame it was on |
+| Gaps | What the analysis does not cover yet: screens with no requirement, fields never mentioned, requirements with no criteria |
+| Personal Data | Every email, phone number, postcode, date of birth, card or account number, name and address that appeared, masked, with the frame |
 
-The same content goes into a single web page with the frames inside it, a
-Markdown report, a screen-flow picture, and ticket files for Jira and Azure
-DevOps.
+Plus a single web page with the frames inside it, a Markdown report, a screen-flow picture, and import files for Jira and Azure DevOps.
+
+<div align="center">
+
+[![The finished dashboard: frame, transcript, ranked questions, requirements and the counters](./docs/dashboard.png)](./docs/dashboard.png)
+
+</div>
+
+563 offline tests. Runs without an API key. Nothing leaves your machine except the frames and words you choose to send to a model service.
+
+---
 
 ## Does it work?
-
-A one-page scoreboard for a business reader, with every figure marked
-measured or assumed, a savings calculator and the roadmap, is at
-[docs/scoreboard.html](docs/scoreboard.html).
 
 The example recording has been read twice by Claude through the
 bring-your-own-model path (the agents in a Claude Code session acting as
@@ -87,6 +109,16 @@ the question missed the second time (which document types are accepted)
 was raised the first time. That is the kind of variation to expect between
 runs. The current reference result is in `examples/onboarding/reference/`.
 
+<div align="center">
+
+[![Recall against the answer keys and the cost and speed counters](./docs/scoreboard.png)](./docs/scoreboard.png)
+
+</div>
+
+A one-page scoreboard for a business reader, with every figure marked
+measured or assumed, a savings calculator, a comparison with named
+neighbours and the roadmap: [docs/scoreboard.html](docs/scoreboard.html).
+
 The second example, the complaints tool recorded inside a meeting frame,
 was read once the same way: 6 screens, 42 fields, 46 requirements, 60
 criteria and 23 questions, and every item in its answer key was found
@@ -96,7 +128,7 @@ The same stages have not yet been run through the API itself, so the first
 run with a key should be on an example, and the score compared with its
 reference folder.
 
-## Try it
+## Run it yourself
 
 ```bash
 pip install -e .
