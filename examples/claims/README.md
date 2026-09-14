@@ -9,3 +9,10 @@ It differs from the onboarding example in two ways. The screens are tables, a ti
 To rebuild: `.venv/bin/pip install playwright && .venv/bin/playwright install chromium`, then `.venv/bin/python examples/claims/make_example.py` from the repo root. It rewrites the pages in `app/`, prints the timeline and overwrites the mp4 and vtt.
 
 To run specto on it: `specto run examples/claims/walkthrough.mp4 --transcript examples/claims/walkthrough.vtt --crop auto --fake` (drop `--fake` to use an API key). Measured on 2026-09-14: the crop detector found the 1280x720 window at 160,60 exactly and the hash detector kept 6 keyframes, one per screen.
+
+## Reference result
+
+`reference/` holds a real reading of this recording by Claude through the
+bring-your-own-model path: 6 screens, 42 fields, 46 requirements, 60
+criteria and 23 questions, with overall recall 1.00 against `expected.json`.
+Use it to compare a new prompt or model.

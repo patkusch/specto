@@ -65,9 +65,14 @@ the question missed the second time (which document types are accepted)
 was raised the first time. That is the kind of variation to expect between
 runs. The current reference result is in `examples/onboarding/reference/`.
 
+The second example, the complaints tool recorded inside a meeting frame,
+was read once the same way: 6 screens, 42 fields, 46 requirements, 60
+criteria and 23 questions, and every item in its answer key was found
+(recall 1.00). Its result is in `examples/claims/reference/`.
+
 The same stages have not yet been run through the API itself, so the first
-run with a key should be on the example, and the score compared with that
-folder.
+run with a key should be on an example, and the score compared with its
+reference folder.
 
 ## Try it
 

@@ -1,0 +1,59 @@
+{
+  "categories": {
+    "screens": {
+      "expected": 6,
+      "found": 6,
+      "recall": 1.0,
+      "missed": [],
+      "extras": 0
+    },
+    "fields": {
+      "expected": 14,
+      "found": 14,
+      "recall": 1.0,
+      "missed": [],
+      "extras": 28
+    },
+    "actions": {
+      "expected": 4,
+      "found": 4,
+      "recall": 1.0,
+      "missed": [],
+      "extras": 10
+    },
+    "requirements": {
+      "expected": 7,
+      "found": 7,
+      "recall": 1.0,
+      "missed": [],
+      "extras": 39
+    },
+    "questions": {
+      "expected": 4,
+      "found": 4,
+      "recall": 1.0,
+      "missed": [],
+      "extras": 19
+    }
+  },
+  "overall_recall": 1.0,
+  "traceability": {
+    "requirements_without_source_quote": 0,
+    "criteria_with_unknown_requirement": 0,
+    "negative_keyframe_indexes": 0
+  },
+  "writing": {
+    "requirements_with_warnings": 5,
+    "criteria_with_warnings": 9,
+    "rules_seen": [
+      "absolute",
+      "escape-clause",
+      "implementation-word",
+      "joined-clauses",
+      "missing-actor",
+      "passive-voice",
+      "too-long",
+      "vague-word"
+    ]
+  }
+}
