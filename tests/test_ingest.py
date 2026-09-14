@@ -583,3 +583,13 @@ def test_ingest_folder_with_no_screenshots_fails_loudly(tmp_path: Path):
     (empty / "notes.txt").write_text("nothing to see", encoding="utf-8")
     with pytest.raises(FileNotFoundError, match="no screenshots"):
         ingest_folder(empty, tmp_path / "out", log=lambda _: None)
+
+
+def test_rerun_with_fewer_frames_removes_stale_close_ups(synthetic_video, tmp_path):
+    from specto.ingest import extract_keyframes
+
+    extract_keyframes(synthetic_video, tmp_path)
+    stale = tmp_path / "frames" / "crop_0099.jpg"
+    stale.write_bytes(b"old close-up")
+    extract_keyframes(synthetic_video, tmp_path)
+    assert not stale.exists()

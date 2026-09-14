@@ -504,7 +504,8 @@ def extract_keyframes(
             f"to stay within {max_frames} frames; raise max_frames if that is too much"
         )
 
-    _clear(frames_dir, "frame_*.jpg")
+    for pattern in ("frame_*.jpg", "crop_*.jpg"):  # close-ups from an earlier run must not survive
+        _clear(frames_dir, pattern)
     keyframes: list[Keyframe] = []
     for index, (path, timestamp) in enumerate(kept):
         final = frames_dir / f"frame_{index:04d}.jpg"

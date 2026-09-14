@@ -340,7 +340,11 @@ dollars, so a long recording cannot run up a bill by accident.
 `specto doctor` lists what is installed and what is missing (ffmpeg, the
 speech model, OCR, the API key) and what to do about each.
 
-A one-hour walkthrough typically yields 60 to 120 still images. Each image is
+A one-hour walkthrough typically yields 100 to 130 still images: one per
+screen, plus two or three for every value typed and two for every popup.
+Ingest itself takes about twenty seconds for an hour of full-size video on
+a laptop. Measured on a synthetic hour with 40 screens, the model cost
+estimate came to between $1.15 and $1.60 on Claude Opus 5. Each image is
 scaled to 1280 pixels wide and costs roughly 1,500 tokens to read, and the
 system prompt is cached between calls. Expect a few dollars per hour of
 recording on Claude Opus 5; `--effort medium` and a lower `--max-frames` cut
