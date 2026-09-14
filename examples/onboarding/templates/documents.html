@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Northwind Onboarding - Documents</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>Oderic Falstow</b> &middot; Onboarding Officer</div></header>
+<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>{{signed_in_user}}</b> &middot; Onboarding Officer</div></header>
 <div class="layout">
 <nav><div class="section">Onboarding</div>
 <a class="done" href="search.html"><span class="step">1</span>Customer Search</a>
@@ -14,7 +14,7 @@
 <main>
 <div class="crumbs">Onboarding &rsaquo; New customer &rsaquo; Documents</div>
 <h1>Documents</h1>
-<p class="subtitle">Upload proof of identity for Eloette Lunmere.</p>
+<p class="subtitle">Upload proof of identity for {{name}}.</p>
 <div class="card">
   <h2>Upload ID document</h2>
   <div class="grid three">
@@ -27,8 +27,8 @@
   <h2>Uploaded documents</h2>
   <table>
     <tr><th>File</th><th>Document type</th><th>Uploaded</th><th>Uploaded by</th><th>Status</th></tr>
-    <tr><td>passport_elunmere.jpg</td><td>Passport</td><td>10/09/2026 09:41</td><td>Oderic Falstow</td><td><span class="pill pending">Pending check</span></td></tr>
-    <tr><td>council_tax_2026.pdf</td><td>Proof of address</td><td>10/09/2026 09:43</td><td>Oderic Falstow</td><td><span class="pill verified">Verified</span></td></tr>
+    <tr><td>{{id_file}}</td><td>Passport</td><td>10/09/2026 09:41</td><td>{{signed_in_user}}</td><td><span class="pill pending">Pending check</span></td></tr>
+    <tr><td>council_tax_2026.pdf</td><td>Proof of address</td><td>10/09/2026 09:43</td><td>{{signed_in_user}}</td><td><span class="pill verified">Verified</span></td></tr>
   </table>
   <div class="actions"><a class="btn" href="details.html">Back</a><a class="btn primary" href="review.html">Continue to review</a></div>
 </div>

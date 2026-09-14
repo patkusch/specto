@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Northwind Onboarding - Customer Details</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>Oderic Falstow</b> &middot; Onboarding Officer</div></header>
+<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>{{signed_in_user}}</b> &middot; Onboarding Officer</div></header>
 <div class="layout">
 <nav><div class="section">Onboarding</div>
 <a class="done" href="search.html"><span class="step">1</span>Customer Search</a>
@@ -18,21 +18,21 @@
 <div class="card">
   <h2>Personal details</h2>
   <div class="grid">
-    <div class="field"><label>First name<span class="req">*</span></label><input type="text" value="Eloette"></div>
-    <div class="field"><label>Last name<span class="req">*</span></label><input type="text" value="Lunmere"></div>
-    <div class="field"><label>Date of birth<span class="req">*</span></label><input type="text" value="01/01/1981"><div class="hint">DD/MM/YYYY</div></div>
-    <div class="field"><label>Email address</label><input type="email" value="eloette.lunmere@example.com"></div>
-    <div class="field"><label>Phone number</label><input type="tel" value="07700 900231"></div>
+    <div class="field"><label>First name<span class="req">*</span></label><input type="text" value="{{first_name}}"></div>
+    <div class="field"><label>Last name<span class="req">*</span></label><input type="text" value="{{last_name}}"></div>
+    <div class="field"><label>Date of birth<span class="req">*</span></label><input type="text" value="{{date_of_birth}}"><div class="hint">DD/MM/YYYY</div></div>
+    <div class="field"><label>Email address</label><input type="email" value="{{email}}"></div>
+    <div class="field"><label>Phone number</label><input type="tel" value="{{phone}}"></div>
     <div class="field"><label>Account type<span class="req">*</span></label><select><option>Personal</option><option>Business</option></select></div>
   </div>
 </div>
 <div class="card">
   <h2>Address</h2>
   <div class="grid">
-    <div class="field"><label>Address line 1</label><input type="text" value="14 Example Street"></div>
-    <div class="field"><label>Address line 2</label><input type="text" value=""></div>
-    <div class="field"><label>Town / City</label><input type="text" value="London"></div>
-    <div class="field"><label>Postcode<span class="req">*</span></label><input type="text" value="SW1A 1AA"><div class="hint">UK postcode format, e.g. SW1A 1AA</div></div>
+    <div class="field"><label>Address line 1</label><input type="text" value="{{address_line_1}}"></div>
+    <div class="field"><label>Address line 2</label><input type="text" value="{{address_line_2}}"></div>
+    <div class="field"><label>Town / City</label><input type="text" value="{{town}}"></div>
+    <div class="field"><label>Postcode<span class="req">*</span></label><input type="text" value="{{postcode}}"><div class="hint">UK postcode format, e.g. SW1A 1AA</div></div>
   </div>
   <div class="check"><input type="checkbox" id="mk"><label for="mk" style="margin:0;font-weight:500">Customer has given marketing consent</label></div>
   <div class="actions"><a class="btn" href="search.html">Back</a><a class="btn primary" href="documents.html">Save and continue</a></div>

@@ -22,7 +22,8 @@ from specto.pii import (
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
-EXAMPLE_PAGE = Path(__file__).resolve().parent.parent / "examples" / "onboarding" / "app" / "details.html"
+EXAMPLE = Path(__file__).resolve().parent.parent / "examples" / "onboarding"
+EXAMPLE_PAGE = EXAMPLE / "app" / "details.html"
 
 
 def kinds(text: str) -> list[str]:
@@ -157,16 +158,30 @@ def page_text(path: Path) -> str:
     return "\n".join(" ".join(line.split()) for line in text.splitlines() if line.strip())
 
 
+def sample_customer() -> dict:
+    """The seeded customer the example pages are rendered from (see examples/onboarding/make_example.py)."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("make_example", EXAMPLE / "make_example.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.sample_customer()
+
+
 def test_example_details_page():
+    c = sample_customer()
     hits = scan_text(page_text(EXAMPLE_PAGE), "frame text", keyframe_index=1, timestamp=45.0)
     found = {(h.kind, h.value_masked) for h in hits}
-    assert ("email", "pr***@example.com") in found
-    assert ("phone", "07*** ******78") in found
-    assert ("uk postcode", "SW** *AA") in found
-    assert ("date of birth", "04/**/**75") in found
-    assert ("person name", "P***") in found and ("person name", "S***") in found
+    assert ("email", mask_value("email", c["email"])) in found
+    assert ("phone", mask_value("phone", c["phone"])) in found
+    assert ("uk postcode", mask_value("uk postcode", c["postcode"])) in found
+    assert ("date of birth", mask_value("date of birth", c["date_of_birth"])) in found
+    assert ("person name", mask_value("person name", c["first_name"])) in found
+    assert ("person name", mask_value("person name", c["last_name"])) in found
+    assert ("person name", mask_value("person name", c["signed_in_user"])) in found
     joined = " ".join(h.value_masked + " " + h.context for h in hits)
-    for raw in ("priya.shah", "345678", "SW1A 1AA", "04/03/1975", "Priya", "Shah"):
+    local_part = c["email"].partition("@")[0]
+    for raw in (local_part, c["phone"][-6:], c["postcode"], c["date_of_birth"], c["first_name"], c["last_name"], c["signed_in_user"]):
         assert raw not in joined
 
 

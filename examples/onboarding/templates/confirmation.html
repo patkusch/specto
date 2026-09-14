@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Northwind Onboarding - Confirmation</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>Oderic Falstow</b> &middot; Onboarding Officer</div></header>
+<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>{{signed_in_user}}</b> &middot; Onboarding Officer</div></header>
 <div class="layout">
 <nav><div class="section">Onboarding</div>
 <a class="done" href="search.html"><span class="step">1</span>Customer Search</a>
@@ -17,13 +17,13 @@
 <p class="subtitle">The customer record has been approved.</p>
 <div class="card">
   <div class="tick">&#10003;</div>
-  <h2>Eloette Lunmere is now an active customer</h2>
+  <h2>{{name}} is now an active customer</h2>
   <div class="muted">Customer reference number</div>
-  <div class="ref">NW-2026-31365</div>
+  <div class="ref">{{reference}}</div>
   <table class="summary" style="margin-top:14px">
-    <tr><td>Approved by</td><td>Sorora Brinhurst (Team Lead)</td></tr>
+    <tr><td>Approved by</td><td>{{team_lead}} (Team Lead)</td></tr>
     <tr><td>Approved on</td><td>10/09/2026 10:31</td></tr>
-    <tr><td>Welcome email</td><td>Sent to eloette.lunmere@example.com</td></tr>
+    <tr><td>Welcome email</td><td>Sent to {{email}}</td></tr>
   </table>
   <div class="actions"><a class="btn primary" href="search.html">Start another customer</a><a class="btn" href="#">Print confirmation</a></div>
 </div>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Northwind Onboarding - Approval Queue</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>Oderic Falstow</b> &middot; Onboarding Officer</div></header>
+<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>{{signed_in_user}}</b> &middot; Onboarding Officer</div></header>
 <div class="layout">
 <nav><div class="section">Onboarding</div>
 <a class="done" href="search.html"><span class="step">1</span>Customer Search</a>
@@ -19,10 +19,10 @@
 <div class="card">
   <table>
     <tr><th>Reference</th><th>Customer</th><th>Submitted</th><th>Submitted by</th><th>Status</th><th>Assigned to</th><th>Action</th></tr>
-    <tr><td>NW-2026-31360</td><td>Odeina Wexshaw</td><td>09/09/2026 16:20</td><td>Eloora Lunwick</td><td><span class="pill awaiting">Awaiting approval</span></td><td>Sorora Brinhurst</td><td><a class="btn small success" href="confirmation.html">Approve</a></td></tr>
-    <tr><td>NW-2026-31363</td><td>Marisol Quenmere</td><td>10/09/2026 08:05</td><td>Oderic Falstow</td><td><span class="pill awaiting">Awaiting approval</span></td><td>Sorora Brinhurst</td><td><a class="btn small success" href="confirmation.html">Approve</a></td></tr>
-    <tr><td>NW-2026-31365</td><td>Eloette Lunmere</td><td>10/09/2026 09:52</td><td>Oderic Falstow</td><td><span class="pill awaiting">Awaiting approval</span></td><td>Unassigned</td><td><a class="btn small success" href="confirmation.html">Approve</a></td></tr>
-    <tr><td>NW-2026-31357</td><td>Wilisol Tamshaw</td><td>08/09/2026 11:14</td><td>Eloora Lunwick</td><td><span class="pill approved">Approved</span></td><td>Sorora Brinhurst</td><td class="muted">&mdash;</td></tr>
+    <tr><td>{{queue1_reference}}</td><td>{{queue1_name}}</td><td>09/09/2026 16:20</td><td>{{colleague}}</td><td><span class="pill awaiting">Awaiting approval</span></td><td>{{team_lead}}</td><td><a class="btn small success" href="confirmation.html">Approve</a></td></tr>
+    <tr><td>{{queue2_reference}}</td><td>{{queue2_name}}</td><td>10/09/2026 08:05</td><td>{{signed_in_user}}</td><td><span class="pill awaiting">Awaiting approval</span></td><td>{{team_lead}}</td><td><a class="btn small success" href="confirmation.html">Approve</a></td></tr>
+    <tr><td>{{reference}}</td><td>{{name}}</td><td>10/09/2026 09:52</td><td>{{signed_in_user}}</td><td><span class="pill awaiting">Awaiting approval</span></td><td>Unassigned</td><td><a class="btn small success" href="confirmation.html">Approve</a></td></tr>
+    <tr><td>{{queue3_reference}}</td><td>{{queue3_name}}</td><td>08/09/2026 11:14</td><td>{{colleague}}</td><td><span class="pill approved">Approved</span></td><td>{{team_lead}}</td><td class="muted">&mdash;</td></tr>
   </table>
 </div>
 </main>

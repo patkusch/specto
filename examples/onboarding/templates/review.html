@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Northwind Onboarding - Review and Submit</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>Oderic Falstow</b> &middot; Onboarding Officer</div></header>
+<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>{{signed_in_user}}</b> &middot; Onboarding Officer</div></header>
 <div class="layout">
 <nav><div class="section">Onboarding</div>
 <a class="done" href="search.html"><span class="step">1</span>Customer Search</a>
@@ -17,14 +17,14 @@
 <p class="subtitle">Check the details below. After submission the record is locked for editing.</p>
 <div class="card">
   <table class="summary">
-    <tr><td>Name</td><td>Eloette Lunmere</td></tr>
-    <tr><td>Date of birth</td><td>01/01/1981</td></tr>
-    <tr><td>Email address</td><td>eloette.lunmere@example.com</td></tr>
-    <tr><td>Phone number</td><td>07700 900231</td></tr>
-    <tr><td>Address</td><td>14 Example Street, London, SW1A 1AA</td></tr>
+    <tr><td>Name</td><td>{{name}}</td></tr>
+    <tr><td>Date of birth</td><td>{{date_of_birth}}</td></tr>
+    <tr><td>Email address</td><td>{{email}}</td></tr>
+    <tr><td>Phone number</td><td>{{phone}}</td></tr>
+    <tr><td>Address</td><td>{{address}}</td></tr>
     <tr><td>Account type</td><td>Personal</td></tr>
     <tr><td>Marketing consent</td><td>No</td></tr>
-    <tr><td>ID document</td><td>Passport (passport_elunmere.jpg) &middot; <span class="pill pending">Pending check</span></td></tr>
+    <tr><td>ID document</td><td>Passport ({{id_file}}) &middot; <span class="pill pending">Pending check</span></td></tr>
   </table>
   <div class="actions"><a class="btn" href="documents.html">Back</a><a class="btn success" href="queue.html">Submit for approval</a></div>
 </div>

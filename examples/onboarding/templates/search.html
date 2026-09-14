@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Northwind Onboarding - Customer Search</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>Oderic Falstow</b> &middot; Onboarding Officer</div></header>
+<header><div class="brand"><span></span>Northwind Onboarding</div><div class="env">UAT</div><div class="user">Signed in as <b>{{signed_in_user}}</b> &middot; Onboarding Officer</div></header>
 <div class="layout">
 <nav><div class="section">Onboarding</div>
 <a class="active" href="search.html"><span class="step">1</span>Customer Search</a>
@@ -17,8 +17,8 @@
 <p class="subtitle">Check whether the customer already exists before creating a new record.</p>
 <div class="card">
   <div class="grid three">
-    <div class="field"><label for="pc">Postcode</label><input type="text" id="pc" value="SW1A 1AA"></div>
-    <div class="field"><label for="sn">Surname</label><input type="text" id="sn" value="Lunmere"></div>
+    <div class="field"><label for="pc">Postcode</label><input type="text" id="pc" value="{{postcode}}"></div>
+    <div class="field"><label for="sn">Surname</label><input type="text" id="sn" value="{{last_name}}"></div>
     <div class="field"><label>&nbsp;</label><a class="btn primary" href="#">Search</a> <a class="btn" href="#">Clear</a></div>
   </div>
 </div>
@@ -26,9 +26,9 @@
   <h2>Results (3 matches)</h2>
   <table>
     <tr><th>Customer ID</th><th>Name</th><th>Date of birth</th><th>Postcode</th><th>Account type</th><th>Status</th><th></th></tr>
-    <tr><td>C-625922</td><td>Wilina Lunmere</td><td>01/01/1982</td><td>SW1A 1AA</td><td>Personal</td><td><span class="pill approved">Active</span></td><td><a class="btn small" href="#">Open</a></td></tr>
-    <tr><td>C-994911</td><td>Corric Lunmere</td><td>01/01/1976</td><td>SW1A 1AB</td><td>Business</td><td><span class="pill approved">Active</span></td><td><a class="btn small" href="#">Open</a></td></tr>
-    <tr><td>C-595381</td><td>Sordra Lunmere</td><td>01/01/1988</td><td>SW1A 1AA</td><td>Personal</td><td><span class="pill rejected">Closed</span></td><td><a class="btn small" href="#">Open</a></td></tr>
+    <tr><td>{{match1_id}}</td><td>{{match1_name}}</td><td>{{match1_date_of_birth}}</td><td>SW1A 1AA</td><td>Personal</td><td><span class="pill approved">Active</span></td><td><a class="btn small" href="#">Open</a></td></tr>
+    <tr><td>{{match2_id}}</td><td>{{match2_name}}</td><td>{{match2_date_of_birth}}</td><td>SW1A 1AB</td><td>Business</td><td><span class="pill approved">Active</span></td><td><a class="btn small" href="#">Open</a></td></tr>
+    <tr><td>{{match3_id}}</td><td>{{match3_name}}</td><td>{{match3_date_of_birth}}</td><td>SW1A 1AA</td><td>Personal</td><td><span class="pill rejected">Closed</span></td><td><a class="btn small" href="#">Open</a></td></tr>
   </table>
   <div class="actions"><a class="btn primary" href="details.html">Create new customer</a></div>
 </div>
