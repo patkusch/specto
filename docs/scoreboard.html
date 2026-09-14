@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>specto Scoreboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F4F6F8; --panel:#FFFFFF; --line:#D9DFE6; --ink:#1B2733; --muted:#5E6B78; --faint:#8C98A4;
+  --accent:#0B5C8F; --accent-soft:#D6E6F2; --track:#E6EBF0;
+  --measured:#1F6E43; --measured-soft:#DDEFE3; --assumed:#8A5A12; --assumed-soft:#F5E9D3;
+  --done:#1F6E43; --next:#0B5C8F; --later:#8C98A4;
+  --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F161D; --panel:#171F28; --line:#2A3540; --ink:#E6EBF0; --muted:#A0ACB8; --faint:#6F7C88;
+    --accent:#5FB0DC; --accent-soft:#1B3447; --track:#243039;
+    --measured:#6CC28E; --measured-soft:#173324; --assumed:#E0A94E; --assumed-soft:#3A2B12;
+    --done:#6CC28E; --next:#5FB0DC; --later:#6F7C88;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F161D; --panel:#171F28; --line:#2A3540; --ink:#E6EBF0; --muted:#A0ACB8; --faint:#6F7C88;
+  --accent:#5FB0DC; --accent-soft:#1B3447; --track:#243039;
+  --measured:#6CC28E; --measured-soft:#173324; --assumed:#E0A94E; --assumed-soft:#3A2B12;
+  --done:#6CC28E; --next:#5FB0DC; --later:#6F7C88;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.55 var(--sans)}
+main{max-width:1080px;margin:0 auto;padding:40px 28px 80px}
+h1{font-size:2rem;line-height:1.15;margin:0 0 6px;font-weight:600;text-wrap:balance}
+h2{font-size:1.25rem;margin:56px 0 14px;font-weight:600;text-wrap:balance}
+h3{font-size:1rem;margin:0 0 8px;font-weight:600}
+p{margin:8px 0;max-width:68ch}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.lead{font-size:1.1rem;color:var(--muted);max-width:66ch}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font:500 .72rem/1 var(--sans);letter-spacing:.04em;text-transform:uppercase;padding:4px 8px;border-radius:3px;vertical-align:middle}
+.tag.m{background:var(--measured-soft);color:var(--measured)}
+.tag.a{background:var(--assumed-soft);color:var(--assumed)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:26px 0 8px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
+.tile .v{font:500 2.1rem/1.1 var(--mono);font-variant-numeric:tabular-nums;margin:6px 0 4px}
+.tile .l{font-size:.85rem;color:var(--muted)}
+.tile .s{font-size:.8rem;color:var(--faint);margin-top:6px}
+
+.chart{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px 20px;overflow-x:auto}
+.chart svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:18px;font-size:.82rem;color:var(--muted);margin:10px 0 0;flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.legend .f::before{background:var(--accent)}
+.legend .e::before{background:var(--track);border:1px solid var(--line)}
+
+.callout{border-left:3px solid var(--accent);padding:6px 18px;margin:18px 0;background:var(--panel);border-radius:0 6px 6px 0}
+.callout p{max-width:72ch}
+
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:22px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:20px}
+@media (max-width:720px){.calc{grid-template-columns:1fr}}
+.calc label{display:block;font-size:.85rem;color:var(--muted);margin:10px 0 4px}
+.calc input{width:100%;font:1rem var(--mono);padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--ground);color:var(--ink)}
+.calc input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.out{display:grid;gap:12px;align-content:start}
+.out .row{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding:8px 0}
+.out .row b{font:500 1.35rem var(--mono);font-variant-numeric:tabular-nums}
+.out .row.big b{font-size:1.9rem;color:var(--accent)}
+.out .row span{color:var(--muted);font-size:.9rem}
+.fine{font-size:.8rem;color:var(--faint);max-width:72ch}
+
+table{border-collapse:collapse;width:100%;font-size:.92rem;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+td.num{white-space:nowrap}
+.wrap{overflow-x:auto}
+
+.road{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:820px){.road{grid-template-columns:1fr}}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
+.col h3{display:flex;align-items:center;gap:8px}
+.col h3::before{content:"";width:10px;height:10px;border-radius:50%}
+.col.done h3::before{background:var(--done)}
+.col.next h3::before{background:var(--next)}
+.col.later h3::before{background:var(--later)}
+.col ul{margin:8px 0 0;padding-left:18px}
+.col li{margin:6px 0;font-size:.92rem}
+.col .when{font-size:.78rem;color:var(--faint);margin-bottom:6px}
+
+.honest{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:720px){.honest{grid-template-columns:1fr}}
+.honest .col ul{padding-left:18px}
+footer{margin-top:56px;font-size:.82rem;color:var(--faint)}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+
+
+<main>
+  <p class="eyebrow">specto · product scoreboard · 14 September 2026</p>
+  <h1>Turn an expert's screen walkthrough into requirements a team can build from</h1>
+  <p class="lead">An expert shares their screen and talks through a process. specto listens, looks at what was on screen at each moment, and writes the requirements, the acceptance criteria and the questions nobody answered. This page shows how well it does that, what it saves, and where it goes next.</p>
+
+  <div class="tiles">
+    <div class="tile"><div class="l">Answer-key recall, complaints tool <span class="tag m">measured</span></div><div class="v">100%</div><div class="s">21 of 21 items the key asks for, one reading</div></div>
+    <div class="tile"><div class="l">Answer-key recall, onboarding tool <span class="tag m">measured</span></div><div class="v">93–97%</div><div class="s">two independent readings of the same recording</div></div>
+    <div class="tile"><div class="l">Model cost per hour of recording <span class="tag m">measured</span></div><div class="v">$1.15–1.60</div><div class="s">Claude Opus 5, synthetic hour with 40 screens</div></div>
+    <div class="tile"><div class="l">Time to prepare an hour of video <span class="tag m">measured</span></div><div class="v">~20 s</div><div class="s">frames, text on screen, alignment; laptop</div></div>
+  </div>
+
+  <h2>What the reading found, against what the answer key asks for</h2>
+  <p>Each example recording has a hand-written answer key: the screens, fields, actions, requirements and questions a careful analyst would expect. The bars show how many of those the reading found. Extra items the reading produced beyond the key are not penalised here; they are listed underneath.</p>
+  <div class="chart">
+    <svg viewBox="0 0 900 330" role="img" aria-label="Found versus expected per category for both examples">
+      <style>
+        .ax{font:12px var(--sans);fill:var(--muted)} .lab{font:13px var(--sans);fill:var(--ink)} .val{font:12px var(--mono);fill:var(--ink)}
+        .grp{font:600 12px var(--sans);fill:var(--muted);letter-spacing:.04em}
+      </style>
+      <!-- Onboarding (second reading) -->
+      <text class="grp" x="0" y="16">ONBOARDING TOOL · SECOND READING</text>
+      <g transform="translate(0,28)">
+        <g transform="translate(0,0)"><text class="lab" x="0" y="14">Screens</text><rect x="150" y="2" width="250" height="16" fill="var(--track)" rx="3"/><rect x="150" y="2" width="250" height="16" fill="var(--accent)" rx="3"/><text class="val" x="408" y="15">6 of 6</text></g>
+        <g transform="translate(0,26)"><text class="lab" x="0" y="14">Fields</text><rect x="150" y="2" width="250" height="16" fill="var(--track)" rx="3"/><rect x="150" y="2" width="250" height="16" fill="var(--accent)" rx="3"/><text class="val" x="408" y="15">14 of 14</text></g>
+        <g transform="translate(0,52)"><text class="lab" x="0" y="14">Actions</text><rect x="150" y="2" width="250" height="16" fill="var(--track)" rx="3"/><rect x="150" y="2" width="250" height="16" fill="var(--accent)" rx="3"/><text class="val" x="408" y="15">4 of 4</text></g>
+        <g transform="translate(0,78)"><text class="lab" x="0" y="14">Requirements</text><rect x="150" y="2" width="250" height="16" fill="var(--track)" rx="3"/><rect x="150" y="2" width="214" height="16" fill="var(--accent)" rx="3"/><text class="val" x="408" y="15">6 of 7</text></g>
+        <g transform="translate(0,104)"><text class="lab" x="0" y="14">Questions</text><rect x="150" y="2" width="250" height="16" fill="var(--track)" rx="3"/><rect x="150" y="2" width="200" height="16" fill="var(--accent)" rx="3"/><text class="val" x="408" y="15">4 of 5</text></g>
+      </g>
+      <!-- Claims -->
+      <text class="grp" x="480" y="16">COMPLAINTS TOOL · MEETING FRAME</text>
+      <g transform="translate(480,28)">
+        <g transform="translate(0,0)"><text class="lab" x="0" y="14">Screens</text><rect x="150" y="2" width="250" height="16" fill="var(--track)" rx="3"/><rect x="150" y="2" width="250" height="16" fill="var(--accent)" rx="3"/><text class="val" x="408" y="15">6 of 6</text></g>
+        <g transform="translate(0,26)"><text class="lab" x="0" y="14">Fields</text><rect x="150" y="2" width="250" height="16" fill="var(--track)" rx="3"/><rect x="150" y="2" width="250" height="16" fill="var(--accent)" rx="3"/><text class="val" x="408" y="15">14 of 14</text></g>
+        <g transform="translate(0,52)"><text class="lab" x="0" y="14">Actions</text><rect x="150" y="2" width="250" height="16" fill="var(--track)" rx="3"/><rect x="150" y="2" width="250" height="16" fill="var(--accent)" rx="3"/><text class="val" x="408" y="15">4 of 4</text></g>
+        <g transform="translate(0,78)"><text class="lab" x="0" y="14">Requirements</text><rect x="150" y="2" width="250" height="16" fill="var(--track)" rx="3"/><rect x="150" y="2" width="250" height="16" fill="var(--accent)" rx="3"/><text class="val" x="408" y="15">7 of 7</text></g>
+        <g transform="translate(0,104)"><text class="lab" x="0" y="14">Questions</text><rect x="150" y="2" width="250" height="16" fill="var(--track)" rx="3"/><rect x="150" y="2" width="250" height="16" fill="var(--accent)" rx="3"/><text class="val" x="408" y="15">4 of 4</text></g>
+      </g>
+      <!-- what each reading produced in total -->
+      <g transform="translate(0,190)">
+        <text class="grp" x="0" y="0">WHAT EACH READING PRODUCED IN TOTAL</text>
+        <text class="ax" x="0" y="26">Onboarding</text><text class="val" x="150" y="26">6 screens · 44 fields · 18 actions · 21 requirements · 30 acceptance criteria · 20 questions</text>
+        <text class="ax" x="0" y="50">Complaints</text><text class="val" x="150" y="50">6 screens · 42 fields · 14 actions · 46 requirements · 60 acceptance criteria · 23 questions</text>
+        <text class="ax" x="0" y="86">The one "missed" onboarding requirement is in both readings, folded into the mandatory-fields rule.</text>
+        <text class="ax" x="0" y="106">The question missed in the second reading was raised in the first. Extra items beyond the key are the model</text>
+        <text class="ax" x="0" y="126">being thorough: 30 more fields seen on screen, 15 more requirements, 16 more questions. A reviewer trims.</text>
+      </g>
+    </svg>
+    <div class="legend"><span class="f">Found</span><span class="e">Asked for by the answer key</span></div>
+  </div>
+
+  <div class="callout">
+    <h3>What a transcript alone would have missed</h3>
+    <p>In the onboarding reading, five of the seventeen questions came from looking at the screens, not from the words: the Approve button visible to someone the expert said cannot approve; a record submittable while its ID is still "Pending check"; a queue labelled "oldest first" with the approved row at the bottom; a search returning a different postcode from the one typed; a proof-of-address upload the expert never mentioned. These are the questions that cost a sprint when found late.</p>
+  </div>
+
+  <h2>How it compares</h2>
+  <div class="wrap"><table>
+    <thead><tr><th>Approach</th><th>Screens caught</th><th>Traceable to the moment</th><th>Questions from the screen</th><th>Effort per recorded hour</th></tr></thead>
+    <tbody>
+      <tr><td><b>Analyst watches and types</b></td><td>All, if attentive</td><td>Rarely; notes lose the timestamp</td><td>Only what they notice live</td><td class="num">4–8 hours <span class="tag a">assumed</span></td></tr>
+      <tr><td><b>Transcript into a chat model</b></td><td>None; it never sees the screen</td><td>To the sentence at best</td><td>None</td><td class="num">1–2 hours plus cleanup <span class="tag a">assumed</span></td></tr>
+      <tr><td><b>Frames chosen by brightness change</b> (specto's first version)</td><td class="num">1 of 6 on the example <span class="tag m">measured</span></td><td>Yes</td><td>Only on frames it kept</td><td class="num">minutes</td></tr>
+      <tr><td><b>specto now</b> (image fingerprint, OCR, close-ups)</td><td class="num">6 of 6 on both examples <span class="tag m">measured</span></td><td>Every row links to its frame</td><td class="num">5 of 17 in one reading <span class="tag m">measured</span></td><td class="num">~20 s of compute, then a review <span class="tag m">measured</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>What it saves</h2>
+  <p>Nobody has timed a real analyst against specto yet, so this is a calculator, not a claim. The defaults are common rules of thumb; change them to your own numbers.</p>
+  <div class="calc">
+    <div>
+      <label for="hrs">Hours of expert walkthroughs per month <span class="tag a">your number</span></label>
+      <input id="hrs" type="number" min="0" step="1" value="20">
+      <label for="rate">Fully loaded cost of an analyst hour <span class="tag a">your number</span></label>
+      <input id="rate" type="number" min="0" step="5" value="90">
+      <label for="wr">Analyst hours to write up one recorded hour by hand <span class="tag a">assumed 5</span></label>
+      <input id="wr" type="number" min="0" step="0.5" value="5">
+      <label for="rv">Analyst hours to review specto's draft of one recorded hour <span class="tag a">assumed 1.5</span></label>
+      <input id="rv" type="number" min="0" step="0.5" value="1.5">
+      <label for="mc">Model cost per recorded hour <span class="tag m">measured 1.15–1.60</span></label>
+      <input id="mc" type="number" min="0" step="0.1" value="1.6">
+    </div>
+    <div class="out">
+      <div class="row big"><span>Analyst hours saved per month</span><b id="o-hours">—</b></div>
+      <div class="row"><span>Money saved per month</span><b id="o-money">—</b></div>
+      <div class="row"><span>Model spend per month</span><b id="o-model">—</b></div>
+      <div class="row"><span>Write-up turned around in</span><b id="o-turn">—</b></div>
+      <p class="fine">Hours saved = walkthrough hours × (hand write-up hours − review hours). Turnaround assumes the draft is ready the same day and the review happens the next working day, against a hand write-up that typically lands a week later. The model cost uses the measured per-hour figure at the top of the page.</p>
+    </div>
+  </div>
+
+  <h2>Product roadmap</h2>
+  <div class="road">
+    <div class="col done"><h3>Built</h3><div class="when">v0.1 to v0.6, 10 to 14 September 2026</div>
+      <ul>
+        <li>Recording in, workbook and one-page report out, every row linked to its frame</li>
+        <li>Screen changes by image fingerprint, text on screen read, close-ups of what changed</li>
+        <li>Live mode during a call on macOS, Windows and Linux; questions refreshed every five minutes</li>
+        <li>Jira and Azure DevOps import files; several sessions merged into one workbook</li>
+        <li>Answers typed into the workbook read back and turned into requirements</li>
+        <li>Personal data listed, masked, and painted over on the frames</li>
+        <li>Cost estimate before every run, a spending cap, resume after a crash</li>
+        <li>Two example recordings with answer keys and reference readings; 563 automated tests</li>
+      </ul></div>
+    <div class="col next"><h3>Next</h3><div class="when">needs one thing from the owner: an API key</div>
+      <ul>
+        <li>First run through the live API and a cost figure from a real bill</li>
+        <li>Prompt tuning measured against both answer keys</li>
+        <li>Three to five real recordings from real experts, with their analysts' verdicts</li>
+        <li>A timed comparison: analyst by hand versus analyst reviewing specto's draft</li>
+      </ul></div>
+    <div class="col later"><h3>Later</h3><div class="when">ideas, not commitments</div>
+      <ul>
+        <li>Who said what, from the audio, when several people are on the call</li>
+        <li>Edits made in the web page flowing back into the workbook</li>
+        <li>Confluence and SharePoint as places the report can land</li>
+        <li>A shared folder that processes every recording dropped into it, for a team</li>
+        <li>Process comparison: two recordings of the same journey, what changed</li>
+      </ul></div>
+  </div>
+
+  <h2>What is measured and what is assumed</h2>
+  <div class="honest">
+    <div class="col done"><h3>Measured</h3><ul>
+      <li>Recall against answer keys: 0.97 and 0.93 on the onboarding example, 1.00 on the complaints example</li>
+      <li>Screens caught: 6 of 6 with the fingerprint detector, 1 of 6 with the brightness detector</li>
+      <li>Model cost estimate: $1.15 to $1.60 per recorded hour on Claude Opus 5, from token counts of a synthetic hour with 40 screens</li>
+      <li>Preparation time: about 20 seconds per recorded hour at full size</li>
+      <li>Local speech-to-text: 4% word error on the example audio</li>
+    </ul></div>
+    <div class="col later"><h3>Assumed, and how to replace it</h3><ul>
+      <li>Hours to write up a recording by hand: time three analysts on one recording</li>
+      <li>Hours to review a specto draft: time the same analysts on the draft</li>
+      <li>Readings so far used Claude acting through a session, not the paid API: the first API run replaces this with a bill</li>
+      <li>Both examples are built for the purpose, with narration and screens designed to be readable: real recordings will be messier and the scores will move</li>
+    </ul></div>
+  </div>
+
+  <footer>Source and reference results: <a href="https://github.com/patkusch/specto">github.com/patkusch/specto</a>. Every figure marked measured is reproducible from the repository: the answer keys, the reference readings and the stress script are all there.</footer>
+</main>
+
+<script>
+(function(){
+  var ids=["hrs","rate","wr","rv","mc"];
+  function n(id){var v=parseFloat(document.getElementById(id).value);return isFinite(v)?v:0;}
+  function fmt(x){return x.toLocaleString(undefined,{maximumFractionDigits:0});}
+  function run(){
+    var hrs=n("hrs"),rate=n("rate"),wr=n("wr"),rv=n("rv"),mc=n("mc");
+    var saved=Math.max(0,hrs*(wr-rv));
+    document.getElementById("o-hours").textContent=fmt(saved)+" h";
+    document.getElementById("o-money").textContent="$"+fmt(saved*rate);
+    document.getElementById("o-model").textContent="$"+fmt(hrs*mc);
+    document.getElementById("o-turn").textContent=hrs>0?"next day":"—";
+  }
+  ids.forEach(function(id){document.getElementById(id).addEventListener("input",run);});
+  run();
+})();
+</script>
+
+</body>
+</html>

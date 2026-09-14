@@ -39,6 +39,10 @@ DevOps.
 
 ## Does it work?
 
+A one-page scoreboard for a business reader, with every figure marked
+measured or assumed, a savings calculator and the roadmap, is at
+[docs/scoreboard.html](docs/scoreboard.html).
+
 The example recording has been read twice by Claude through the
 bring-your-own-model path (the agents in a Claude Code session acting as
 the model, so no API key was involved), once before and once after the
