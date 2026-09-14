@@ -265,7 +265,8 @@ def build_video(
             proc.stdin.write(data)
             frames += 1
     finally:
-        proc.stdin.close()
+        # communicate() closes stdin itself; closing it first makes Python 3.12
+        # raise "flush of closed file" when it tries again.
         _, stderr = proc.communicate()
     if proc.returncode != 0:
         raise RuntimeError(f"ffmpeg failed while encoding: {stderr.decode(errors='replace')}")
