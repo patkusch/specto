@@ -3,6 +3,15 @@
 Watches a recording of an expert walking through a system and writes down
 what the system must do.
 
+563 offline tests. Runs without an API key. Nothing leaves your machine
+except the frames and words you choose to send to a model service.
+
+![Left: a frame of the example walkthrough. Right: the requirement, the acceptance criterion and the question specto wrote from that moment, each linked to the frame](docs/hero.png)
+
+On the two example recordings, the readings recovered 93 to 100 percent of
+what a hand-written answer key asks for. The full numbers are two sections
+down.
+
 An expert shares their screen and talks through the process: "this is where
 we look up the customer, we type the postcode here, then Save sends it to
 the approvals queue". Someone then has to turn that into requirements by
@@ -17,7 +26,16 @@ delivery team can build from.
 ![One frame from the example recording, the Customer Details screen](docs/frame-example.png)
 
 Every row links to the still image it came from, so a reader can check any
-claim against the screen in one click. The workbook has these sheets:
+claim against the screen in one click. Three rows from the example, as
+written:
+
+| You get | For example |
+|---|---|
+| Requirements, in the expert's own words | *As an Onboarding Officer, I need to search existing customers by postcode and surname before I create a record, so that I do not create a duplicate customer.* From "You put in the postcode and the surname and hit Search, and it lists anyone we already have, so you don't create a duplicate." (frame 0 at 00:07) |
+| Acceptance criteria a tester can run | *Given an existing customer with surname Lunmere and postcode SW1A 1AA is on file, when the officer enters that postcode and surname and presses Search, then the results table shows that customer as a row.* |
+| Questions nobody answered, ranked by what they hold up | *Are there validation rules on Date of birth, Email address and Phone number, and what does the officer see when a mandatory field is empty?* Holds up two requirements. |
+
+The workbook has these sheets:
 
 | Sheet | What is in it |
 |---|---|
