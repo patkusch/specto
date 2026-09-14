@@ -128,6 +128,15 @@ that actually changes over the recording and keeps only that, so the model
 reads the shared window and not the meeting around it. If it picks the
 wrong area, pass the box yourself as `--crop x,y,w,h` in pixels.
 
+A second example recording, `examples/claims/`, is exactly that: a
+complaints-handling tool with table-heavy screens, recorded inside a
+Teams-style frame with participant tiles and a toolbar. `--crop auto` finds
+the shared window in it to the pixel:
+
+```bash
+specto run examples/claims/walkthrough.mp4 --transcript examples/claims/walkthrough.vtt --crop auto --fake
+```
+
 ### No recording, just screenshots
 
 ```bash

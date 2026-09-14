@@ -1,0 +1,48 @@
+{
+  "_note": "Hand-written answer key for the claims example. Matching is case-insensitive substring; a group written as 'a|b' matches when any alternative is present; an item matches when every group in it is present. Only things the narration or the screens actually contain are listed.",
+  "screens": [
+    "inbox",
+    "complaint detail",
+    "decision",
+    "redress",
+    "letter preview",
+    "dashboard"
+  ],
+  "fields": [
+    {"screen": "inbox", "label": "reference"},
+    {"screen": "inbox", "label": "customer"},
+    {"screen": "inbox", "label": "category"},
+    {"screen": "inbox", "label": "status"},
+    {"screen": "inbox", "label": "sla"},
+    {"screen": "complaint detail", "label": "timeline"},
+    {"screen": "complaint detail", "label": "note"},
+    {"screen": "decision", "label": "outcome|uphold"},
+    {"screen": "decision", "label": "reason"},
+    {"screen": "decision", "label": "summary"},
+    {"screen": "redress", "label": "refund amount|amount"},
+    {"screen": "redress", "label": "days"},
+    {"screen": "redress", "label": "interest"},
+    {"screen": "dashboard", "label": "uphold rate"}
+  ],
+  "actions": [
+    ["add note"],
+    ["record", "decision"],
+    ["approve", "redress"],
+    ["send", "letter"]
+  ],
+  "requirements": [
+    ["eight weeks|8 weeks|8-week", "ombudsman|referred"],
+    ["note", "edit|delete|permanent|cannot|can't"],
+    ["summary", "fifty|50|mandatory"],
+    ["grade two|grade 2|trainee|supervisor", "decision"],
+    ["five hundred|500", "second|approver|team lead"],
+    ["decision", "letter|send"],
+    ["category", "note|why|reason"]
+  ],
+  "questions": [
+    ["sla|clock", "wrong|why|unreliable"],
+    ["interest", "finance|where|rate|source"],
+    ["email", "preference|where|set|how"],
+    ["uphold rate", "month|rolling|period|window"]
+  ]
+}

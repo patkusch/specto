@@ -1,0 +1,65 @@
+WEBVTT
+
+1
+00:00:00.800 --> 00:00:11.930
+<v Expert>Right, this is Meridian Complaints, the tool we log and work every customer complaint in. You land on the Inbox, which is every open complaint sorted by how long we've got left on it.
+
+2
+00:00:12.530 --> 00:00:23.840
+<v Expert>Each row has the reference, the customer, when it came in, the category, the status and the SLA countdown. You click a column header to sort, and most people sort by the SLA column.
+
+3
+00:00:24.440 --> 00:00:37.470
+<v Expert>Anything over eight weeks old goes to the Ombudsman automatically, you'll see the status flip to Referred on its own. Sometimes the SLA clock is wrong, honestly, nobody knows why, so you double-check the received date.
+
+4
+00:00:38.070 --> 00:00:51.390
+<v Expert>You double-click a row to open it and you get the Complaint Detail. Top left is the customer and their contact details, and on the right is the timeline, every event in order: received, acknowledged, assigned, and so on.
+
+5
+00:00:51.990 --> 00:01:02.650
+<v Expert>The notes panel at the bottom is where you write what you've done. You type in the box and press Add note, and it stamps your name and the date on it. Notes can't be edited or deleted once they're saved.
+
+6
+00:01:03.250 --> 00:01:10.640
+<v Expert>The category is set by whoever logged the complaint. If it's wrong you can change it here, but you have to put a note in saying why.
+
+7
+00:01:11.240 --> 00:01:23.540
+<v Expert>When you've investigated, you go to Decision. It's three options: uphold, partially uphold, or reject. You pick one, choose a reason from the dropdown, and write the summary in the box.
+
+8
+00:01:24.140 --> 00:01:31.190
+<v Expert>The summary is mandatory and it has to be at least fifty words, the system counts them. Then you press Record decision.
+
+9
+00:01:31.790 --> 00:01:39.990
+<v Expert>Only complaint handlers at grade two and above can record a decision. If you're a trainee the button is greyed out and your supervisor records it for you.
+
+10
+00:01:40.590 --> 00:01:51.470
+<v Expert>If it's upheld or partially upheld, you go to Redress. You put in the refund amount and the number of days the customer was out of pocket, and it works out the interest and the total in the little table.
+
+11
+00:01:52.070 --> 00:02:04.850
+<v Expert>The interest rate comes from somewhere in finance, I just use whatever it shows. Then you press Approve redress. Anything over five hundred pounds needs a second approver, and that pops up as a task for the team lead.
+
+12
+00:02:05.450 --> 00:02:14.970
+<v Expert>Letter Preview is the final response letter. It's a template with the customer's name, the reference, the decision and the redress amount merged in from the earlier screens.
+
+13
+00:02:15.570 --> 00:02:25.210
+<v Expert>You can't send a letter until a decision is recorded, the Send letter button just won't show up. You read it through, and if it's right you press Send letter and it goes to print.
+
+14
+00:02:25.810 --> 00:02:35.020
+<v Expert>If the customer asked for email, it's supposed to email it instead of printing. I'm not sure where that preference is set, it's not on any of these screens.
+
+15
+00:02:35.620 --> 00:02:46.420
+<v Expert>And the Dashboard is what the team lead looks at. Three numbers: open complaints, how many are breaching SLA, and the uphold rate, and a chart of complaints received by month.
+
+16
+00:02:47.020 --> 00:02:57.260
+<v Expert>I think the uphold rate is this month, but it might be rolling, I've never checked. You press Export to get it all as a spreadsheet. That's the whole process, inbox to letter.
