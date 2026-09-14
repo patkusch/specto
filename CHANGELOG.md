@@ -2,6 +2,19 @@
 
 Newest first. Dates are when the change was pushed.
 
+## 0.6.0 (2026-09-14)
+
+- The example's sample customer is generated from a seed with values that
+  cannot be real, instead of being invented by the model.
+- A second example: a complaints tool recorded inside a meeting frame, with
+  its own answer key. `--crop auto` finds the shared window to the pixel.
+- Reference readings for both examples, produced by Claude through the
+  bring-your-own-model path: recall 0.93 and 0.97 on two readings of the
+  onboarding example, 1.00 on the complaints example.
+- An hour-long stress run for ingest (about 20 seconds, under 650 MB at
+  full size), which found and fixed stale close-ups surviving a re-run.
+- README reordered: short opening, results first, reference material last.
+
 ## 0.5.0 (2026-09-13)
 
 - Live mode runs on Windows and Linux as well as macOS, and on a Mac
