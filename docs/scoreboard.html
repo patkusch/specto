@@ -37,6 +37,15 @@ h3{font-size:1rem;margin:0 0 8px;font-weight:600}
 p{margin:8px 0;max-width:68ch}
 .eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
 .lead{font-size:1.1rem;color:var(--muted);max-width:66ch}
+.whatsnew{font-size:.9rem;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin:0 0 18px;max-width:none}
+.whatsnew b{color:var(--ink)}
+.check,.col ul.check{list-style:none;padding:0;margin:8px 0 0}
+.check li{margin:6px 0;font-size:.92rem;padding-left:26px;position:relative}
+.check li::before{content:"";position:absolute;left:0;top:4px;width:14px;height:14px;border:1.5px solid var(--faint);border-radius:3px}
+.check li.x::before{background:var(--done);border-color:var(--done)}
+.check li.x::after{content:"";position:absolute;left:4.5px;top:6px;width:4px;height:8px;border:solid var(--panel);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.vs td.y{color:var(--measured);font-weight:600}
+.vs td.n{color:var(--faint)}
 .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .tag{display:inline-block;font:500 .72rem/1 var(--sans);letter-spacing:.04em;text-transform:uppercase;padding:4px 8px;border-radius:3px;vertical-align:middle}
 .tag.m{background:var(--measured-soft);color:var(--measured)}
@@ -101,12 +110,13 @@ a{color:var(--accent)}
 
 <main>
   <p class="eyebrow">specto · product scoreboard · 14 September 2026</p>
+  <p class="whatsnew"><b>What's new in v0.6.0</b> · a second example recorded inside a meeting frame, read with every answer-key item found · sample data generated from a seed, never invented by the model · an hour of video prepared in about twenty seconds</p>
   <h1>Turn an expert's screen walkthrough into requirements a team can build from</h1>
   <p class="lead">An expert shares their screen and talks through a process. specto listens, looks at what was on screen at each moment, and writes the requirements, the acceptance criteria and the questions nobody answered. This page shows how well it does that, what it saves, and where it goes next.</p>
 
   <div class="tiles">
-    <div class="tile"><div class="l">Answer-key recall, complaints tool <span class="tag m">measured</span></div><div class="v">100%</div><div class="s">21 of 21 items the key asks for, one reading</div></div>
-    <div class="tile"><div class="l">Answer-key recall, onboarding tool <span class="tag m">measured</span></div><div class="v">93–97%</div><div class="s">two independent readings of the same recording</div></div>
+    <div class="tile"><div class="l">Answer-key recall, complaints tool <span class="tag m">measured</span></div><div class="v">100%</div><div class="s">Meridian Complaints example · read 14 Sep 2026 · 21 of 21 key items</div></div>
+    <div class="tile"><div class="l">Answer-key recall, onboarding tool <span class="tag m">measured</span></div><div class="v">93–97%</div><div class="s">Northwind Onboarding example · read 13 and 14 Sep 2026 · two readings</div></div>
     <div class="tile"><div class="l">Model cost per hour of recording <span class="tag m">measured</span></div><div class="v">$1.15–1.60</div><div class="s">Claude Opus 5, synthetic hour with 40 screens</div></div>
     <div class="tile"><div class="l">Time to prepare an hour of video <span class="tag m">measured</span></div><div class="v">~20 s</div><div class="s">frames, text on screen, alignment; laptop</div></div>
   </div>
@@ -166,6 +176,22 @@ a{color:var(--accent)}
     </tbody>
   </table></div>
 
+  <h3 style="margin-top:22px">Against named neighbours</h3>
+  <p>From their public pages and repositories in September 2026, on the things specto can honestly claim. No accuracy column: none of them publish a comparable figure, and specto's is measured on its own examples only.</p>
+  <div class="wrap"><table class="vs">
+    <thead><tr><th></th><th>specto</th><th>Scribe</th><th>Requirements AI</th><th>meetily</th></tr></thead>
+    <tbody>
+      <tr><td>Takes in</td><td>Screen recording with narration, or a live call, or screenshots</td><td>Clicks in a browser</td><td>Meeting transcript</td><td>Meeting audio</td></tr>
+      <tr><td>Gives out</td><td>Requirements, acceptance criteria, questions, data fields, glossary, gaps</td><td>Step-by-step guide</td><td>Requirements and user stories</td><td>Summary and notes</td></tr>
+      <tr><td>Looks at the screen, not just the words</td><td class="y">Yes</td><td class="y">Yes</td><td class="n">No</td><td class="n">No</td></tr>
+      <tr><td>Every row linked to the moment it came from</td><td class="y">Yes, to the frame</td><td class="n">To the step</td><td class="n">No</td><td class="n">No</td></tr>
+      <tr><td>Questions the expert never answered</td><td class="y">Yes, ranked</td><td class="n">No</td><td class="n">No</td><td class="n">No</td></tr>
+      <tr><td>Works without an API key</td><td class="y">Yes, requests as files</td><td class="n">Cloud account</td><td class="n">Cloud account</td><td class="y">Local models</td></tr>
+      <tr><td>Open source</td><td class="y">Yes</td><td class="n">No</td><td class="n">No</td><td class="y">Yes</td></tr>
+      <tr><td>Personal data on screen found and painted over</td><td class="y">Yes</td><td class="y">Blur tool</td><td class="n">No</td><td class="n">No</td></tr>
+    </tbody>
+  </table></div>
+
   <h2>What it saves</h2>
   <p>Nobody has timed a real analyst against specto yet, so this is a calculator, not a claim. The defaults are common rules of thumb; change them to your own numbers.</p>
   <div class="calc">
@@ -192,31 +218,33 @@ a{color:var(--accent)}
 
   <h2>Product roadmap</h2>
   <div class="road">
-    <div class="col done"><h3>Built</h3><div class="when">v0.1 to v0.6, 10 to 14 September 2026</div>
-      <ul>
-        <li>Recording in, workbook and one-page report out, every row linked to its frame</li>
-        <li>Screen changes by image fingerprint, text on screen read, close-ups of what changed</li>
-        <li>Live mode during a call on macOS, Windows and Linux; questions refreshed every five minutes</li>
-        <li>Jira and Azure DevOps import files; several sessions merged into one workbook</li>
-        <li>Answers typed into the workbook read back and turned into requirements</li>
-        <li>Personal data listed, masked, and painted over on the frames</li>
-        <li>Cost estimate before every run, a spending cap, resume after a crash</li>
-        <li>Two example recordings with answer keys and reference readings; 563 automated tests</li>
+    <div class="col done"><h3>Shipped</h3><div class="when">v0.1.0 to v0.6.0 · 10 to 14 September 2026</div>
+      <ul class="check">
+        <li class="x">Recording in, workbook and one-page report out, every row linked to its frame</li>
+        <li class="x">Screen changes by image fingerprint; text on screen read; close-ups of what changed</li>
+        <li class="x">Live mode during a call on macOS, Windows and Linux</li>
+        <li class="x">Jira and Azure DevOps import files; sessions merged into one workbook</li>
+        <li class="x">Answers typed into the workbook read back and turned into requirements</li>
+        <li class="x">Personal data listed, masked, and painted over on the frames</li>
+        <li class="x">Cost estimate before every run, a spending cap, resume after a crash</li>
+        <li class="x">Two example recordings with answer keys and reference readings</li>
+        <li class="x">Sample data generated from a seed; hour-long stress run; 563 tests</li>
       </ul></div>
-    <div class="col next"><h3>Next</h3><div class="when">needs one thing from the owner: an API key</div>
-      <ul>
-        <li>First run through the live API and a cost figure from a real bill</li>
+    <div class="col next"><h3>v0.7, next</h3><div class="when">needs one thing from the owner: an API key</div>
+      <ul class="check">
+        <li>First run through the live API, with a cost figure from a real bill</li>
         <li>Prompt tuning measured against both answer keys</li>
         <li>Three to five real recordings from real experts, with their analysts' verdicts</li>
-        <li>A timed comparison: analyst by hand versus analyst reviewing specto's draft</li>
+        <li>A timed comparison: analyst by hand versus analyst reviewing the draft</li>
+        <li>README pictures regenerated from real API output</li>
       </ul></div>
     <div class="col later"><h3>Later</h3><div class="when">ideas, not commitments</div>
-      <ul>
+      <ul class="check">
         <li>Who said what, from the audio, when several people are on the call</li>
         <li>Edits made in the web page flowing back into the workbook</li>
         <li>Confluence and SharePoint as places the report can land</li>
-        <li>A shared folder that processes every recording dropped into it, for a team</li>
-        <li>Process comparison: two recordings of the same journey, what changed</li>
+        <li>A shared folder that processes every recording dropped into it</li>
+        <li>Two recordings of the same journey compared: what changed</li>
       </ul></div>
   </div>
 
