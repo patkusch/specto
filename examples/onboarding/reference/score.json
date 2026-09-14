@@ -12,14 +12,14 @@
       "found": 14,
       "recall": 1.0,
       "missed": [],
-      "extras": 45
+      "extras": 30
     },
     "actions": {
       "expected": 4,
       "found": 4,
       "recall": 1.0,
       "missed": [],
-      "extras": 8
+      "extras": 14
     },
     "requirements": {
       "expected": 7,
@@ -31,28 +31,32 @@
           "mandatory|required|must"
         ]
       ],
-      "extras": 26
+      "extras": 15
     },
     "questions": {
       "expected": 5,
-      "found": 5,
-      "recall": 1.0,
-      "missed": [],
-      "extras": 12
+      "found": 4,
+      "recall": 0.8,
+      "missed": [
+        [
+          "passport|driving licence|document type",
+          "accept|which|allowed|other"
+        ]
+      ],
+      "extras": 16
     }
   },
-  "overall_recall": 0.9714285714285713,
+  "overall_recall": 0.9314285714285715,
   "traceability": {
     "requirements_without_source_quote": 0,
     "criteria_with_unknown_requirement": 0,
     "negative_keyframe_indexes": 0
   },
   "writing": {
-    "requirements_with_warnings": 1,
-    "criteria_with_warnings": 2,
+    "requirements_with_warnings": 2,
+    "criteria_with_warnings": 0,
     "rules_seen": [
       "absolute",
-      "implementation-word",
       "joined-clauses",
       "missing-actor",
       "passive-voice"

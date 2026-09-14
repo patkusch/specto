@@ -39,25 +39,31 @@ DevOps.
 
 ## Does it work?
 
-On the example recording, read by Claude through the bring-your-own-model
-path (the agents in a Claude Code session acting as the model, so no API
-key was involved), the result was 6 screens, 59 fields, 12 actions, 32
-requirements, 44 acceptance criteria and 17 questions. Against the
-hand-written answer key:
+The example recording has been read twice by Claude through the
+bring-your-own-model path (the agents in a Claude Code session acting as
+the model, so no API key was involved), once before and once after the
+sample customer's details were changed. Against the hand-written answer
+key:
 
-| What the key asks for | Found |
-|---|---|
-| Screens | 6 of 6 |
-| Fields | 14 of 14 |
-| Actions | 4 of 4 |
-| Requirements | 6 of 7 (the seventh is there too, folded into one requirement with another) |
-| Questions | 5 of 5 |
+| What the key asks for | First reading | Second reading |
+|---|---|---|
+| Screens | 6 of 6 | 6 of 6 |
+| Fields | 14 of 14 | 14 of 14 |
+| Actions | 4 of 4 | 4 of 4 |
+| Requirements | 6 of 7 | 6 of 7 |
+| Questions | 5 of 5 | 4 of 5 |
+| Overall recall | 0.97 | 0.93 |
 
-Two things the model noticed that the narration never said: the Approve
-button is visible on screen while the expert says only team leads see it,
-and a record can be submitted while its ID document is still "Pending
-check". Both became questions, each naming the requirements it holds up.
-The full result is in `examples/onboarding/reference/`.
+The second reading found 6 screens, 44 fields, 21 requirements, 30
+acceptance criteria and 20 questions. In both readings the model noticed
+things the narration never said: the Approve button is visible on screen
+while the expert says only team leads see it, and a record can be submitted
+while its ID document is still "Pending check". Both became questions, each
+naming the requirements it holds up. The requirement the key counts as
+missed is present in both readings, folded into the mandatory-fields rule;
+the question missed the second time (which document types are accepted)
+was raised the first time. That is the kind of variation to expect between
+runs. The current reference result is in `examples/onboarding/reference/`.
 
 The same stages have not yet been run through the API itself, so the first
 run with a key should be on the example, and the score compared with that

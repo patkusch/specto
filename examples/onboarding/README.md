@@ -17,6 +17,6 @@ Two things measured on 2026-09-10. Local speech-to-text (faster-whisper, base mo
 `reference/` holds a real reading of this recording: the answers a Claude
 model gave to the two request files (`chunk_01.response.json`,
 `consolidate.response.json`), the analysis built from them, its score
-against `expected.json` (overall recall 0.97) and the Markdown report. Use
+against `expected.json` (overall recall 0.93; an earlier reading of the same recording scored 0.97) and the Markdown report. Use
 it to compare a new prompt or a new model: run the pipeline, then diff the
 score.
