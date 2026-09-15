@@ -29,6 +29,8 @@ def healthy(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     monkeypatch.setattr(doctor, "hf_cache_dir", lambda: cache)
     monkeypatch.setattr(doctor, "ocr_installed", lambda: True)
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test-not-real")
+    monkeypatch.setenv("GEMINI_API_KEY", "AIza-test-not-real")
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
     monkeypatch.setattr(doctor, "playwright_chromium_dir", lambda: "/Users/x/Library/Caches/ms-playwright/chromium-1234")
     monkeypatch.setattr(doctor, "system_name", lambda: "Darwin")
     monkeypatch.setattr(doctor, "screencapture_path", lambda: "/usr/sbin/screencapture")
@@ -44,13 +46,14 @@ def test_everything_ok(healthy, capsys) -> None:
     assert all(c.ok for c in checks)
     names = [c.name for c in checks]
     assert names == ["Python", "ffmpeg", "faster-whisper", "stable-ts", "OCR",
-                     "ANTHROPIC_API_KEY", "Playwright", "Screen capture", "Microphone input", "Disk space"]
+                     "ANTHROPIC_API_KEY", "Gemini key", "Model access", "Playwright", "Screen capture", "Microphone input", "Disk space"]
     assert main() == 0
     out = capsys.readouterr().out
     assert out.count("\nok ") + out.startswith("ok ") == len(checks)
     assert not any(line.startswith("-- ") for line in out.splitlines())
     assert "Everything specto needs is here" in out
     assert "sk-ant" not in out  # the key is never printed
+    assert "AIza" not in out
 
 
 def test_python_too_old_fails(healthy, capsys) -> None:
@@ -293,3 +296,43 @@ def test_real_lookups_do_not_raise() -> None:
     assert doctor.tool_path("no-such-tool-xyz") is None
     assert isinstance(doctor.wayland_session(), bool)
     assert doctor.screen_recording_allowed() in (True, False, None)
+
+
+def test_gemini_key_both_ways(healthy, monkeypatch, capsys) -> None:
+    key = next(c for c in run_checks() if c.name == "Gemini key")
+    assert key.ok and key.detail.startswith("set")
+    monkeypatch.delenv("GEMINI_API_KEY")
+    key = next(c for c in run_checks() if c.name == "Gemini key")
+    assert not key.ok and not key.required
+    assert "not set" in key.detail and "aistudio.google.com" in key.fix
+    monkeypatch.setenv("GOOGLE_API_KEY", "AIza-google-not-real")
+    assert next(c for c in run_checks() if c.name == "Gemini key").ok
+    monkeypatch.setenv("GOOGLE_API_KEY", "  ")
+    assert not next(c for c in run_checks() if c.name == "Gemini key").ok
+    assert main() == 0
+    assert "AIza" not in capsys.readouterr().out
+
+
+def _access(monkeypatch, claude: bool, gemini: bool):
+    for name in ("ANTHROPIC_API_KEY", "GEMINI_API_KEY", "GOOGLE_API_KEY"):
+        monkeypatch.delenv(name, raising=False)
+    if claude:
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test-not-real")
+    if gemini:
+        monkeypatch.setenv("GEMINI_API_KEY", "AIza-test-not-real")
+    return next(c for c in run_checks() if c.name == "Model access")
+
+
+def test_model_access_summary(healthy, monkeypatch, capsys) -> None:
+    both = _access(monkeypatch, True, True)
+    assert both.ok and both.detail == "Claude API and Gemini API"
+    claude = _access(monkeypatch, True, False)
+    assert claude.ok and claude.detail == "Claude API"
+    gemini = _access(monkeypatch, False, True)
+    assert gemini.ok and gemini.detail.startswith("Gemini API") and "--provider gemini" in gemini.detail
+    none = _access(monkeypatch, False, False)
+    assert not none.ok and not none.required
+    assert none.detail == "no key: use specto demo, or specto requests / load to answer with any model you can reach"
+    assert main() == 0  # no key is not a stop
+    out = capsys.readouterr().out
+    assert "-- Model access" in out and "specto demo" in out

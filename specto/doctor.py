@@ -100,6 +100,10 @@ def api_key_set() -> bool:
     return bool(os.environ.get("ANTHROPIC_API_KEY", "").strip())
 
 
+def gemini_key_set() -> bool:
+    return any(os.environ.get(name, "").strip() for name in ("GEMINI_API_KEY", "GOOGLE_API_KEY"))
+
+
 def playwright_chromium_dir() -> Optional[str]:
     """The Playwright chromium folder, or None when no browser has been installed."""
     candidates = []
@@ -215,6 +219,28 @@ def check_api_key() -> Check:
                  fix="export ANTHROPIC_API_KEY=... in your shell")
 
 
+def check_gemini_key() -> Check:
+    if gemini_key_set():
+        return Check(name="Gemini key", ok=True, detail="set (GEMINI_API_KEY or GOOGLE_API_KEY)")
+    return Check(name="Gemini key", ok=False,
+                 detail="not set (optional; only for --provider gemini)",
+                 fix="export GEMINI_API_KEY=... (a free key comes from https://aistudio.google.com/apikey)")
+
+
+NO_KEY_ADVICE = "no key: use specto demo, or specto requests / load to answer with any model you can reach"
+
+
+def check_model_access() -> Check:
+    """What a run can call from here, going by which keys are set. Never prints a key."""
+    reachable = [name for name, present in (("Claude API", api_key_set()), ("Gemini API", gemini_key_set())) if present]
+    if not reachable:
+        return Check(name="Model access", ok=False, detail=NO_KEY_ADVICE)
+    detail = " and ".join(reachable)
+    if reachable == ["Gemini API"]:
+        detail += " (pass --provider gemini)"
+    return Check(name="Model access", ok=True, detail=detail)
+
+
 def check_playwright() -> Check:
     if not module_installed("playwright"):
         return Check(name="Playwright", ok=False, detail="not installed (optional, for rebuilding the example)",
@@ -307,6 +333,8 @@ CHECKS: list[Callable[[], Check]] = [
     check_stable_ts,
     check_ocr,
     check_api_key,
+    check_gemini_key,
+    check_model_access,
     check_playwright,
     check_screen_capture,
     check_microphone_input,
