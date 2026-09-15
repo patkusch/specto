@@ -130,6 +130,21 @@ reference folder.
 
 ## Run it yourself
 
+To see real output before you have a key, this one command does it:
+
+```bash
+pip install -e ".[ocr]"
+specto demo --open
+```
+
+It runs the onboarding example recording end to end, answers it with a
+reading Claude gave earlier (saved in `examples/onboarding/reference/`), and
+opens the report in your browser. Nothing is sent anywhere and no key is
+needed. `specto demo --example claims` does the same for the second example.
+The workbook and report land in `out/demo-onboarding/`.
+
+To run it on your own recording:
+
 ```bash
 pip install -e .
 export ANTHROPIC_API_KEY=...
@@ -354,6 +369,7 @@ Ctrl-C) saves what it has read so far and picks up from there next time.
 | `specto live --out DIR` | screen and microphone during a call, questions every five minutes |
 | `specto export DIR` | rebuild every output from a finished analysis |
 | `specto score DIR KEY` | compare an output with an answer key |
+| `specto demo [--example onboarding\|claims] [--open]` | run a real example end to end with a saved reading, no key and no model call |
 | `specto doctor` | what is installed and what is missing |
 | `specto requests DIR`, `specto load DIR`, `specto status DIR` | write the model requests as files, read the answers back, see what is left; no key needed |
 | `specto merge DIR DIR... --out DIR` | several sessions into one workbook: same screens, requirements and questions folded together, no model call |

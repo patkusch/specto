@@ -12,6 +12,7 @@
     specto answers out/walkthrough       # read the answers typed into the workbook
     specto resolve out/walkthrough       # answered questions become requirements
     specto live --out out/call           # during a call: screen + mic, questions every 5 minutes
+    specto demo --open                   # a real example end to end, no key, no model call
 
 Each stage saves its result in the output folder, so running the same command
 again picks up where it left off. Pass --force to redo everything.
@@ -321,6 +322,93 @@ def cmd_merge(args: argparse.Namespace) -> int:
     return 0
 
 
+DEMO_EXAMPLES = {
+    "onboarding": {"crop": None},
+    "claims": {"crop": "auto"},
+}
+
+
+def examples_root() -> Path:
+    """The examples/ folder: $SPECTO_EXAMPLES, next to the package (a source
+    checkout or an editable install), or under the current folder."""
+    if os.environ.get("SPECTO_EXAMPLES"):
+        return Path(os.environ["SPECTO_EXAMPLES"]).expanduser()
+    beside = Path(__file__).resolve().parent.parent / "examples"
+    if beside.is_dir():
+        return beside
+    return Path("examples")
+
+
+def cmd_demo(args: argparse.Namespace) -> int:
+    import re
+    import shutil
+
+    from .byo import ByoError, dump_requests, load_responses, requests_dir
+    from .export import export_all
+    from .extract import split_chunks
+    from .ingest import ingest
+
+    example = examples_root() / args.example
+    reference = example / "reference"
+    video, transcript = example / "walkthrough.mp4", example / "walkthrough.vtt"
+    missing = [p for p in (video, transcript, reference) if not p.exists()]
+    if missing:
+        print(f"demo: cannot find {', '.join(str(p) for p in missing)}. The demo needs the examples folder from "
+              f"the specto repository; run it from a checkout or set SPECTO_EXAMPLES.", file=sys.stderr)
+        return 2
+    out_dir = Path(args.out or Path("out") / f"demo-{args.example}")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    print(f"demo: the {args.example} example, answered with a saved real reading; no key, no model call")
+
+    recording = ingest(video, out_dir, transcript_path=transcript, whisper_model=None,
+                       crop=DEMO_EXAMPLES[args.example]["crop"])
+    print(f"ingest: {len(recording.keyframes)} frames, {len(recording.segments)} transcript segments, "
+          f"{recording.duration:.0f}s of video")
+    ocr_text = None
+    from .ocr import ocr_available
+    if ocr_available():
+        from .ocr import ocr_recording
+        ocr_text = ocr_recording(recording, out_dir) or None
+
+    frames_per_call = 8
+    chunk_count = len(split_chunks(recording, frames_per_call))
+    answers = sorted(reference.glob("*.response.json"))
+    reference_chunks = [p for p in answers if re.fullmatch(r"chunk_\d+\.response\.json", p.name)]
+    if chunk_count != len(reference_chunks):
+        print(f"demo: this build of the recording splits into {chunk_count} chunk(s), but the saved reference "
+              f"answers cover {len(reference_chunks)}. The reference was made from a different build of the "
+              f"recording, so its answers would not line up with these frames. Rebuild the reference, or "
+              f"check out the recording it was made from.", file=sys.stderr)
+        return 2
+
+    folder = requests_dir(out_dir)
+    if folder.exists():
+        shutil.rmtree(folder)
+    try:
+        dump_requests(recording, out_dir, frames_per_call=frames_per_call, ocr_text=ocr_text)
+        for path in answers:
+            shutil.copyfile(path, folder / path.name)
+        print(f"demo: copied {len(answers)} reference answer file(s) into {folder}")
+        analysis = load_responses(recording, out_dir)
+    except ByoError as error:
+        print(f"demo: {error}", file=sys.stderr)
+        return 2
+    print(f"loaded: {len(analysis.screens)} screens, {len(analysis.fields)} fields, "
+          f"{len(analysis.requirements)} requirements, {len(analysis.acceptance_criteria)} criteria, "
+          f"{len(analysis.questions)} questions")
+    paths = export_all(analysis, recording, out_dir)
+    for name, p in paths.items():
+        print(f"wrote {name}: {p}")
+    html = paths["html"].resolve()
+    print(f"\nOpen the report:   {html}")
+    print(f"Open the workbook: {paths['xlsx'].resolve()}")
+    if args.open:
+        import webbrowser
+
+        webbrowser.open(html.as_uri())
+    return 0
+
+
 def cmd_doctor(args: argparse.Namespace) -> int:
     from .doctor import main as doctor_main
 
@@ -425,6 +513,12 @@ def build_parser() -> argparse.ArgumentParser:
     mg.add_argument("sources", nargs="+", help="output folders of finished runs, in session order")
     mg.add_argument("--out", required=True, help="folder for the merged result")
     mg.set_defaults(func=cmd_merge)
+
+    dm = sub.add_parser("demo", help="run a real example end to end with a saved reading: no key, no model call")
+    dm.add_argument("--example", default="onboarding", choices=sorted(DEMO_EXAMPLES), help="which example (default onboarding)")
+    dm.add_argument("--out", help="output folder (default: out/demo-<example>)")
+    dm.add_argument("--open", action="store_true", help="open report.html in the default browser when done")
+    dm.set_defaults(func=cmd_demo)
 
     doc = sub.add_parser("doctor", help="check what is installed and what is missing")
     doc.set_defaults(func=cmd_doctor)

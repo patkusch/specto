@@ -266,3 +266,40 @@ def test_cli_requests_and_load_round_trip(synthetic_video: Path, tmp_path: Path,
     assert (out / "analysis.xlsx").exists()
     ana = Analysis.model_validate_json((out / "analysis.json").read_text())
     assert ana.usage.model == "bring-your-own"
+
+
+def test_cli_demo_onboarding_without_a_key(tmp_path: Path, monkeypatch, capsys) -> None:
+    import webbrowser
+
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    opened: list[str] = []
+    monkeypatch.setattr(webbrowser, "open", lambda url: opened.append(url))
+    out = tmp_path / "demo"
+    assert main(["demo", "--example", "onboarding", "--out", str(out), "--open"]) == 0
+    assert (out / "analysis.xlsx").exists() and (out / "report.html").exists()
+    ana = Analysis.model_validate_json((out / "analysis.json").read_text())
+    assert len(ana.requirements) >= 15
+    assert ana.usage.model == "bring-your-own"
+    text = capsys.readouterr().out
+    assert "report.html" in text and "analysis.xlsx" in text
+    assert opened and opened[0].endswith("report.html")
+
+
+def test_cli_demo_stops_when_the_reference_does_not_match(tmp_path: Path, monkeypatch, capsys) -> None:
+    import shutil
+
+    examples = tmp_path / "examples"
+    src = Path(__file__).resolve().parent.parent / "examples" / "onboarding"
+    dst = examples / "onboarding"
+    (dst / "reference").mkdir(parents=True)
+    for name in ("walkthrough.mp4", "walkthrough.vtt"):
+        shutil.copyfile(src / name, dst / name)
+    for name in ("chunk_01.response.json", "consolidate.response.json"):
+        shutil.copyfile(src / "reference" / name, dst / "reference" / name)
+    shutil.copyfile(src / "reference" / "chunk_01.response.json", dst / "reference" / "chunk_02.response.json")
+    monkeypatch.setenv("SPECTO_EXAMPLES", str(examples))
+    assert main(["demo", "--out", str(tmp_path / "o")]) == 2
+    err = capsys.readouterr().err
+    assert "different build of the recording" in err
+    assert not (tmp_path / "o" / "analysis.json").exists()
