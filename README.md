@@ -196,6 +196,27 @@ to the model next to the image, so small labels and values are not lost when
 the frame is scaled down. It is on by default when installed; `--no-ocr` turns
 it off.
 
+### With Docker
+
+No local Python needed. From the repo folder:
+
+```bash
+docker build -t specto .
+docker run --rm -v "$PWD:/work" specto demo
+```
+
+The output lands in `out/demo-onboarding/` on your machine. Your folder is
+mounted at `/work`, so a run on your own recording reads and writes there.
+Pass a key into the container with `-e`; with no value after the name it
+copies the one already set in your shell:
+
+```bash
+docker run --rm -v "$PWD:/work" -e ANTHROPIC_API_KEY specto run walkthrough.mp4 --transcript walkthrough.vtt
+docker run --rm -v "$PWD:/work" -e GEMINI_API_KEY specto run walkthrough.mp4 --transcript walkthrough.vtt --provider gemini
+```
+
+With no command the container runs `specto doctor`.
+
 ## Other ways in
 
 The same pipeline runs from more than a finished recording.

@@ -13,3 +13,10 @@ jobs:
           python-version: "3.12"
       - run: pip install -e ".[dev,ocr]"
       - run: python -m pytest -q
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -t specto:ci .
+      - run: docker run --rm specto:ci doctor
+      - run: docker run --rm specto:ci demo --example onboarding --out /tmp/demo

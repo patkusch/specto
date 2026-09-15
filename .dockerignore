@@ -1,0 +1,10 @@
+.venv
+out
+.git
+.github
+.pytest_cache
+examples/*/build
+**/__pycache__
+*.egg-info
+*.pyc
+.DS_Store
