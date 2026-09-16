@@ -36,11 +36,17 @@ What good looks like
   and benefit are clear; otherwise "The system must ...". source_quote is the
   expert's actual words from the transcript, copied, not paraphrased. Set
   confidence high when the expert said it plainly, low when you inferred it
-  from what is on screen.
+  from what is on screen. When one rule applies independently to several
+  items — several fields that are all mandatory, several file types that are
+  all accepted — write one candidate per item, not one candidate naming the
+  whole list, so each item can be checked and referenced on its own.
 - Questions: what a business analyst would have to ask the expert before a
   developer could build this. Unstated rules, missing values, what happens on
   error, who is allowed to do it, where the data goes, what the limits are.
   Each question says why it matters and quotes the moment that raised it.
+  When the expert names only one or two examples of a value the system
+  accepts (a document type, a file type, a role) without saying that is the
+  whole list, ask directly whether other values are accepted too.
 
 What to avoid
 - Padding. If a frame shows nothing new, report nothing new for it.
@@ -101,6 +107,10 @@ What good looks like
   frame. Keep source_quote as the expert's own words, with the timestamp and
   keyframe_index of that moment. Fill in kind, priority (must / should / could
   when the expert's words make it clear, otherwise unknown) and confidence.
+  Keep a rule that applies independently to several items — several fields
+  that are all mandatory, several file types that are all accepted — as
+  separate requirements, one per item, even where the chunk notes already
+  state them as a single list; do not merge them back into one.
 - writing rules for each requirement and criterion, drawn from the INCOSE
   Guide to Writing Requirements and the GOV.UK user story guidance: one
   thought per sentence, so no "and", "or", "unless" or "as well as" joining
