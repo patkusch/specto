@@ -23,30 +23,20 @@
     },
     "requirements": {
       "expected": 7,
-      "found": 6,
-      "recall": 0.8571428571428571,
-      "missed": [
-        [
-          "date of birth",
-          "mandatory|required|must"
-        ]
-      ],
-      "extras": 15
+      "found": 7,
+      "recall": 1.0,
+      "missed": [],
+      "extras": 18
     },
     "questions": {
       "expected": 5,
-      "found": 4,
-      "recall": 0.8,
-      "missed": [
-        [
-          "passport|driving licence|document type",
-          "accept|which|allowed|other"
-        ]
-      ],
-      "extras": 16
+      "found": 5,
+      "recall": 1.0,
+      "missed": [],
+      "extras": 15
     }
   },
-  "overall_recall": 0.9314285714285715,
+  "overall_recall": 1.0,
   "traceability": {
     "requirements_without_source_quote": 0,
     "criteria_with_unknown_requirement": 0,

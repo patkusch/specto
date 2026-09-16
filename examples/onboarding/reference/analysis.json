@@ -928,8 +928,8 @@
     },
     {
       "id": "R003",
-      "statement": "The system saves Customer Details only when First name, Last name, Date of birth, Account type and Postcode are all filled in.",
-      "rationale": "The five fields carry a * on screen and the legend reads 'fields marked * are required'.",
+      "statement": "The system does not save Customer Details when First name is empty.",
+      "rationale": "The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.",
       "source_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
       "timestamp": 15.0,
       "keyframe_index": 1,
@@ -940,6 +940,54 @@
     },
     {
       "id": "R004",
+      "statement": "The system does not save Customer Details when Last name is empty.",
+      "rationale": "The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.",
+      "source_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
+      "timestamp": 15.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "validation",
+      "priority": "must",
+      "confidence": "high"
+    },
+    {
+      "id": "R005",
+      "statement": "The system does not save Customer Details when Date of birth is empty.",
+      "rationale": "The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.",
+      "source_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
+      "timestamp": 15.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "validation",
+      "priority": "must",
+      "confidence": "high"
+    },
+    {
+      "id": "R006",
+      "statement": "The system does not save Customer Details when Account type is empty.",
+      "rationale": "The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.",
+      "source_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
+      "timestamp": 15.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "validation",
+      "priority": "must",
+      "confidence": "high"
+    },
+    {
+      "id": "R007",
+      "statement": "The system does not save Customer Details when Postcode is empty.",
+      "rationale": "The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.",
+      "source_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
+      "timestamp": 15.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "validation",
+      "priority": "must",
+      "confidence": "high"
+    },
+    {
+      "id": "R008",
       "statement": "The system rejects a Customer Details save when Postcode is not in a valid UK postcode format.",
       "rationale": "Hint under the field on screen: 'UK postcode format, e.g. SW1A 1AA'. The exact rule is not stated.",
       "source_quote": "The postcode has to be a valid UK format, otherwise the system won't let you save.",
@@ -951,7 +999,7 @@
       "confidence": "high"
     },
     {
-      "id": "R005",
+      "id": "R009",
       "statement": "The system saves Customer Details when Address line 1, Address line 2, Town / City, Email address and Phone number are all empty.",
       "rationale": "The expert names the address lines and town as optional; Email address and Phone number carry no * on screen.",
       "source_quote": "The address lines and the town are optional.",
@@ -963,7 +1011,7 @@
       "confidence": "medium"
     },
     {
-      "id": "R006",
+      "id": "R010",
       "statement": "The Account type dropdown on Customer Details offers the options Personal and Business.",
       "rationale": "Both values also appear in the Account type column of the Customer Search results.",
       "source_quote": "Account type is a dropdown, personal or business",
@@ -975,7 +1023,7 @@
       "confidence": "high"
     },
     {
-      "id": "R007",
+      "id": "R011",
       "statement": "The system records marketing consent as Yes only when the Onboarding Officer has ticked 'Customer has given marketing consent'.",
       "rationale": "The checkbox is unticked on the frame and Review & Submit shows 'Marketing consent: No'. The business rule is that the officer ticks it only when the customer has said yes.",
       "source_quote": "the marketing consent box only gets ticked if the customer actually said yes",
@@ -987,7 +1035,7 @@
       "confidence": "high"
     },
     {
-      "id": "R008",
+      "id": "R012",
       "statement": "As an Onboarding Officer, I need to upload an image of the customer's ID document with its Document type, so that proof of identity is attached to the customer record.",
       "rationale": "The Documents screen has a Choose File control, a Document type dropdown and an Upload button.",
       "source_quote": "We upload a photo of their ID, usually a passport or a driving licence, and pick the document type from the dropdown.",
@@ -999,7 +1047,7 @@
       "confidence": "high"
     },
     {
-      "id": "R009",
+      "id": "R013",
       "statement": "The system accepts an ID document upload only when the file is a PDF, JPG or PNG.",
       "rationale": "Taken from the hint under the file control ('PDF, JPG or PNG, up to 10 MB'); the expert did not say it.",
       "source_quote": "We upload a photo of their ID",
@@ -1011,7 +1059,7 @@
       "confidence": "medium"
     },
     {
-      "id": "R010",
+      "id": "R014",
       "statement": "The system accepts an ID document upload only when the file is 10 MB or smaller.",
       "rationale": "Taken from the hint under the file control ('PDF, JPG or PNG, up to 10 MB'); the expert did not say it.",
       "source_quote": "We upload a photo of their ID",
@@ -1023,7 +1071,7 @@
       "confidence": "medium"
     },
     {
-      "id": "R011",
+      "id": "R015",
       "statement": "The system shows an uploaded document with status Pending check until the document has been checked.",
       "rationale": "Pending check (amber) is visible in the Uploaded documents table on the frame.",
       "source_quote": "The status column shows pending until the document has been checked.",
@@ -1035,7 +1083,7 @@
       "confidence": "high"
     },
     {
-      "id": "R012",
+      "id": "R016",
       "statement": "The system changes the status of an uploaded document to Verified once the document has been checked.",
       "rationale": "Verified (green) is visible in the Uploaded documents table. Who checks the document, and where, is unknown.",
       "source_quote": "Someone checks them, I'm honestly not sure who, it just changes to verified at some point.",
@@ -1047,7 +1095,7 @@
       "confidence": "medium"
     },
     {
-      "id": "R013",
+      "id": "R017",
       "statement": "The Documents screen lists each uploaded document with File, Document type, Uploaded date and time, Uploaded by and Status.",
       "rationale": "Column list taken from the Uploaded documents table on the frame; the expert only mentioned the status column.",
       "source_quote": "The status column shows pending until the document has been checked.",
@@ -1059,7 +1107,7 @@
       "confidence": "medium"
     },
     {
-      "id": "R014",
+      "id": "R018",
       "statement": "The Review & Submit screen shows a read-only summary of Name, Date of birth, Email address, Phone number, Address, Account type, Marketing consent and ID document with its check status.",
       "rationale": "All eight items are visible on the frame.",
       "source_quote": "Review and Submit is a summary of everything so far. You read it through, and if it all looks right you press Submit for approval.",
@@ -1071,7 +1119,7 @@
       "confidence": "high"
     },
     {
-      "id": "R015",
+      "id": "R019",
       "statement": "The system locks the customer record against editing once the Onboarding Officer has pressed Submit for approval.",
       "rationale": "Also written on screen: 'After submission the record is locked for editing.'",
       "source_quote": "Once you submit, the record locks and you can't edit it any more.",
@@ -1083,7 +1131,7 @@
       "confidence": "high"
     },
     {
-      "id": "R016",
+      "id": "R020",
       "statement": "A Team Lead can send a submitted customer record back to the Onboarding Officer for editing.",
       "rationale": "The expert was not sure and no send-back control was seen on any frame. Kept because it is the only stated way to correct a mistake after submission.",
       "source_quote": "You'd have to ask a team lead to send it back, I think.",
@@ -1095,7 +1143,7 @@
       "confidence": "low"
     },
     {
-      "id": "R017",
+      "id": "R021",
       "statement": "The Approval Queue lists every submitted customer as one row with Reference, Customer, Submitted date and time, Submitted by, Status and Assigned to.",
       "rationale": "Column list taken from the frame. The screen subtitle says oldest first, but the rows on the frame are not in date order, so ordering is left as a question.",
       "source_quote": "Every submitted customer sits here with a status, and it shows who it's assigned to",
@@ -1107,7 +1155,7 @@
       "confidence": "high"
     },
     {
-      "id": "R018",
+      "id": "R022",
       "statement": "The system shows the Approve button in the Approval Queue only to users in the Team Lead role.",
       "rationale": "Also stated in the banner on screen: 'Team leads only. The Approve action is shown to users in the Team Lead role.'",
       "source_quote": "Only team leads can approve. The Approve button doesn't show for the rest of us, and it says team leads only at the top.",
@@ -1119,7 +1167,7 @@
       "confidence": "high"
     },
     {
-      "id": "R019",
+      "id": "R023",
       "statement": "Users outside the Team Lead role can view the Approval Queue.",
       "rationale": "The banner on screen reads 'Other users can view the queue but cannot approve', and the expert (not a team lead) sees the queue without the Approve button.",
       "source_quote": "The Approve button doesn't show for the rest of us, and it says team leads only at the top.",
@@ -1131,7 +1179,7 @@
       "confidence": "medium"
     },
     {
-      "id": "R020",
+      "id": "R024",
       "statement": "When a customer is approved, the system shows a Confirmation screen with Customer reference number, Approved by, Approved on and Welcome email status.",
       "rationale": "All four items are visible on the frame. The reference number is what the Onboarding Officer gives to the customer.",
       "source_quote": "When it's approved, you get the Confirmation screen with a reference number. We give that reference to the customer.",
@@ -1143,7 +1191,7 @@
       "confidence": "high"
     },
     {
-      "id": "R021",
+      "id": "R025",
       "statement": "The system sends a welcome email to the Email address entered on Customer Details when the customer is approved.",
       "rationale": "The Confirmation screen shows 'Welcome email: Sent to eloette.lunmere@example.com'. The trigger being approval is implied by where the status appears; the expert did not say when it is sent.",
       "source_quote": "A welcome email goes out automatically to the address we entered.",
@@ -1186,16 +1234,16 @@
     {
       "id": "AC004",
       "requirement_id": "R003",
-      "given": "The Onboarding Officer is on Customer Details with First name, Last name, Date of birth, Account type and Postcode filled in",
+      "given": "The Onboarding Officer is on Customer Details with every mandatory field filled in except First name",
       "when": "The Onboarding Officer presses Save and continue",
-      "then": "The system saves the details and shows the Documents screen",
+      "then": "The system stays on Customer Details and does not save the details",
       "timestamp": 15.0,
       "keyframe_index": 1
     },
     {
       "id": "AC005",
-      "requirement_id": "R003",
-      "given": "The Onboarding Officer is on Customer Details with Date of birth left empty and the other four mandatory fields filled in",
+      "requirement_id": "R008",
+      "given": "The Onboarding Officer is on Customer Details with every mandatory field filled in except Last name",
       "when": "The Onboarding Officer presses Save and continue",
       "then": "The system stays on Customer Details and does not save the details",
       "timestamp": 15.0,
@@ -1203,7 +1251,34 @@
     },
     {
       "id": "AC006",
-      "requirement_id": "R004",
+      "requirement_id": "R009",
+      "given": "The Onboarding Officer is on Customer Details with every mandatory field filled in except Date of birth",
+      "when": "The Onboarding Officer presses Save and continue",
+      "then": "The system stays on Customer Details and does not save the details",
+      "timestamp": 15.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC007",
+      "requirement_id": "R010",
+      "given": "The Onboarding Officer is on Customer Details with every mandatory field filled in except Account type",
+      "when": "The Onboarding Officer presses Save and continue",
+      "then": "The system stays on Customer Details and does not save the details",
+      "timestamp": 15.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC008",
+      "requirement_id": "R011",
+      "given": "The Onboarding Officer is on Customer Details with every mandatory field filled in except Postcode",
+      "when": "The Onboarding Officer presses Save and continue",
+      "then": "The system stays on Customer Details and does not save the details",
+      "timestamp": 15.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC009",
+      "requirement_id": "R008",
       "given": "The Onboarding Officer has entered SW1A 1AA in Postcode with all other mandatory fields filled in",
       "when": "The Onboarding Officer presses Save and continue",
       "then": "The system saves the details",
@@ -1211,8 +1286,8 @@
       "keyframe_index": 1
     },
     {
-      "id": "AC007",
-      "requirement_id": "R004",
+      "id": "AC010",
+      "requirement_id": "R008",
       "given": "The Onboarding Officer has entered 12345 in Postcode with all other mandatory fields filled in",
       "when": "The Onboarding Officer presses Save and continue",
       "then": "The system stays on Customer Details and does not save the details",
@@ -1220,8 +1295,8 @@
       "keyframe_index": 1
     },
     {
-      "id": "AC008",
-      "requirement_id": "R005",
+      "id": "AC011",
+      "requirement_id": "R009",
       "given": "The Onboarding Officer has filled in the five mandatory fields and left Address line 1, Address line 2, Town / City, Email address and Phone number empty",
       "when": "The Onboarding Officer presses Save and continue",
       "then": "The system saves the details and shows the Documents screen",
@@ -1229,8 +1304,8 @@
       "keyframe_index": 1
     },
     {
-      "id": "AC009",
-      "requirement_id": "R006",
+      "id": "AC012",
+      "requirement_id": "R010",
       "given": "The Onboarding Officer is on Customer Details",
       "when": "The Onboarding Officer opens the Account type dropdown",
       "then": "The dropdown lists Personal and Business",
@@ -1238,8 +1313,8 @@
       "keyframe_index": 1
     },
     {
-      "id": "AC010",
-      "requirement_id": "R007",
+      "id": "AC013",
+      "requirement_id": "R011",
       "given": "The Onboarding Officer leaves 'Customer has given marketing consent' unticked and saves Customer Details",
       "when": "The Onboarding Officer reaches Review & Submit",
       "then": "Marketing consent shows No",
@@ -1247,8 +1322,8 @@
       "keyframe_index": 1
     },
     {
-      "id": "AC011",
-      "requirement_id": "R007",
+      "id": "AC014",
+      "requirement_id": "R011",
       "given": "The Onboarding Officer ticks 'Customer has given marketing consent' and saves Customer Details",
       "when": "The Onboarding Officer reaches Review & Submit",
       "then": "Marketing consent shows Yes",
@@ -1256,8 +1331,8 @@
       "keyframe_index": 1
     },
     {
-      "id": "AC012",
-      "requirement_id": "R008",
+      "id": "AC015",
+      "requirement_id": "R012",
       "given": "The Onboarding Officer is on Documents and has chosen the file passport_elunmere.jpg and Document type Passport",
       "when": "The Onboarding Officer presses Upload",
       "then": "The Uploaded documents table shows a row with File passport_elunmere.jpg and Document type Passport",
@@ -1265,8 +1340,8 @@
       "keyframe_index": 2
     },
     {
-      "id": "AC013",
-      "requirement_id": "R008",
+      "id": "AC016",
+      "requirement_id": "R012",
       "given": "The Onboarding Officer is on Documents",
       "when": "The Onboarding Officer opens the Document type dropdown",
       "then": "The dropdown lists Passport and Driving licence",
@@ -1274,8 +1349,8 @@
       "keyframe_index": 2
     },
     {
-      "id": "AC014",
-      "requirement_id": "R009",
+      "id": "AC017",
+      "requirement_id": "R013",
       "given": "The Onboarding Officer has chosen a .docx file as the ID document",
       "when": "The Onboarding Officer presses Upload",
       "then": "The system does not add the file to the Uploaded documents table",
@@ -1283,8 +1358,8 @@
       "keyframe_index": 2
     },
     {
-      "id": "AC015",
-      "requirement_id": "R009",
+      "id": "AC018",
+      "requirement_id": "R013",
       "given": "The Onboarding Officer has chosen a .png file under 10 MB as the ID document",
       "when": "The Onboarding Officer presses Upload",
       "then": "The system adds the file to the Uploaded documents table",
@@ -1292,8 +1367,8 @@
       "keyframe_index": 2
     },
     {
-      "id": "AC016",
-      "requirement_id": "R010",
+      "id": "AC019",
+      "requirement_id": "R014",
       "given": "The Onboarding Officer has chosen a JPG file of 11 MB as the ID document",
       "when": "The Onboarding Officer presses Upload",
       "then": "The system does not add the file to the Uploaded documents table",
@@ -1301,8 +1376,8 @@
       "keyframe_index": 2
     },
     {
-      "id": "AC017",
-      "requirement_id": "R010",
+      "id": "AC020",
+      "requirement_id": "R014",
       "given": "The Onboarding Officer has chosen a JPG file of 10 MB as the ID document",
       "when": "The Onboarding Officer presses Upload",
       "then": "The system adds the file to the Uploaded documents table",
@@ -1310,8 +1385,8 @@
       "keyframe_index": 2
     },
     {
-      "id": "AC018",
-      "requirement_id": "R011",
+      "id": "AC021",
+      "requirement_id": "R015",
       "given": "The Onboarding Officer has just uploaded an ID document",
       "when": "The Onboarding Officer looks at the Uploaded documents table",
       "then": "The Status column for that document shows Pending check",
@@ -1319,8 +1394,8 @@
       "keyframe_index": 2
     },
     {
-      "id": "AC019",
-      "requirement_id": "R012",
+      "id": "AC022",
+      "requirement_id": "R016",
       "given": "An uploaded document shows Status Pending check",
       "when": "The document check is completed",
       "then": "The Status column for that document shows Verified",
@@ -1328,8 +1403,8 @@
       "keyframe_index": 2
     },
     {
-      "id": "AC020",
-      "requirement_id": "R013",
+      "id": "AC023",
+      "requirement_id": "R017",
       "given": "At least one document has been uploaded for the customer",
       "when": "The Onboarding Officer looks at the Uploaded documents table on Documents",
       "then": "Each row shows a value under File, Document type, Uploaded, Uploaded by and Status",
@@ -1337,8 +1412,8 @@
       "keyframe_index": 2
     },
     {
-      "id": "AC021",
-      "requirement_id": "R014",
+      "id": "AC024",
+      "requirement_id": "R018",
       "given": "The Onboarding Officer has saved Customer Details for Eloette Lunmere and uploaded a Passport",
       "when": "The Onboarding Officer presses Continue to review on Documents",
       "then": "Review & Submit shows Name, Date of birth, Email address, Phone number, Address, Account type, Marketing consent and ID document with the values entered",
@@ -1346,8 +1421,8 @@
       "keyframe_index": 3
     },
     {
-      "id": "AC022",
-      "requirement_id": "R014",
+      "id": "AC025",
+      "requirement_id": "R018",
       "given": "The Onboarding Officer is on Review & Submit",
       "when": "The Onboarding Officer clicks on any summary value",
       "then": "The value cannot be edited on that screen",
@@ -1355,8 +1430,8 @@
       "keyframe_index": 3
     },
     {
-      "id": "AC023",
-      "requirement_id": "R015",
+      "id": "AC026",
+      "requirement_id": "R019",
       "given": "The Onboarding Officer has pressed Submit for approval on Review & Submit",
       "when": "The Onboarding Officer opens that customer's Customer Details",
       "then": "Every field is read-only and Save and continue is unavailable",
@@ -1364,8 +1439,8 @@
       "keyframe_index": 3
     },
     {
-      "id": "AC024",
-      "requirement_id": "R016",
+      "id": "AC027",
+      "requirement_id": "R020",
       "given": "A customer record has been submitted for approval and is locked",
       "when": "A Team Lead sends the record back",
       "then": "The Onboarding Officer can edit the record again",
@@ -1373,8 +1448,8 @@
       "keyframe_index": 3
     },
     {
-      "id": "AC025",
-      "requirement_id": "R017",
+      "id": "AC028",
+      "requirement_id": "R021",
       "given": "An Onboarding Officer has just submitted a customer for approval",
       "when": "A user opens the Approval Queue",
       "then": "The queue shows a row for that customer with Reference, Customer, Submitted, Submitted by, Status Awaiting approval and Assigned to",
@@ -1382,8 +1457,8 @@
       "keyframe_index": 4
     },
     {
-      "id": "AC026",
-      "requirement_id": "R018",
+      "id": "AC029",
+      "requirement_id": "R022",
       "given": "A user in the Team Lead role is signed in",
       "when": "The user opens the Approval Queue",
       "then": "Each row with Status Awaiting approval shows an Approve button",
@@ -1391,8 +1466,8 @@
       "keyframe_index": 4
     },
     {
-      "id": "AC027",
-      "requirement_id": "R018",
+      "id": "AC030",
+      "requirement_id": "R022",
       "given": "A user in the Onboarding Officer role is signed in",
       "when": "The user opens the Approval Queue",
       "then": "No row shows an Approve button",
@@ -1400,8 +1475,8 @@
       "keyframe_index": 4
     },
     {
-      "id": "AC028",
-      "requirement_id": "R019",
+      "id": "AC031",
+      "requirement_id": "R023",
       "given": "A user in the Onboarding Officer role is signed in",
       "when": "The user opens the Approval Queue",
       "then": "The queue rows are displayed with the 'Team leads only' banner at the top",
@@ -1409,8 +1484,8 @@
       "keyframe_index": 4
     },
     {
-      "id": "AC029",
-      "requirement_id": "R020",
+      "id": "AC032",
+      "requirement_id": "R024",
       "given": "A customer row in the Approval Queue has Status Awaiting approval",
       "when": "A Team Lead presses Approve on that row",
       "then": "A Confirmation screen shows Customer reference number, Approved by with the Team Lead's name, Approved on with the current date and time, and Welcome email",
@@ -1418,8 +1493,8 @@
       "keyframe_index": 5
     },
     {
-      "id": "AC030",
-      "requirement_id": "R021",
+      "id": "AC033",
+      "requirement_id": "R025",
       "given": "A customer was saved with Email address eloette.lunmere@example.com",
       "when": "A Team Lead approves that customer",
       "then": "A welcome email is sent to eloette.lunmere@example.com and the Confirmation screen shows 'Sent to eloette.lunmere@example.com'",
@@ -1483,7 +1558,7 @@
       "screen_id": "S02",
       "category": "validation rule",
       "blocks_requirement_ids": [
-        "R004"
+        "R008"
       ],
       "answer": null,
       "status": "open"
@@ -1498,8 +1573,8 @@
       "screen_id": "S02",
       "category": "validation rule",
       "blocks_requirement_ids": [
-        "R003",
-        "R005"
+        "R005",
+        "R009"
       ],
       "answer": null,
       "status": "open"
@@ -1527,22 +1602,22 @@
       "screen_id": "S03",
       "category": "missing information",
       "blocks_requirement_ids": [
-        "R012"
+        "R016"
       ],
       "answer": null,
       "status": "open"
     },
     {
       "id": "Q008",
-      "question": "What are the full options in the Document type dropdown, and is a proof of address document required as well as the ID document?",
-      "why_it_matters": "Passport and Proof of address were seen and driving licence was mentioned; the table lists two documents but the form is labelled 'Upload ID document'.",
+      "question": "Which document types does the system accept for the ID upload: only Passport and Driving licence as the expert named, or others too, such as the Proof of address type seen in the uploaded documents table?",
+      "why_it_matters": "The expert named only two examples, but the uploaded documents table shows a third type, Proof of address; the full accepted list decides what the Document type dropdown must offer and whether a second document is required.",
       "context_quote": "We upload a photo of their ID, usually a passport or a driving licence, and pick the document type from the dropdown.",
       "timestamp": 43.0,
       "keyframe_index": 2,
       "screen_id": "S03",
       "category": "data",
       "blocks_requirement_ids": [
-        "R008"
+        "R012"
       ],
       "answer": null,
       "status": "open"
@@ -1557,8 +1632,8 @@
       "screen_id": "S03",
       "category": "edge case",
       "blocks_requirement_ids": [
-        "R009",
-        "R010"
+        "R013",
+        "R014"
       ],
       "answer": null,
       "status": "open"
@@ -1573,8 +1648,8 @@
       "screen_id": "S04",
       "category": "validation rule",
       "blocks_requirement_ids": [
-        "R015",
-        "R018"
+        "R019",
+        "R022"
       ],
       "answer": null,
       "status": "open"
@@ -1589,8 +1664,8 @@
       "screen_id": "S04",
       "category": "missing information",
       "blocks_requirement_ids": [
-        "R015",
-        "R016"
+        "R019",
+        "R020"
       ],
       "answer": null,
       "status": "open"
@@ -1605,7 +1680,7 @@
       "screen_id": "S05",
       "category": "missing information",
       "blocks_requirement_ids": [
-        "R017"
+        "R021"
       ],
       "answer": null,
       "status": "open"
@@ -1620,8 +1695,8 @@
       "screen_id": "S05",
       "category": "missing information",
       "blocks_requirement_ids": [
-        "R017",
-        "R018"
+        "R021",
+        "R022"
       ],
       "answer": null,
       "status": "open"
@@ -1636,7 +1711,7 @@
       "screen_id": "S05",
       "category": "permissions",
       "blocks_requirement_ids": [
-        "R019"
+        "R023"
       ],
       "answer": null,
       "status": "open"
@@ -1651,7 +1726,7 @@
       "screen_id": "S05",
       "category": "ambiguity",
       "blocks_requirement_ids": [
-        "R017"
+        "R021"
       ],
       "answer": null,
       "status": "open"
@@ -1666,7 +1741,7 @@
       "screen_id": "S06",
       "category": "integration",
       "blocks_requirement_ids": [
-        "R021"
+        "R025"
       ],
       "answer": null,
       "status": "open"
@@ -1681,7 +1756,7 @@
       "screen_id": "S06",
       "category": "data",
       "blocks_requirement_ids": [
-        "R020"
+        "R024"
       ],
       "answer": null,
       "status": "open"
@@ -1696,7 +1771,7 @@
       "screen_id": "S06",
       "category": "ambiguity",
       "blocks_requirement_ids": [
-        "R020"
+        "R024"
       ],
       "answer": null,
       "status": "open"

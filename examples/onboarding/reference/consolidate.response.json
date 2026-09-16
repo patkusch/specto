@@ -1,689 +1,1806 @@
 {
-  "title": "Northwind customer onboarding",
-  "summary": "Northwind Onboarding is the tool the team uses to set up a new customer. An Onboarding Officer first searches for the customer by postcode and surname so that no duplicate record is created. If the customer is new, the officer enters their details, uploads a photo of an identity document and submits the record for approval, at which point it locks. A Team Lead approves the record from the Approval Queue. The system then shows a Confirmation screen with a customer reference number, which the officer gives to the customer, and sends a welcome email to the address entered.",
-  "actors": [
-    "Onboarding Officer",
-    "Team Lead",
-    "Customer",
-    "Document checker (role not identified by the expert)"
-  ],
-  "screens": [
-    {
-      "id": "S01",
-      "name": "Customer Search",
-      "purpose": "Check whether the customer already exists by postcode and surname before creating a new record.",
-      "keyframe_indexes": [0],
-      "first_seen": 0.0,
-      "field_ids": ["F001", "F002", "F003", "F004", "F005", "F006", "F007", "F008"],
-      "action_ids": ["A001", "A002", "A003", "A004"]
-    },
-    {
-      "id": "S02",
-      "name": "Customer Details",
-      "purpose": "Enter the new customer's personal details, contact details, address and marketing consent.",
-      "keyframe_indexes": [1],
-      "first_seen": 15.0,
-      "field_ids": ["F009", "F010", "F011", "F012", "F013", "F014", "F015", "F016", "F017", "F018", "F019"],
-      "action_ids": ["A005", "A006", "A007", "A008"]
-    },
-    {
-      "id": "S03",
-      "name": "Documents",
-      "purpose": "Upload proof of identity for the customer and see the check status of each uploaded document.",
-      "keyframe_indexes": [2],
-      "first_seen": 43.0,
-      "field_ids": ["F020", "F021", "F022", "F023", "F024", "F025", "F026"],
-      "action_ids": ["A009", "A010", "A011", "A012", "A013"]
-    },
-    {
-      "id": "S04",
-      "name": "Review & Submit",
-      "purpose": "Read-only summary of everything entered so far, with the button that submits the record for approval and locks it.",
-      "keyframe_indexes": [3],
-      "first_seen": 62.0,
-      "field_ids": ["F027", "F028", "F029", "F030", "F031", "F032", "F033", "F034"],
-      "action_ids": ["A014", "A015"]
-    },
-    {
-      "id": "S05",
-      "name": "Approval Queue",
-      "purpose": "List of customers submitted for approval, with status and assignee, where a Team Lead approves them.",
-      "keyframe_indexes": [4],
-      "first_seen": 77.0,
-      "field_ids": ["F035", "F036", "F037", "F038", "F039", "F040"],
-      "action_ids": ["A016"]
-    },
-    {
-      "id": "S06",
-      "name": "Confirmation",
-      "purpose": "Shows that the customer record has been approved, with the customer reference number, approver, approval time and welcome email status.",
-      "keyframe_indexes": [5],
-      "first_seen": 93.0,
-      "field_ids": ["F041", "F042", "F043", "F044"],
-      "action_ids": ["A017", "A018"]
-    }
-  ],
-  "fields": [
-    {"id": "F001", "screen_id": "S01", "label": "Postcode", "field_type": "text", "required": null, "example_value": "SW1A 1AA", "source": "both", "timestamp": 0.0, "keyframe_index": 0, "notes": "Search criterion. Results include postcode SW1A 1AB for this search, so matching may not be exact."},
-    {"id": "F002", "screen_id": "S01", "label": "Surname", "field_type": "text", "required": null, "example_value": "Lunmere", "source": "both", "timestamp": 0.0, "keyframe_index": 0, "notes": "Search criterion."},
-    {"id": "F003", "screen_id": "S01", "label": "Customer ID", "field_type": "table column", "required": null, "example_value": "C-625922", "source": "seen on screen", "timestamp": 0.0, "keyframe_index": 0, "notes": "Results table. Format C- followed by six digits (C-625922, C-994911, C-595381)."},
-    {"id": "F004", "screen_id": "S01", "label": "Name", "field_type": "table column", "required": null, "example_value": "Wilina Lunmere", "source": "seen on screen", "timestamp": 0.0, "keyframe_index": 0, "notes": "Results table."},
-    {"id": "F005", "screen_id": "S01", "label": "Date of birth", "field_type": "table column", "required": null, "example_value": "01/01/1982", "source": "seen on screen", "timestamp": 0.0, "keyframe_index": 0, "notes": "Results table, DD/MM/YYYY."},
-    {"id": "F006", "screen_id": "S01", "label": "Postcode", "field_type": "table column", "required": null, "example_value": "SW1A 1AA", "source": "seen on screen", "timestamp": 0.0, "keyframe_index": 0, "notes": "Results table column, distinct from the Postcode search box."},
-    {"id": "F007", "screen_id": "S01", "label": "Account type", "field_type": "table column", "required": null, "example_value": "Personal", "source": "seen on screen", "timestamp": 0.0, "keyframe_index": 0, "notes": "Results table. Values seen: Personal, Business."},
-    {"id": "F008", "screen_id": "S01", "label": "Status", "field_type": "table column", "required": null, "example_value": "Active", "source": "seen on screen", "timestamp": 0.0, "keyframe_index": 0, "notes": "Results table, shown as a coloured badge. Values seen: Active (green), Closed (red)."},
-    {"id": "F009", "screen_id": "S02", "label": "First name", "field_type": "text", "required": true, "example_value": "Eloette", "source": "both", "timestamp": 15.0, "keyframe_index": 1, "notes": "Marked * on screen and named as mandatory by the expert."},
-    {"id": "F010", "screen_id": "S02", "label": "Last name", "field_type": "text", "required": true, "example_value": "Lunmere", "source": "both", "timestamp": 15.0, "keyframe_index": 1, "notes": "Marked * on screen and named as mandatory by the expert."},
-    {"id": "F011", "screen_id": "S02", "label": "Date of birth", "field_type": "date", "required": true, "example_value": "01/01/1981", "source": "both", "timestamp": 15.0, "keyframe_index": 1, "notes": "Marked * on screen and named as mandatory by the expert. Hint under the field reads DD/MM/YYYY."},
-    {"id": "F012", "screen_id": "S02", "label": "Email address", "field_type": "text", "required": false, "example_value": "eloette.lunmere@example.com", "source": "seen on screen", "timestamp": 15.0, "keyframe_index": 1, "notes": "No * on screen (legend: fields marked * are required). The welcome email on the Confirmation screen is sent to this address."},
-    {"id": "F013", "screen_id": "S02", "label": "Phone number", "field_type": "text", "required": false, "example_value": "07700 900231", "source": "seen on screen", "timestamp": 15.0, "keyframe_index": 1, "notes": "No * on screen."},
-    {"id": "F014", "screen_id": "S02", "label": "Account type", "field_type": "dropdown", "required": true, "example_value": "Personal", "source": "both", "timestamp": 15.0, "keyframe_index": 1, "notes": "Marked * on screen. Expert: options are Personal or Business."},
-    {"id": "F015", "screen_id": "S02", "label": "Address line 1", "field_type": "text", "required": false, "example_value": "14 Example Street", "source": "both", "timestamp": 15.0, "keyframe_index": 1, "notes": "Expert says the address lines are optional; no * on screen."},
-    {"id": "F016", "screen_id": "S02", "label": "Address line 2", "field_type": "text", "required": false, "example_value": null, "source": "both", "timestamp": 15.0, "keyframe_index": 1, "notes": "Empty on the frame. Expert says the address lines are optional."},
-    {"id": "F017", "screen_id": "S02", "label": "Town / City", "field_type": "text", "required": false, "example_value": "London", "source": "both", "timestamp": 15.0, "keyframe_index": 1, "notes": "Expert says the town is optional; no * on screen."},
-    {"id": "F018", "screen_id": "S02", "label": "Postcode", "field_type": "text", "required": true, "example_value": "SW1A 1AA", "source": "both", "timestamp": 15.0, "keyframe_index": 1, "notes": "Marked * on screen. Hint under the field reads 'UK postcode format, e.g. SW1A 1AA'. Expert: must be a valid UK format or the system will not save."},
-    {"id": "F019", "screen_id": "S02", "label": "Customer has given marketing consent", "field_type": "checkbox", "required": false, "example_value": null, "source": "both", "timestamp": 15.0, "keyframe_index": 1, "notes": "Shown unticked on the frame; Review & Submit later shows Marketing consent: No. Expert: only ticked if the customer actually said yes."},
-    {"id": "F020", "screen_id": "S03", "label": "ID document", "field_type": "file", "required": true, "example_value": null, "source": "both", "timestamp": 43.0, "keyframe_index": 2, "notes": "Choose File control showing 'No file chosen'. Hint: 'PDF, JPG or PNG, up to 10 MB'."},
-    {"id": "F021", "screen_id": "S03", "label": "Document type", "field_type": "dropdown", "required": true, "example_value": "Passport", "source": "both", "timestamp": 43.0, "keyframe_index": 2, "notes": "Expert mentions passport or driving licence. The uploaded documents table also shows a type 'Proof of address'. Full option list not seen."},
-    {"id": "F022", "screen_id": "S03", "label": "File", "field_type": "table column", "required": null, "example_value": "passport_elunmere.jpg", "source": "seen on screen", "timestamp": 43.0, "keyframe_index": 2, "notes": "Uploaded documents table."},
-    {"id": "F023", "screen_id": "S03", "label": "Document type", "field_type": "table column", "required": null, "example_value": "Passport", "source": "seen on screen", "timestamp": 43.0, "keyframe_index": 2, "notes": "Uploaded documents table column, distinct from the Document type dropdown. Values seen: Passport, Proof of address."},
-    {"id": "F024", "screen_id": "S03", "label": "Uploaded", "field_type": "table column", "required": null, "example_value": "10/09/2026 09:41", "source": "seen on screen", "timestamp": 43.0, "keyframe_index": 2, "notes": "Uploaded documents table, date and time."},
-    {"id": "F025", "screen_id": "S03", "label": "Uploaded by", "field_type": "table column", "required": null, "example_value": "Oderic Falstow", "source": "seen on screen", "timestamp": 43.0, "keyframe_index": 2, "notes": "Uploaded documents table; matches the signed-in user."},
-    {"id": "F026", "screen_id": "S03", "label": "Status", "field_type": "table column", "required": null, "example_value": "Pending check", "source": "both", "timestamp": 43.0, "keyframe_index": 2, "notes": "Coloured badge. Values seen: Pending check (amber), Verified (green). Expert: shows pending until the document has been checked."},
-    {"id": "F027", "screen_id": "S04", "label": "Name", "field_type": "read-only", "required": null, "example_value": "Eloette Lunmere", "source": "seen on screen", "timestamp": 62.0, "keyframe_index": 3, "notes": "First name and last name shown together."},
-    {"id": "F028", "screen_id": "S04", "label": "Date of birth", "field_type": "read-only", "required": null, "example_value": "01/01/1981", "source": "seen on screen", "timestamp": 62.0, "keyframe_index": 3, "notes": null},
-    {"id": "F029", "screen_id": "S04", "label": "Email address", "field_type": "read-only", "required": null, "example_value": "eloette.lunmere@example.com", "source": "seen on screen", "timestamp": 62.0, "keyframe_index": 3, "notes": null},
-    {"id": "F030", "screen_id": "S04", "label": "Phone number", "field_type": "read-only", "required": null, "example_value": "07700 900231", "source": "seen on screen", "timestamp": 62.0, "keyframe_index": 3, "notes": null},
-    {"id": "F031", "screen_id": "S04", "label": "Address", "field_type": "read-only", "required": null, "example_value": "14 Example Street, London, SW1A 1AA", "source": "seen on screen", "timestamp": 62.0, "keyframe_index": 3, "notes": "Address lines, town and postcode joined into one line with commas."},
-    {"id": "F032", "screen_id": "S04", "label": "Account type", "field_type": "read-only", "required": null, "example_value": "Personal", "source": "seen on screen", "timestamp": 62.0, "keyframe_index": 3, "notes": null},
-    {"id": "F033", "screen_id": "S04", "label": "Marketing consent", "field_type": "read-only", "required": null, "example_value": "No", "source": "seen on screen", "timestamp": 62.0, "keyframe_index": 3, "notes": "Unticked checkbox is shown as 'No'."},
-    {"id": "F034", "screen_id": "S04", "label": "ID document", "field_type": "read-only", "required": null, "example_value": "Passport (passport_elunmere.jpg) · Pending check", "source": "seen on screen", "timestamp": 62.0, "keyframe_index": 3, "notes": "Shows document type, file name and check status badge. Only the ID document is listed here, not the proof of address."},
-    {"id": "F035", "screen_id": "S05", "label": "Reference", "field_type": "table column", "required": null, "example_value": "NW-2026-31360", "source": "seen on screen", "timestamp": 77.0, "keyframe_index": 4, "notes": "Format NW-YYYY-NNNNN. The same kind of number is shown as Customer reference number on the Confirmation screen."},
-    {"id": "F036", "screen_id": "S05", "label": "Customer", "field_type": "table column", "required": null, "example_value": "Odeina Wexshaw", "source": "seen on screen", "timestamp": 77.0, "keyframe_index": 4, "notes": null},
-    {"id": "F037", "screen_id": "S05", "label": "Submitted", "field_type": "table column", "required": null, "example_value": "09/09/2026 16:20", "source": "seen on screen", "timestamp": 77.0, "keyframe_index": 4, "notes": "Date and time. Screen says the queue is ordered oldest first, but the rows on the frame are not in strict date order (the Approved row dated 08/09/2026 is last)."},
-    {"id": "F038", "screen_id": "S05", "label": "Submitted by", "field_type": "table column", "required": null, "example_value": "Eloora Lunwick", "source": "seen on screen", "timestamp": 77.0, "keyframe_index": 4, "notes": "Officer who submitted the record."},
-    {"id": "F039", "screen_id": "S05", "label": "Status", "field_type": "table column", "required": null, "example_value": "Awaiting approval", "source": "both", "timestamp": 77.0, "keyframe_index": 4, "notes": "Coloured badge. Values seen: Awaiting approval (blue), Approved (green)."},
-    {"id": "F040", "screen_id": "S05", "label": "Assigned to", "field_type": "table column", "required": null, "example_value": "Sorora Brinhurst", "source": "both", "timestamp": 77.0, "keyframe_index": 4, "notes": "Values seen: Sorora Brinhurst, Unassigned. Expert does not know how the assignee is chosen."},
-    {"id": "F041", "screen_id": "S06", "label": "Customer reference number", "field_type": "read-only", "required": null, "example_value": "NW-2026-31365", "source": "both", "timestamp": 93.0, "keyframe_index": 5, "notes": "Shown large in monospace. Expert: this reference is given to the customer."},
-    {"id": "F042", "screen_id": "S06", "label": "Approved by", "field_type": "read-only", "required": null, "example_value": "Sorora Brinhurst (Team Lead)", "source": "seen on screen", "timestamp": 93.0, "keyframe_index": 5, "notes": "Name with role in brackets."},
-    {"id": "F043", "screen_id": "S06", "label": "Approved on", "field_type": "read-only", "required": null, "example_value": "10/09/2026 10:31", "source": "seen on screen", "timestamp": 93.0, "keyframe_index": 5, "notes": "Date and time."},
-    {"id": "F044", "screen_id": "S06", "label": "Welcome email", "field_type": "read-only", "required": null, "example_value": "Sent to eloette.lunmere@example.com", "source": "both", "timestamp": 93.0, "keyframe_index": 5, "notes": "Only a 'Sent to' state was seen; no bounce or failure state is shown."}
-  ],
-  "actions": [
-    {"id": "A001", "screen_id": "S01", "description": "Enters postcode and surname and presses Search; matching existing customers are listed below on the same screen", "control": "button", "leads_to_screen_id": null, "timestamp": 0.0, "keyframe_index": 0},
-    {"id": "A002", "screen_id": "S01", "description": "Presses Clear to empty the search fields", "control": "button", "leads_to_screen_id": null, "timestamp": 0.0, "keyframe_index": 0},
-    {"id": "A003", "screen_id": "S01", "description": "Presses Open on a result row to open an existing customer (not shown in the recording)", "control": "button", "leads_to_screen_id": null, "timestamp": 0.0, "keyframe_index": 0},
-    {"id": "A004", "screen_id": "S01", "description": "Presses Create new customer when the customer is not found", "control": "button", "leads_to_screen_id": "S02", "timestamp": 0.0, "keyframe_index": 0},
-    {"id": "A005", "screen_id": "S02", "description": "Picks the Account type (Personal or Business) from the dropdown", "control": "menu", "leads_to_screen_id": null, "timestamp": 15.0, "keyframe_index": 1},
-    {"id": "A006", "screen_id": "S02", "description": "Ticks 'Customer has given marketing consent' only if the customer said yes", "control": "other", "leads_to_screen_id": null, "timestamp": 15.0, "keyframe_index": 1},
-    {"id": "A007", "screen_id": "S02", "description": "Presses Back", "control": "button", "leads_to_screen_id": null, "timestamp": 15.0, "keyframe_index": 1},
-    {"id": "A008", "screen_id": "S02", "description": "Presses Save and continue after filling in the details", "control": "button", "leads_to_screen_id": "S03", "timestamp": 15.0, "keyframe_index": 1},
-    {"id": "A009", "screen_id": "S03", "description": "Presses Choose File to pick the ID document image or PDF", "control": "button", "leads_to_screen_id": null, "timestamp": 43.0, "keyframe_index": 2},
-    {"id": "A010", "screen_id": "S03", "description": "Picks the Document type from the dropdown", "control": "menu", "leads_to_screen_id": null, "timestamp": 43.0, "keyframe_index": 2},
-    {"id": "A011", "screen_id": "S03", "description": "Presses Upload; the document appears in the Uploaded documents table with status Pending check", "control": "button", "leads_to_screen_id": null, "timestamp": 43.0, "keyframe_index": 2},
-    {"id": "A012", "screen_id": "S03", "description": "Presses Back", "control": "button", "leads_to_screen_id": null, "timestamp": 43.0, "keyframe_index": 2},
-    {"id": "A013", "screen_id": "S03", "description": "Presses Continue to review", "control": "button", "leads_to_screen_id": "S04", "timestamp": 43.0, "keyframe_index": 2},
-    {"id": "A014", "screen_id": "S04", "description": "Presses Back", "control": "button", "leads_to_screen_id": null, "timestamp": 62.0, "keyframe_index": 3},
-    {"id": "A015", "screen_id": "S04", "description": "Presses Submit for approval; the record is locked for editing (the next screen shown in the recording was the Approval Queue, but the submit itself was not shown, so where the officer lands is unconfirmed)", "control": "button", "leads_to_screen_id": null, "timestamp": 62.0, "keyframe_index": 3},
-    {"id": "A016", "screen_id": "S05", "description": "Team Lead presses Approve on a row with status Awaiting approval (button only shown to the Team Lead role; the press itself was not shown, so the screen that follows is unconfirmed)", "control": "button", "leads_to_screen_id": null, "timestamp": 77.0, "keyframe_index": 4},
-    {"id": "A017", "screen_id": "S06", "description": "Presses Start another customer (not shown in the recording)", "control": "button", "leads_to_screen_id": null, "timestamp": 93.0, "keyframe_index": 5},
-    {"id": "A018", "screen_id": "S06", "description": "Presses Print confirmation (not shown in the recording)", "control": "button", "leads_to_screen_id": null, "timestamp": 93.0, "keyframe_index": 5}
-  ],
-  "journey": [
-    {"order": 1, "screen_id": "S01", "description": "The Onboarding Officer enters the customer's postcode and surname and presses Search to see whether the customer already exists.", "actor": "Onboarding Officer", "timestamp": 0.0, "keyframe_index": 0},
-    {"order": 2, "screen_id": "S01", "description": "When the customer is not in the results, the Onboarding Officer presses Create new customer.", "actor": "Onboarding Officer", "timestamp": 0.0, "keyframe_index": 0},
-    {"order": 3, "screen_id": "S02", "description": "The Onboarding Officer fills in the mandatory details (First name, Last name, Date of birth, Account type, Postcode), any optional contact and address details and the marketing consent tick, then presses Save and continue.", "actor": "Onboarding Officer", "timestamp": 15.0, "keyframe_index": 1},
-    {"order": 4, "screen_id": "S03", "description": "The Onboarding Officer chooses a photo of the customer's ID, picks the Document type, presses Upload so the document sits in the table as Pending check, then presses Continue to review.", "actor": "Onboarding Officer", "timestamp": 43.0, "keyframe_index": 2},
-    {"order": 5, "screen_id": "S04", "description": "The Onboarding Officer reads through the summary of everything entered and presses Submit for approval, after which the record is locked for editing.", "actor": "Onboarding Officer", "timestamp": 62.0, "keyframe_index": 3},
-    {"order": 6, "screen_id": "S05", "description": "The submitted customer sits in the Approval Queue with status Awaiting approval and an assignee, and a Team Lead presses Approve.", "actor": "Team Lead", "timestamp": 77.0, "keyframe_index": 4},
-    {"order": 7, "screen_id": "S06", "description": "The Confirmation screen shows the customer reference number, approver, approval time and that the welcome email was sent; the Onboarding Officer gives the reference to the customer.", "actor": "Onboarding Officer", "timestamp": 93.0, "keyframe_index": 5}
-  ],
-  "requirements": [
-    {
-      "id": "R001",
-      "statement": "As an Onboarding Officer, I need to search existing customers by postcode and surname before I create a record, so that I do not create a duplicate customer.",
-      "rationale": "Duplicate prevention is the stated purpose of the first screen.",
-      "source_quote": "You put in the postcode and the surname and hit Search, and it lists anyone we already have, so you don't create a duplicate.",
-      "timestamp": 7.0,
-      "keyframe_index": 0,
-      "screen_id": "S01",
-      "kind": "functional",
-      "priority": "must",
-      "confidence": "high"
-    },
-    {
-      "id": "R002",
-      "statement": "The Customer Search screen shows each matching customer as one row with Customer ID, Name, Date of birth, Postcode, Account type and Status.",
-      "rationale": "Column list taken from the results table on the frame; the expert did not name the columns.",
-      "source_quote": "it lists anyone we already have",
-      "timestamp": 7.0,
-      "keyframe_index": 0,
-      "screen_id": "S01",
-      "kind": "data",
-      "priority": "unknown",
-      "confidence": "medium"
-    },
-    {
-      "id": "R003",
-      "statement": "The system saves Customer Details only when First name, Last name, Date of birth, Account type and Postcode are all filled in.",
-      "rationale": "The five fields carry a * on screen and the legend reads 'fields marked * are required'.",
-      "source_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
-      "timestamp": 15.0,
-      "keyframe_index": 1,
-      "screen_id": "S02",
-      "kind": "validation",
-      "priority": "must",
-      "confidence": "high"
-    },
-    {
-      "id": "R004",
-      "statement": "The system rejects a Customer Details save when Postcode is not in a valid UK postcode format.",
-      "rationale": "Hint under the field on screen: 'UK postcode format, e.g. SW1A 1AA'. The exact rule is not stated.",
-      "source_quote": "The postcode has to be a valid UK format, otherwise the system won't let you save.",
-      "timestamp": 25.0,
-      "keyframe_index": 1,
-      "screen_id": "S02",
-      "kind": "validation",
-      "priority": "must",
-      "confidence": "high"
-    },
-    {
-      "id": "R005",
-      "statement": "The system saves Customer Details when Address line 1, Address line 2, Town / City, Email address and Phone number are all empty.",
-      "rationale": "The expert names the address lines and town as optional; Email address and Phone number carry no * on screen.",
-      "source_quote": "The address lines and the town are optional.",
-      "timestamp": 25.0,
-      "keyframe_index": 1,
-      "screen_id": "S02",
-      "kind": "validation",
-      "priority": "must",
-      "confidence": "medium"
-    },
-    {
-      "id": "R006",
-      "statement": "The Account type dropdown on Customer Details offers the options Personal and Business.",
-      "rationale": "Both values also appear in the Account type column of the Customer Search results.",
-      "source_quote": "Account type is a dropdown, personal or business",
-      "timestamp": 33.0,
-      "keyframe_index": 1,
-      "screen_id": "S02",
-      "kind": "data",
-      "priority": "must",
-      "confidence": "high"
-    },
-    {
-      "id": "R007",
-      "statement": "The system records marketing consent as Yes only when the Onboarding Officer has ticked 'Customer has given marketing consent'.",
-      "rationale": "The checkbox is unticked on the frame and Review & Submit shows 'Marketing consent: No'. The business rule is that the officer ticks it only when the customer has said yes.",
-      "source_quote": "the marketing consent box only gets ticked if the customer actually said yes",
-      "timestamp": 33.0,
-      "keyframe_index": 1,
-      "screen_id": "S02",
-      "kind": "data",
-      "priority": "must",
-      "confidence": "high"
-    },
-    {
-      "id": "R008",
-      "statement": "As an Onboarding Officer, I need to upload an image of the customer's ID document with its Document type, so that proof of identity is attached to the customer record.",
-      "rationale": "The Documents screen has a Choose File control, a Document type dropdown and an Upload button.",
-      "source_quote": "We upload a photo of their ID, usually a passport or a driving licence, and pick the document type from the dropdown.",
-      "timestamp": 43.0,
-      "keyframe_index": 2,
-      "screen_id": "S03",
-      "kind": "functional",
-      "priority": "must",
-      "confidence": "high"
-    },
-    {
-      "id": "R009",
-      "statement": "The system accepts an ID document upload only when the file is a PDF, JPG or PNG.",
-      "rationale": "Taken from the hint under the file control ('PDF, JPG or PNG, up to 10 MB'); the expert did not say it.",
-      "source_quote": "We upload a photo of their ID",
-      "timestamp": 43.0,
-      "keyframe_index": 2,
-      "screen_id": "S03",
-      "kind": "validation",
-      "priority": "unknown",
-      "confidence": "medium"
-    },
-    {
-      "id": "R010",
-      "statement": "The system accepts an ID document upload only when the file is 10 MB or smaller.",
-      "rationale": "Taken from the hint under the file control ('PDF, JPG or PNG, up to 10 MB'); the expert did not say it.",
-      "source_quote": "We upload a photo of their ID",
-      "timestamp": 43.0,
-      "keyframe_index": 2,
-      "screen_id": "S03",
-      "kind": "validation",
-      "priority": "unknown",
-      "confidence": "medium"
-    },
-    {
-      "id": "R011",
-      "statement": "The system shows an uploaded document with status Pending check until the document has been checked.",
-      "rationale": "Pending check (amber) is visible in the Uploaded documents table on the frame.",
-      "source_quote": "The status column shows pending until the document has been checked.",
-      "timestamp": 52.0,
-      "keyframe_index": 2,
-      "screen_id": "S03",
-      "kind": "workflow",
-      "priority": "must",
-      "confidence": "high"
-    },
-    {
-      "id": "R012",
-      "statement": "The system changes the status of an uploaded document to Verified once the document has been checked.",
-      "rationale": "Verified (green) is visible in the Uploaded documents table. Who checks the document, and where, is unknown.",
-      "source_quote": "Someone checks them, I'm honestly not sure who, it just changes to verified at some point.",
-      "timestamp": 52.0,
-      "keyframe_index": 2,
-      "screen_id": "S03",
-      "kind": "workflow",
-      "priority": "must",
-      "confidence": "medium"
-    },
-    {
-      "id": "R013",
-      "statement": "The Documents screen lists each uploaded document with File, Document type, Uploaded date and time, Uploaded by and Status.",
-      "rationale": "Column list taken from the Uploaded documents table on the frame; the expert only mentioned the status column.",
-      "source_quote": "The status column shows pending until the document has been checked.",
-      "timestamp": 52.0,
-      "keyframe_index": 2,
-      "screen_id": "S03",
-      "kind": "data",
-      "priority": "unknown",
-      "confidence": "medium"
-    },
-    {
-      "id": "R014",
-      "statement": "The Review & Submit screen shows a read-only summary of Name, Date of birth, Email address, Phone number, Address, Account type, Marketing consent and ID document with its check status.",
-      "rationale": "All eight items are visible on the frame.",
-      "source_quote": "Review and Submit is a summary of everything so far. You read it through, and if it all looks right you press Submit for approval.",
-      "timestamp": 62.0,
-      "keyframe_index": 3,
-      "screen_id": "S04",
-      "kind": "functional",
-      "priority": "must",
-      "confidence": "high"
-    },
-    {
-      "id": "R015",
-      "statement": "The system locks the customer record against editing once the Onboarding Officer has pressed Submit for approval.",
-      "rationale": "Also written on screen: 'After submission the record is locked for editing.'",
-      "source_quote": "Once you submit, the record locks and you can't edit it any more.",
-      "timestamp": 69.0,
-      "keyframe_index": 3,
-      "screen_id": "S04",
-      "kind": "workflow",
-      "priority": "must",
-      "confidence": "high"
-    },
-    {
-      "id": "R016",
-      "statement": "A Team Lead can send a submitted customer record back to the Onboarding Officer for editing.",
-      "rationale": "The expert was not sure and no send-back control was seen on any frame. Kept because it is the only stated way to correct a mistake after submission.",
-      "source_quote": "You'd have to ask a team lead to send it back, I think.",
-      "timestamp": 69.0,
-      "keyframe_index": 3,
-      "screen_id": "S04",
-      "kind": "workflow",
-      "priority": "unknown",
-      "confidence": "low"
-    },
-    {
-      "id": "R017",
-      "statement": "The Approval Queue lists every submitted customer as one row with Reference, Customer, Submitted date and time, Submitted by, Status and Assigned to.",
-      "rationale": "Column list taken from the frame. The screen subtitle says oldest first, but the rows on the frame are not in date order, so ordering is left as a question.",
-      "source_quote": "Every submitted customer sits here with a status, and it shows who it's assigned to",
-      "timestamp": 77.0,
-      "keyframe_index": 4,
-      "screen_id": "S05",
-      "kind": "functional",
-      "priority": "must",
-      "confidence": "high"
-    },
-    {
-      "id": "R018",
-      "statement": "The system shows the Approve button in the Approval Queue only to users in the Team Lead role.",
-      "rationale": "Also stated in the banner on screen: 'Team leads only. The Approve action is shown to users in the Team Lead role.'",
-      "source_quote": "Only team leads can approve. The Approve button doesn't show for the rest of us, and it says team leads only at the top.",
-      "timestamp": 86.0,
-      "keyframe_index": 4,
-      "screen_id": "S05",
-      "kind": "functional",
-      "priority": "must",
-      "confidence": "high"
-    },
-    {
-      "id": "R019",
-      "statement": "Users outside the Team Lead role can view the Approval Queue.",
-      "rationale": "The banner on screen reads 'Other users can view the queue but cannot approve', and the expert (not a team lead) sees the queue without the Approve button.",
-      "source_quote": "The Approve button doesn't show for the rest of us, and it says team leads only at the top.",
-      "timestamp": 86.0,
-      "keyframe_index": 4,
-      "screen_id": "S05",
-      "kind": "functional",
-      "priority": "must",
-      "confidence": "medium"
-    },
-    {
-      "id": "R020",
-      "statement": "When a customer is approved, the system shows a Confirmation screen with Customer reference number, Approved by, Approved on and Welcome email status.",
-      "rationale": "All four items are visible on the frame. The reference number is what the Onboarding Officer gives to the customer.",
-      "source_quote": "When it's approved, you get the Confirmation screen with a reference number. We give that reference to the customer.",
-      "timestamp": 93.0,
-      "keyframe_index": 5,
-      "screen_id": "S06",
-      "kind": "functional",
-      "priority": "must",
-      "confidence": "high"
-    },
-    {
-      "id": "R021",
-      "statement": "The system sends a welcome email to the Email address entered on Customer Details when the customer is approved.",
-      "rationale": "The Confirmation screen shows 'Welcome email: Sent to eloette.lunmere@example.com'. The trigger being approval is implied by where the status appears; the expert did not say when it is sent.",
-      "source_quote": "A welcome email goes out automatically to the address we entered.",
-      "timestamp": 99.0,
-      "keyframe_index": 5,
-      "screen_id": "S06",
-      "kind": "functional",
-      "priority": "must",
-      "confidence": "medium"
-    }
-  ],
-  "acceptance_criteria": [
-    {"id": "AC001", "requirement_id": "R001", "given": "An existing customer with surname Lunmere and postcode SW1A 1AA is on file", "when": "The Onboarding Officer enters postcode SW1A 1AA and surname Lunmere on Customer Search and presses Search", "then": "The results table shows that customer as a row", "timestamp": 7.0, "keyframe_index": 0},
-    {"id": "AC002", "requirement_id": "R001", "given": "No customer on file has the surname entered", "when": "The Onboarding Officer presses Search", "then": "The results table shows no rows and the Create new customer button is available", "timestamp": 7.0, "keyframe_index": 0},
-    {"id": "AC003", "requirement_id": "R002", "given": "A search on Customer Search has returned at least one customer", "when": "The Onboarding Officer looks at the results table", "then": "Each row shows a value under Customer ID, Name, Date of birth, Postcode, Account type and Status", "timestamp": 7.0, "keyframe_index": 0},
-    {"id": "AC004", "requirement_id": "R003", "given": "The Onboarding Officer is on Customer Details with First name, Last name, Date of birth, Account type and Postcode filled in", "when": "The Onboarding Officer presses Save and continue", "then": "The system saves the details and shows the Documents screen", "timestamp": 15.0, "keyframe_index": 1},
-    {"id": "AC005", "requirement_id": "R003", "given": "The Onboarding Officer is on Customer Details with Date of birth left empty and the other four mandatory fields filled in", "when": "The Onboarding Officer presses Save and continue", "then": "The system stays on Customer Details and does not save the details", "timestamp": 15.0, "keyframe_index": 1},
-    {"id": "AC006", "requirement_id": "R004", "given": "The Onboarding Officer has entered SW1A 1AA in Postcode with all other mandatory fields filled in", "when": "The Onboarding Officer presses Save and continue", "then": "The system saves the details", "timestamp": 25.0, "keyframe_index": 1},
-    {"id": "AC007", "requirement_id": "R004", "given": "The Onboarding Officer has entered 12345 in Postcode with all other mandatory fields filled in", "when": "The Onboarding Officer presses Save and continue", "then": "The system stays on Customer Details and does not save the details", "timestamp": 25.0, "keyframe_index": 1},
-    {"id": "AC008", "requirement_id": "R005", "given": "The Onboarding Officer has filled in the five mandatory fields and left Address line 1, Address line 2, Town / City, Email address and Phone number empty", "when": "The Onboarding Officer presses Save and continue", "then": "The system saves the details and shows the Documents screen", "timestamp": 25.0, "keyframe_index": 1},
-    {"id": "AC009", "requirement_id": "R006", "given": "The Onboarding Officer is on Customer Details", "when": "The Onboarding Officer opens the Account type dropdown", "then": "The dropdown lists Personal and Business", "timestamp": 33.0, "keyframe_index": 1},
-    {"id": "AC010", "requirement_id": "R007", "given": "The Onboarding Officer leaves 'Customer has given marketing consent' unticked and saves Customer Details", "when": "The Onboarding Officer reaches Review & Submit", "then": "Marketing consent shows No", "timestamp": 33.0, "keyframe_index": 1},
-    {"id": "AC011", "requirement_id": "R007", "given": "The Onboarding Officer ticks 'Customer has given marketing consent' and saves Customer Details", "when": "The Onboarding Officer reaches Review & Submit", "then": "Marketing consent shows Yes", "timestamp": 33.0, "keyframe_index": 1},
-    {"id": "AC012", "requirement_id": "R008", "given": "The Onboarding Officer is on Documents and has chosen the file passport_elunmere.jpg and Document type Passport", "when": "The Onboarding Officer presses Upload", "then": "The Uploaded documents table shows a row with File passport_elunmere.jpg and Document type Passport", "timestamp": 43.0, "keyframe_index": 2},
-    {"id": "AC013", "requirement_id": "R008", "given": "The Onboarding Officer is on Documents", "when": "The Onboarding Officer opens the Document type dropdown", "then": "The dropdown lists Passport and Driving licence", "timestamp": 43.0, "keyframe_index": 2},
-    {"id": "AC014", "requirement_id": "R009", "given": "The Onboarding Officer has chosen a .docx file as the ID document", "when": "The Onboarding Officer presses Upload", "then": "The system does not add the file to the Uploaded documents table", "timestamp": 43.0, "keyframe_index": 2},
-    {"id": "AC015", "requirement_id": "R009", "given": "The Onboarding Officer has chosen a .png file under 10 MB as the ID document", "when": "The Onboarding Officer presses Upload", "then": "The system adds the file to the Uploaded documents table", "timestamp": 43.0, "keyframe_index": 2},
-    {"id": "AC016", "requirement_id": "R010", "given": "The Onboarding Officer has chosen a JPG file of 11 MB as the ID document", "when": "The Onboarding Officer presses Upload", "then": "The system does not add the file to the Uploaded documents table", "timestamp": 43.0, "keyframe_index": 2},
-    {"id": "AC017", "requirement_id": "R010", "given": "The Onboarding Officer has chosen a JPG file of 10 MB as the ID document", "when": "The Onboarding Officer presses Upload", "then": "The system adds the file to the Uploaded documents table", "timestamp": 43.0, "keyframe_index": 2},
-    {"id": "AC018", "requirement_id": "R011", "given": "The Onboarding Officer has just uploaded an ID document", "when": "The Onboarding Officer looks at the Uploaded documents table", "then": "The Status column for that document shows Pending check", "timestamp": 52.0, "keyframe_index": 2},
-    {"id": "AC019", "requirement_id": "R012", "given": "An uploaded document shows Status Pending check", "when": "The document check is completed", "then": "The Status column for that document shows Verified", "timestamp": 52.0, "keyframe_index": 2},
-    {"id": "AC020", "requirement_id": "R013", "given": "At least one document has been uploaded for the customer", "when": "The Onboarding Officer looks at the Uploaded documents table on Documents", "then": "Each row shows a value under File, Document type, Uploaded, Uploaded by and Status", "timestamp": 52.0, "keyframe_index": 2},
-    {"id": "AC021", "requirement_id": "R014", "given": "The Onboarding Officer has saved Customer Details for Eloette Lunmere and uploaded a Passport", "when": "The Onboarding Officer presses Continue to review on Documents", "then": "Review & Submit shows Name, Date of birth, Email address, Phone number, Address, Account type, Marketing consent and ID document with the values entered", "timestamp": 62.0, "keyframe_index": 3},
-    {"id": "AC022", "requirement_id": "R014", "given": "The Onboarding Officer is on Review & Submit", "when": "The Onboarding Officer clicks on any summary value", "then": "The value cannot be edited on that screen", "timestamp": 62.0, "keyframe_index": 3},
-    {"id": "AC023", "requirement_id": "R015", "given": "The Onboarding Officer has pressed Submit for approval on Review & Submit", "when": "The Onboarding Officer opens that customer's Customer Details", "then": "Every field is read-only and Save and continue is unavailable", "timestamp": 69.0, "keyframe_index": 3},
-    {"id": "AC024", "requirement_id": "R016", "given": "A customer record has been submitted for approval and is locked", "when": "A Team Lead sends the record back", "then": "The Onboarding Officer can edit the record again", "timestamp": 69.0, "keyframe_index": 3},
-    {"id": "AC025", "requirement_id": "R017", "given": "An Onboarding Officer has just submitted a customer for approval", "when": "A user opens the Approval Queue", "then": "The queue shows a row for that customer with Reference, Customer, Submitted, Submitted by, Status Awaiting approval and Assigned to", "timestamp": 77.0, "keyframe_index": 4},
-    {"id": "AC026", "requirement_id": "R018", "given": "A user in the Team Lead role is signed in", "when": "The user opens the Approval Queue", "then": "Each row with Status Awaiting approval shows an Approve button", "timestamp": 86.0, "keyframe_index": 4},
-    {"id": "AC027", "requirement_id": "R018", "given": "A user in the Onboarding Officer role is signed in", "when": "The user opens the Approval Queue", "then": "No row shows an Approve button", "timestamp": 86.0, "keyframe_index": 4},
-    {"id": "AC028", "requirement_id": "R019", "given": "A user in the Onboarding Officer role is signed in", "when": "The user opens the Approval Queue", "then": "The queue rows are displayed with the 'Team leads only' banner at the top", "timestamp": 86.0, "keyframe_index": 4},
-    {"id": "AC029", "requirement_id": "R020", "given": "A customer row in the Approval Queue has Status Awaiting approval", "when": "A Team Lead presses Approve on that row", "then": "A Confirmation screen shows Customer reference number, Approved by with the Team Lead's name, Approved on with the current date and time, and Welcome email", "timestamp": 93.0, "keyframe_index": 5},
-    {"id": "AC030", "requirement_id": "R021", "given": "A customer was saved with Email address eloette.lunmere@example.com", "when": "A Team Lead approves that customer", "then": "A welcome email is sent to eloette.lunmere@example.com and the Confirmation screen shows 'Sent to eloette.lunmere@example.com'", "timestamp": 99.0, "keyframe_index": 5}
-  ],
-  "questions": [
-    {
-      "id": "Q001",
-      "question": "What counts as a match in Customer Search: exact surname and postcode, or partial / nearby matches? The results include postcode SW1A 1AB for a search on SW1A 1AA.",
-      "why_it_matters": "The matching rule decides how well duplicates are caught and what a developer has to build.",
-      "context_quote": "it lists anyone we already have, so you don't create a duplicate.",
-      "timestamp": 7.0,
-      "keyframe_index": 0,
-      "screen_id": "S01",
-      "category": "ambiguity",
-      "blocks_requirement_ids": ["R001"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q002",
-      "question": "Must both Postcode and Surname be filled in to search, or can either be left blank?",
-      "why_it_matters": "Determines search validation and whether a surname-only search is allowed.",
-      "context_quote": "You put in the postcode and the surname and hit Search",
-      "timestamp": 7.0,
-      "keyframe_index": 0,
-      "screen_id": "S01",
-      "category": "validation rule",
-      "blocks_requirement_ids": ["R001"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q003",
-      "question": "What should happen when the officer presses Open on an existing customer, and can a customer with status Closed be onboarded again?",
-      "why_it_matters": "The Open button and the Closed status were seen but never explained; the team needs to know what path an existing or closed customer follows.",
-      "context_quote": "it lists anyone we already have, so you don't create a duplicate.",
-      "timestamp": 7.0,
-      "keyframe_index": 0,
-      "screen_id": "S01",
-      "category": "edge case",
-      "blocks_requirement_ids": ["R002"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q004",
-      "question": "What exactly is the UK postcode validation rule (accepted patterns, spaces, upper/lower case) and what error message is shown when it fails?",
-      "why_it_matters": "A developer cannot implement 'valid UK format' without the precise rule and the failure behaviour.",
-      "context_quote": "The postcode has to be a valid UK format, otherwise the system won't let you save.",
-      "timestamp": 25.0,
-      "keyframe_index": 1,
-      "screen_id": "S02",
-      "category": "validation rule",
-      "blocks_requirement_ids": ["R004"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q005",
-      "question": "Are there validation rules on Date of birth (DD/MM/YYYY only, no future dates, minimum age), Email address and Phone number, and what does the officer see when a mandatory field is empty?",
-      "why_it_matters": "Only the postcode rule was described; the other fields may also reject bad input, and the empty-field behaviour was not shown.",
-      "context_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
-      "timestamp": 15.0,
-      "keyframe_index": 1,
-      "screen_id": "S02",
-      "category": "validation rule",
-      "blocks_requirement_ids": ["R003", "R005"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q006",
-      "question": "Does Save and continue create a saved customer record at that point, and can an officer leave and come back to a half-finished onboarding?",
-      "why_it_matters": "Decides whether draft records exist before documents are uploaded and how they show in search.",
-      "context_quote": "Then you press Save and continue.",
-      "timestamp": 33.0,
-      "keyframe_index": 1,
-      "screen_id": "S02",
-      "category": "missing information",
-      "blocks_requirement_ids": [],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q007",
-      "question": "Who checks uploaded documents and changes the status from Pending check to Verified, and is that done inside this system or elsewhere?",
-      "why_it_matters": "The verification step is part of the process but the expert could not say who performs it or where.",
-      "context_quote": "Someone checks them, I'm honestly not sure who, it just changes to verified at some point.",
-      "timestamp": 52.0,
-      "keyframe_index": 2,
-      "screen_id": "S03",
-      "category": "missing information",
-      "blocks_requirement_ids": ["R012"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q008",
-      "question": "What are the full options in the Document type dropdown, and is a proof of address document required as well as the ID document?",
-      "why_it_matters": "Passport and Proof of address were seen and driving licence was mentioned; the table lists two documents but the form is labelled 'Upload ID document'.",
-      "context_quote": "We upload a photo of their ID, usually a passport or a driving licence, and pick the document type from the dropdown.",
-      "timestamp": 43.0,
-      "keyframe_index": 2,
-      "screen_id": "S03",
-      "category": "data",
-      "blocks_requirement_ids": ["R008"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q009",
-      "question": "What happens when an upload is the wrong file type or over 10 MB, and can an uploaded document be removed or replaced?",
-      "why_it_matters": "The limit is shown on screen but no error or delete behaviour was seen.",
-      "context_quote": "We upload a photo of their ID",
-      "timestamp": 43.0,
-      "keyframe_index": 2,
-      "screen_id": "S03",
-      "category": "edge case",
-      "blocks_requirement_ids": ["R009", "R010"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q010",
-      "question": "Can a record be submitted for approval, and approved, while its ID document is still Pending check? The record on screen was submitted with the ID still pending.",
-      "why_it_matters": "If verification must come first, both Submit for approval and Approve need a gate on document status.",
-      "context_quote": "You read it through, and if it all looks right you press Submit for approval.",
-      "timestamp": 62.0,
-      "keyframe_index": 3,
-      "screen_id": "S04",
-      "category": "validation rule",
-      "blocks_requirement_ids": ["R015", "R018"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q011",
-      "question": "How does a submitted record get sent back for editing, who can do it, and does that unlock the record and return it to the officer?",
-      "why_it_matters": "The expert was unsure and no send-back or reject control was seen; without it a mistake after submission cannot be corrected.",
-      "context_quote": "You'd have to ask a team lead to send it back, I think.",
-      "timestamp": 69.0,
-      "keyframe_index": 3,
-      "screen_id": "S04",
-      "category": "missing information",
-      "blocks_requirement_ids": ["R015", "R016"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q012",
-      "question": "How is a submitted customer assigned to a team lead, and what does Unassigned mean for who picks it up?",
-      "why_it_matters": "The assignment rule affects who sees which work; one row on screen is Unassigned.",
-      "context_quote": "it shows who it's assigned to, though I've never worked out how it picks the person.",
-      "timestamp": 77.0,
-      "keyframe_index": 4,
-      "screen_id": "S05",
-      "category": "missing information",
-      "blocks_requirement_ids": ["R017"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q013",
-      "question": "Can a team lead reject a record from the Approval Queue, and are there statuses other than Awaiting approval and Approved?",
-      "why_it_matters": "Only an Approve action was seen; the team needs the full set of outcomes and statuses.",
-      "context_quote": "Every submitted customer sits here with a status",
-      "timestamp": 77.0,
-      "keyframe_index": 4,
-      "screen_id": "S05",
-      "category": "missing information",
-      "blocks_requirement_ids": ["R017", "R018"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q014",
-      "question": "Which users can view the Approval Queue, and do they see all officers' submissions or only their own?",
-      "why_it_matters": "The banner says other users can view but cannot approve; the scope of what they can see is not stated.",
-      "context_quote": "The Approve button doesn't show for the rest of us, and it says team leads only at the top.",
-      "timestamp": 86.0,
-      "keyframe_index": 4,
-      "screen_id": "S05",
-      "category": "permissions",
-      "blocks_requirement_ids": ["R019"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q015",
-      "question": "In what order should the Approval Queue list its rows? The screen says oldest first, but the rows on the frame are not in date order (the Approved row dated 08/09/2026 is last).",
-      "why_it_matters": "The stated order and the shown order disagree; the team needs one rule, for example by status then by submitted date.",
-      "context_quote": "Every submitted customer sits here with a status",
-      "timestamp": 77.0,
-      "keyframe_index": 4,
-      "screen_id": "S05",
-      "category": "ambiguity",
-      "blocks_requirement_ids": ["R017"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q016",
-      "question": "What should happen when the welcome email bounces or no email address was entered: retry, notify the officer, show a failed state on the Confirmation screen?",
-      "why_it_matters": "Today a bounce goes unnoticed; email is optional on Customer Details, so approvals with no address are possible.",
-      "context_quote": "If the email bounces it just sort of sits there, nobody gets told.",
-      "timestamp": 99.0,
-      "keyframe_index": 5,
-      "screen_id": "S06",
-      "category": "integration",
-      "blocks_requirement_ids": ["R021"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q017",
-      "question": "How is the customer reference number (format NW-2026-31365) generated, and how does it relate to the Customer ID (format C-625922) shown in search results?",
-      "why_it_matters": "Two different identifiers were seen; the team needs to know which is the customer's identity and which is the onboarding case.",
-      "context_quote": "When it's approved, you get the Confirmation screen with a reference number. We give that reference to the customer.",
-      "timestamp": 93.0,
-      "keyframe_index": 5,
-      "screen_id": "S06",
-      "category": "data",
-      "blocks_requirement_ids": ["R020"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q018",
-      "question": "Who sees the Confirmation screen and when: does the Team Lead land on it after pressing Approve, does the Onboarding Officer see it automatically, or must the officer find the record again?",
-      "why_it_matters": "The approval happens in a different role, possibly later; the officer needs a way to get the reference to the customer. The Approve press itself was not shown, so the screen that follows it is inferred.",
-      "context_quote": "When it's approved, you get the Confirmation screen with a reference number.",
-      "timestamp": 93.0,
-      "keyframe_index": 5,
-      "screen_id": "S06",
-      "category": "ambiguity",
-      "blocks_requirement_ids": ["R020"],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q019",
-      "question": "Which screen does the Onboarding Officer see after pressing Submit for approval? The recording moved to the Approval Queue, but the submit itself was not shown.",
-      "why_it_matters": "The team needs to know whether the officer lands on the Approval Queue, a confirmation message or back on Customer Search.",
-      "context_quote": "Once you submit, the record locks and you can't edit it any more.",
-      "timestamp": 69.0,
-      "keyframe_index": 3,
-      "screen_id": "S04",
-      "category": "ambiguity",
-      "blocks_requirement_ids": [],
-      "answer": null,
-      "status": "open"
-    },
-    {
-      "id": "Q020",
-      "question": "What does Print confirmation produce, and where does Start another customer take the officer?",
-      "why_it_matters": "Both buttons are on the Confirmation screen but neither was pressed or described.",
-      "context_quote": "We give that reference to the customer.",
-      "timestamp": 93.0,
-      "keyframe_index": 5,
-      "screen_id": "S06",
-      "category": "missing information",
-      "blocks_requirement_ids": [],
-      "answer": null,
-      "status": "open"
-    }
-  ]
+ "title": "Northwind customer onboarding",
+ "summary": "Northwind Onboarding is the tool the team uses to set up a new customer. An Onboarding Officer first searches for the customer by postcode and surname so that no duplicate record is created. If the customer is new, the officer enters their details, uploads a photo of an identity document and submits the record for approval, at which point it locks. A Team Lead approves the record from the Approval Queue. The system then shows a Confirmation screen with a customer reference number, which the officer gives to the customer, and sends a welcome email to the address entered.",
+ "actors": [
+  "Onboarding Officer",
+  "Team Lead",
+  "Customer",
+  "Document checker (role not identified by the expert)"
+ ],
+ "screens": [
+  {
+   "id": "S01",
+   "name": "Customer Search",
+   "purpose": "Check whether the customer already exists by postcode and surname before creating a new record.",
+   "keyframe_indexes": [
+    0
+   ],
+   "first_seen": 0.0,
+   "field_ids": [
+    "F001",
+    "F002",
+    "F003",
+    "F004",
+    "F005",
+    "F006",
+    "F007",
+    "F008"
+   ],
+   "action_ids": [
+    "A001",
+    "A002",
+    "A003",
+    "A004"
+   ]
+  },
+  {
+   "id": "S02",
+   "name": "Customer Details",
+   "purpose": "Enter the new customer's personal details, contact details, address and marketing consent.",
+   "keyframe_indexes": [
+    1
+   ],
+   "first_seen": 15.0,
+   "field_ids": [
+    "F009",
+    "F010",
+    "F011",
+    "F012",
+    "F013",
+    "F014",
+    "F015",
+    "F016",
+    "F017",
+    "F018",
+    "F019"
+   ],
+   "action_ids": [
+    "A005",
+    "A006",
+    "A007",
+    "A008"
+   ]
+  },
+  {
+   "id": "S03",
+   "name": "Documents",
+   "purpose": "Upload proof of identity for the customer and see the check status of each uploaded document.",
+   "keyframe_indexes": [
+    2
+   ],
+   "first_seen": 43.0,
+   "field_ids": [
+    "F020",
+    "F021",
+    "F022",
+    "F023",
+    "F024",
+    "F025",
+    "F026"
+   ],
+   "action_ids": [
+    "A009",
+    "A010",
+    "A011",
+    "A012",
+    "A013"
+   ]
+  },
+  {
+   "id": "S04",
+   "name": "Review & Submit",
+   "purpose": "Read-only summary of everything entered so far, with the button that submits the record for approval and locks it.",
+   "keyframe_indexes": [
+    3
+   ],
+   "first_seen": 62.0,
+   "field_ids": [
+    "F027",
+    "F028",
+    "F029",
+    "F030",
+    "F031",
+    "F032",
+    "F033",
+    "F034"
+   ],
+   "action_ids": [
+    "A014",
+    "A015"
+   ]
+  },
+  {
+   "id": "S05",
+   "name": "Approval Queue",
+   "purpose": "List of customers submitted for approval, with status and assignee, where a Team Lead approves them.",
+   "keyframe_indexes": [
+    4
+   ],
+   "first_seen": 77.0,
+   "field_ids": [
+    "F035",
+    "F036",
+    "F037",
+    "F038",
+    "F039",
+    "F040"
+   ],
+   "action_ids": [
+    "A016"
+   ]
+  },
+  {
+   "id": "S06",
+   "name": "Confirmation",
+   "purpose": "Shows that the customer record has been approved, with the customer reference number, approver, approval time and welcome email status.",
+   "keyframe_indexes": [
+    5
+   ],
+   "first_seen": 93.0,
+   "field_ids": [
+    "F041",
+    "F042",
+    "F043",
+    "F044"
+   ],
+   "action_ids": [
+    "A017",
+    "A018"
+   ]
+  }
+ ],
+ "fields": [
+  {
+   "id": "F001",
+   "screen_id": "S01",
+   "label": "Postcode",
+   "field_type": "text",
+   "required": null,
+   "example_value": "SW1A 1AA",
+   "source": "both",
+   "timestamp": 0.0,
+   "keyframe_index": 0,
+   "notes": "Search criterion. Results include postcode SW1A 1AB for this search, so matching may not be exact."
+  },
+  {
+   "id": "F002",
+   "screen_id": "S01",
+   "label": "Surname",
+   "field_type": "text",
+   "required": null,
+   "example_value": "Lunmere",
+   "source": "both",
+   "timestamp": 0.0,
+   "keyframe_index": 0,
+   "notes": "Search criterion."
+  },
+  {
+   "id": "F003",
+   "screen_id": "S01",
+   "label": "Customer ID",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "C-625922",
+   "source": "seen on screen",
+   "timestamp": 0.0,
+   "keyframe_index": 0,
+   "notes": "Results table. Format C- followed by six digits (C-625922, C-994911, C-595381)."
+  },
+  {
+   "id": "F004",
+   "screen_id": "S01",
+   "label": "Name",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "Wilina Lunmere",
+   "source": "seen on screen",
+   "timestamp": 0.0,
+   "keyframe_index": 0,
+   "notes": "Results table."
+  },
+  {
+   "id": "F005",
+   "screen_id": "S01",
+   "label": "Date of birth",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "01/01/1982",
+   "source": "seen on screen",
+   "timestamp": 0.0,
+   "keyframe_index": 0,
+   "notes": "Results table, DD/MM/YYYY."
+  },
+  {
+   "id": "F006",
+   "screen_id": "S01",
+   "label": "Postcode",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "SW1A 1AA",
+   "source": "seen on screen",
+   "timestamp": 0.0,
+   "keyframe_index": 0,
+   "notes": "Results table column, distinct from the Postcode search box."
+  },
+  {
+   "id": "F007",
+   "screen_id": "S01",
+   "label": "Account type",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "Personal",
+   "source": "seen on screen",
+   "timestamp": 0.0,
+   "keyframe_index": 0,
+   "notes": "Results table. Values seen: Personal, Business."
+  },
+  {
+   "id": "F008",
+   "screen_id": "S01",
+   "label": "Status",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "Active",
+   "source": "seen on screen",
+   "timestamp": 0.0,
+   "keyframe_index": 0,
+   "notes": "Results table, shown as a coloured badge. Values seen: Active (green), Closed (red)."
+  },
+  {
+   "id": "F009",
+   "screen_id": "S02",
+   "label": "First name",
+   "field_type": "text",
+   "required": true,
+   "example_value": "Eloette",
+   "source": "both",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "notes": "Marked * on screen and named as mandatory by the expert."
+  },
+  {
+   "id": "F010",
+   "screen_id": "S02",
+   "label": "Last name",
+   "field_type": "text",
+   "required": true,
+   "example_value": "Lunmere",
+   "source": "both",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "notes": "Marked * on screen and named as mandatory by the expert."
+  },
+  {
+   "id": "F011",
+   "screen_id": "S02",
+   "label": "Date of birth",
+   "field_type": "date",
+   "required": true,
+   "example_value": "01/01/1981",
+   "source": "both",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "notes": "Marked * on screen and named as mandatory by the expert. Hint under the field reads DD/MM/YYYY."
+  },
+  {
+   "id": "F012",
+   "screen_id": "S02",
+   "label": "Email address",
+   "field_type": "text",
+   "required": false,
+   "example_value": "eloette.lunmere@example.com",
+   "source": "seen on screen",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "notes": "No * on screen (legend: fields marked * are required). The welcome email on the Confirmation screen is sent to this address."
+  },
+  {
+   "id": "F013",
+   "screen_id": "S02",
+   "label": "Phone number",
+   "field_type": "text",
+   "required": false,
+   "example_value": "07700 900231",
+   "source": "seen on screen",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "notes": "No * on screen."
+  },
+  {
+   "id": "F014",
+   "screen_id": "S02",
+   "label": "Account type",
+   "field_type": "dropdown",
+   "required": true,
+   "example_value": "Personal",
+   "source": "both",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "notes": "Marked * on screen. Expert: options are Personal or Business."
+  },
+  {
+   "id": "F015",
+   "screen_id": "S02",
+   "label": "Address line 1",
+   "field_type": "text",
+   "required": false,
+   "example_value": "14 Example Street",
+   "source": "both",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "notes": "Expert says the address lines are optional; no * on screen."
+  },
+  {
+   "id": "F016",
+   "screen_id": "S02",
+   "label": "Address line 2",
+   "field_type": "text",
+   "required": false,
+   "example_value": null,
+   "source": "both",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "notes": "Empty on the frame. Expert says the address lines are optional."
+  },
+  {
+   "id": "F017",
+   "screen_id": "S02",
+   "label": "Town / City",
+   "field_type": "text",
+   "required": false,
+   "example_value": "London",
+   "source": "both",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "notes": "Expert says the town is optional; no * on screen."
+  },
+  {
+   "id": "F018",
+   "screen_id": "S02",
+   "label": "Postcode",
+   "field_type": "text",
+   "required": true,
+   "example_value": "SW1A 1AA",
+   "source": "both",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "notes": "Marked * on screen. Hint under the field reads 'UK postcode format, e.g. SW1A 1AA'. Expert: must be a valid UK format or the system will not save."
+  },
+  {
+   "id": "F019",
+   "screen_id": "S02",
+   "label": "Customer has given marketing consent",
+   "field_type": "checkbox",
+   "required": false,
+   "example_value": null,
+   "source": "both",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "notes": "Shown unticked on the frame; Review & Submit later shows Marketing consent: No. Expert: only ticked if the customer actually said yes."
+  },
+  {
+   "id": "F020",
+   "screen_id": "S03",
+   "label": "ID document",
+   "field_type": "file",
+   "required": true,
+   "example_value": null,
+   "source": "both",
+   "timestamp": 43.0,
+   "keyframe_index": 2,
+   "notes": "Choose File control showing 'No file chosen'. Hint: 'PDF, JPG or PNG, up to 10 MB'."
+  },
+  {
+   "id": "F021",
+   "screen_id": "S03",
+   "label": "Document type",
+   "field_type": "dropdown",
+   "required": true,
+   "example_value": "Passport",
+   "source": "both",
+   "timestamp": 43.0,
+   "keyframe_index": 2,
+   "notes": "Expert mentions passport or driving licence. The uploaded documents table also shows a type 'Proof of address'. Full option list not seen."
+  },
+  {
+   "id": "F022",
+   "screen_id": "S03",
+   "label": "File",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "passport_elunmere.jpg",
+   "source": "seen on screen",
+   "timestamp": 43.0,
+   "keyframe_index": 2,
+   "notes": "Uploaded documents table."
+  },
+  {
+   "id": "F023",
+   "screen_id": "S03",
+   "label": "Document type",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "Passport",
+   "source": "seen on screen",
+   "timestamp": 43.0,
+   "keyframe_index": 2,
+   "notes": "Uploaded documents table column, distinct from the Document type dropdown. Values seen: Passport, Proof of address."
+  },
+  {
+   "id": "F024",
+   "screen_id": "S03",
+   "label": "Uploaded",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "10/09/2026 09:41",
+   "source": "seen on screen",
+   "timestamp": 43.0,
+   "keyframe_index": 2,
+   "notes": "Uploaded documents table, date and time."
+  },
+  {
+   "id": "F025",
+   "screen_id": "S03",
+   "label": "Uploaded by",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "Oderic Falstow",
+   "source": "seen on screen",
+   "timestamp": 43.0,
+   "keyframe_index": 2,
+   "notes": "Uploaded documents table; matches the signed-in user."
+  },
+  {
+   "id": "F026",
+   "screen_id": "S03",
+   "label": "Status",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "Pending check",
+   "source": "both",
+   "timestamp": 43.0,
+   "keyframe_index": 2,
+   "notes": "Coloured badge. Values seen: Pending check (amber), Verified (green). Expert: shows pending until the document has been checked."
+  },
+  {
+   "id": "F027",
+   "screen_id": "S04",
+   "label": "Name",
+   "field_type": "read-only",
+   "required": null,
+   "example_value": "Eloette Lunmere",
+   "source": "seen on screen",
+   "timestamp": 62.0,
+   "keyframe_index": 3,
+   "notes": "First name and last name shown together."
+  },
+  {
+   "id": "F028",
+   "screen_id": "S04",
+   "label": "Date of birth",
+   "field_type": "read-only",
+   "required": null,
+   "example_value": "01/01/1981",
+   "source": "seen on screen",
+   "timestamp": 62.0,
+   "keyframe_index": 3,
+   "notes": null
+  },
+  {
+   "id": "F029",
+   "screen_id": "S04",
+   "label": "Email address",
+   "field_type": "read-only",
+   "required": null,
+   "example_value": "eloette.lunmere@example.com",
+   "source": "seen on screen",
+   "timestamp": 62.0,
+   "keyframe_index": 3,
+   "notes": null
+  },
+  {
+   "id": "F030",
+   "screen_id": "S04",
+   "label": "Phone number",
+   "field_type": "read-only",
+   "required": null,
+   "example_value": "07700 900231",
+   "source": "seen on screen",
+   "timestamp": 62.0,
+   "keyframe_index": 3,
+   "notes": null
+  },
+  {
+   "id": "F031",
+   "screen_id": "S04",
+   "label": "Address",
+   "field_type": "read-only",
+   "required": null,
+   "example_value": "14 Example Street, London, SW1A 1AA",
+   "source": "seen on screen",
+   "timestamp": 62.0,
+   "keyframe_index": 3,
+   "notes": "Address lines, town and postcode joined into one line with commas."
+  },
+  {
+   "id": "F032",
+   "screen_id": "S04",
+   "label": "Account type",
+   "field_type": "read-only",
+   "required": null,
+   "example_value": "Personal",
+   "source": "seen on screen",
+   "timestamp": 62.0,
+   "keyframe_index": 3,
+   "notes": null
+  },
+  {
+   "id": "F033",
+   "screen_id": "S04",
+   "label": "Marketing consent",
+   "field_type": "read-only",
+   "required": null,
+   "example_value": "No",
+   "source": "seen on screen",
+   "timestamp": 62.0,
+   "keyframe_index": 3,
+   "notes": "Unticked checkbox is shown as 'No'."
+  },
+  {
+   "id": "F034",
+   "screen_id": "S04",
+   "label": "ID document",
+   "field_type": "read-only",
+   "required": null,
+   "example_value": "Passport (passport_elunmere.jpg) \u00b7 Pending check",
+   "source": "seen on screen",
+   "timestamp": 62.0,
+   "keyframe_index": 3,
+   "notes": "Shows document type, file name and check status badge. Only the ID document is listed here, not the proof of address."
+  },
+  {
+   "id": "F035",
+   "screen_id": "S05",
+   "label": "Reference",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "NW-2026-31360",
+   "source": "seen on screen",
+   "timestamp": 77.0,
+   "keyframe_index": 4,
+   "notes": "Format NW-YYYY-NNNNN. The same kind of number is shown as Customer reference number on the Confirmation screen."
+  },
+  {
+   "id": "F036",
+   "screen_id": "S05",
+   "label": "Customer",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "Odeina Wexshaw",
+   "source": "seen on screen",
+   "timestamp": 77.0,
+   "keyframe_index": 4,
+   "notes": null
+  },
+  {
+   "id": "F037",
+   "screen_id": "S05",
+   "label": "Submitted",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "09/09/2026 16:20",
+   "source": "seen on screen",
+   "timestamp": 77.0,
+   "keyframe_index": 4,
+   "notes": "Date and time. Screen says the queue is ordered oldest first, but the rows on the frame are not in strict date order (the Approved row dated 08/09/2026 is last)."
+  },
+  {
+   "id": "F038",
+   "screen_id": "S05",
+   "label": "Submitted by",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "Eloora Lunwick",
+   "source": "seen on screen",
+   "timestamp": 77.0,
+   "keyframe_index": 4,
+   "notes": "Officer who submitted the record."
+  },
+  {
+   "id": "F039",
+   "screen_id": "S05",
+   "label": "Status",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "Awaiting approval",
+   "source": "both",
+   "timestamp": 77.0,
+   "keyframe_index": 4,
+   "notes": "Coloured badge. Values seen: Awaiting approval (blue), Approved (green)."
+  },
+  {
+   "id": "F040",
+   "screen_id": "S05",
+   "label": "Assigned to",
+   "field_type": "table column",
+   "required": null,
+   "example_value": "Sorora Brinhurst",
+   "source": "both",
+   "timestamp": 77.0,
+   "keyframe_index": 4,
+   "notes": "Values seen: Sorora Brinhurst, Unassigned. Expert does not know how the assignee is chosen."
+  },
+  {
+   "id": "F041",
+   "screen_id": "S06",
+   "label": "Customer reference number",
+   "field_type": "read-only",
+   "required": null,
+   "example_value": "NW-2026-31365",
+   "source": "both",
+   "timestamp": 93.0,
+   "keyframe_index": 5,
+   "notes": "Shown large in monospace. Expert: this reference is given to the customer."
+  },
+  {
+   "id": "F042",
+   "screen_id": "S06",
+   "label": "Approved by",
+   "field_type": "read-only",
+   "required": null,
+   "example_value": "Sorora Brinhurst (Team Lead)",
+   "source": "seen on screen",
+   "timestamp": 93.0,
+   "keyframe_index": 5,
+   "notes": "Name with role in brackets."
+  },
+  {
+   "id": "F043",
+   "screen_id": "S06",
+   "label": "Approved on",
+   "field_type": "read-only",
+   "required": null,
+   "example_value": "10/09/2026 10:31",
+   "source": "seen on screen",
+   "timestamp": 93.0,
+   "keyframe_index": 5,
+   "notes": "Date and time."
+  },
+  {
+   "id": "F044",
+   "screen_id": "S06",
+   "label": "Welcome email",
+   "field_type": "read-only",
+   "required": null,
+   "example_value": "Sent to eloette.lunmere@example.com",
+   "source": "both",
+   "timestamp": 93.0,
+   "keyframe_index": 5,
+   "notes": "Only a 'Sent to' state was seen; no bounce or failure state is shown."
+  }
+ ],
+ "actions": [
+  {
+   "id": "A001",
+   "screen_id": "S01",
+   "description": "Enters postcode and surname and presses Search; matching existing customers are listed below on the same screen",
+   "control": "button",
+   "leads_to_screen_id": null,
+   "timestamp": 0.0,
+   "keyframe_index": 0
+  },
+  {
+   "id": "A002",
+   "screen_id": "S01",
+   "description": "Presses Clear to empty the search fields",
+   "control": "button",
+   "leads_to_screen_id": null,
+   "timestamp": 0.0,
+   "keyframe_index": 0
+  },
+  {
+   "id": "A003",
+   "screen_id": "S01",
+   "description": "Presses Open on a result row to open an existing customer (not shown in the recording)",
+   "control": "button",
+   "leads_to_screen_id": null,
+   "timestamp": 0.0,
+   "keyframe_index": 0
+  },
+  {
+   "id": "A004",
+   "screen_id": "S01",
+   "description": "Presses Create new customer when the customer is not found",
+   "control": "button",
+   "leads_to_screen_id": "S02",
+   "timestamp": 0.0,
+   "keyframe_index": 0
+  },
+  {
+   "id": "A005",
+   "screen_id": "S02",
+   "description": "Picks the Account type (Personal or Business) from the dropdown",
+   "control": "menu",
+   "leads_to_screen_id": null,
+   "timestamp": 15.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "A006",
+   "screen_id": "S02",
+   "description": "Ticks 'Customer has given marketing consent' only if the customer said yes",
+   "control": "other",
+   "leads_to_screen_id": null,
+   "timestamp": 15.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "A007",
+   "screen_id": "S02",
+   "description": "Presses Back",
+   "control": "button",
+   "leads_to_screen_id": null,
+   "timestamp": 15.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "A008",
+   "screen_id": "S02",
+   "description": "Presses Save and continue after filling in the details",
+   "control": "button",
+   "leads_to_screen_id": "S03",
+   "timestamp": 15.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "A009",
+   "screen_id": "S03",
+   "description": "Presses Choose File to pick the ID document image or PDF",
+   "control": "button",
+   "leads_to_screen_id": null,
+   "timestamp": 43.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "A010",
+   "screen_id": "S03",
+   "description": "Picks the Document type from the dropdown",
+   "control": "menu",
+   "leads_to_screen_id": null,
+   "timestamp": 43.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "A011",
+   "screen_id": "S03",
+   "description": "Presses Upload; the document appears in the Uploaded documents table with status Pending check",
+   "control": "button",
+   "leads_to_screen_id": null,
+   "timestamp": 43.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "A012",
+   "screen_id": "S03",
+   "description": "Presses Back",
+   "control": "button",
+   "leads_to_screen_id": null,
+   "timestamp": 43.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "A013",
+   "screen_id": "S03",
+   "description": "Presses Continue to review",
+   "control": "button",
+   "leads_to_screen_id": "S04",
+   "timestamp": 43.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "A014",
+   "screen_id": "S04",
+   "description": "Presses Back",
+   "control": "button",
+   "leads_to_screen_id": null,
+   "timestamp": 62.0,
+   "keyframe_index": 3
+  },
+  {
+   "id": "A015",
+   "screen_id": "S04",
+   "description": "Presses Submit for approval; the record is locked for editing (the next screen shown in the recording was the Approval Queue, but the submit itself was not shown, so where the officer lands is unconfirmed)",
+   "control": "button",
+   "leads_to_screen_id": null,
+   "timestamp": 62.0,
+   "keyframe_index": 3
+  },
+  {
+   "id": "A016",
+   "screen_id": "S05",
+   "description": "Team Lead presses Approve on a row with status Awaiting approval (button only shown to the Team Lead role; the press itself was not shown, so the screen that follows is unconfirmed)",
+   "control": "button",
+   "leads_to_screen_id": null,
+   "timestamp": 77.0,
+   "keyframe_index": 4
+  },
+  {
+   "id": "A017",
+   "screen_id": "S06",
+   "description": "Presses Start another customer (not shown in the recording)",
+   "control": "button",
+   "leads_to_screen_id": null,
+   "timestamp": 93.0,
+   "keyframe_index": 5
+  },
+  {
+   "id": "A018",
+   "screen_id": "S06",
+   "description": "Presses Print confirmation (not shown in the recording)",
+   "control": "button",
+   "leads_to_screen_id": null,
+   "timestamp": 93.0,
+   "keyframe_index": 5
+  }
+ ],
+ "journey": [
+  {
+   "order": 1,
+   "screen_id": "S01",
+   "description": "The Onboarding Officer enters the customer's postcode and surname and presses Search to see whether the customer already exists.",
+   "actor": "Onboarding Officer",
+   "timestamp": 0.0,
+   "keyframe_index": 0
+  },
+  {
+   "order": 2,
+   "screen_id": "S01",
+   "description": "When the customer is not in the results, the Onboarding Officer presses Create new customer.",
+   "actor": "Onboarding Officer",
+   "timestamp": 0.0,
+   "keyframe_index": 0
+  },
+  {
+   "order": 3,
+   "screen_id": "S02",
+   "description": "The Onboarding Officer fills in the mandatory details (First name, Last name, Date of birth, Account type, Postcode), any optional contact and address details and the marketing consent tick, then presses Save and continue.",
+   "actor": "Onboarding Officer",
+   "timestamp": 15.0,
+   "keyframe_index": 1
+  },
+  {
+   "order": 4,
+   "screen_id": "S03",
+   "description": "The Onboarding Officer chooses a photo of the customer's ID, picks the Document type, presses Upload so the document sits in the table as Pending check, then presses Continue to review.",
+   "actor": "Onboarding Officer",
+   "timestamp": 43.0,
+   "keyframe_index": 2
+  },
+  {
+   "order": 5,
+   "screen_id": "S04",
+   "description": "The Onboarding Officer reads through the summary of everything entered and presses Submit for approval, after which the record is locked for editing.",
+   "actor": "Onboarding Officer",
+   "timestamp": 62.0,
+   "keyframe_index": 3
+  },
+  {
+   "order": 6,
+   "screen_id": "S05",
+   "description": "The submitted customer sits in the Approval Queue with status Awaiting approval and an assignee, and a Team Lead presses Approve.",
+   "actor": "Team Lead",
+   "timestamp": 77.0,
+   "keyframe_index": 4
+  },
+  {
+   "order": 7,
+   "screen_id": "S06",
+   "description": "The Confirmation screen shows the customer reference number, approver, approval time and that the welcome email was sent; the Onboarding Officer gives the reference to the customer.",
+   "actor": "Onboarding Officer",
+   "timestamp": 93.0,
+   "keyframe_index": 5
+  }
+ ],
+ "requirements": [
+  {
+   "id": "R001",
+   "statement": "As an Onboarding Officer, I need to search existing customers by postcode and surname before I create a record, so that I do not create a duplicate customer.",
+   "rationale": "Duplicate prevention is the stated purpose of the first screen.",
+   "source_quote": "You put in the postcode and the surname and hit Search, and it lists anyone we already have, so you don't create a duplicate.",
+   "timestamp": 7.0,
+   "keyframe_index": 0,
+   "screen_id": "S01",
+   "kind": "functional",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R002",
+   "statement": "The Customer Search screen shows each matching customer as one row with Customer ID, Name, Date of birth, Postcode, Account type and Status.",
+   "rationale": "Column list taken from the results table on the frame; the expert did not name the columns.",
+   "source_quote": "it lists anyone we already have",
+   "timestamp": 7.0,
+   "keyframe_index": 0,
+   "screen_id": "S01",
+   "kind": "data",
+   "priority": "unknown",
+   "confidence": "medium"
+  },
+  {
+   "id": "R003",
+   "statement": "The system does not save Customer Details when First name is empty.",
+   "rationale": "The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.",
+   "source_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "screen_id": "S02",
+   "kind": "validation",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R004",
+   "statement": "The system does not save Customer Details when Last name is empty.",
+   "rationale": "The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.",
+   "source_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "screen_id": "S02",
+   "kind": "validation",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R005",
+   "statement": "The system does not save Customer Details when Date of birth is empty.",
+   "rationale": "The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.",
+   "source_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "screen_id": "S02",
+   "kind": "validation",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R006",
+   "statement": "The system does not save Customer Details when Account type is empty.",
+   "rationale": "The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.",
+   "source_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "screen_id": "S02",
+   "kind": "validation",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R007",
+   "statement": "The system does not save Customer Details when Postcode is empty.",
+   "rationale": "The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.",
+   "source_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "screen_id": "S02",
+   "kind": "validation",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R008",
+   "statement": "The system rejects a Customer Details save when Postcode is not in a valid UK postcode format.",
+   "rationale": "Hint under the field on screen: 'UK postcode format, e.g. SW1A 1AA'. The exact rule is not stated.",
+   "source_quote": "The postcode has to be a valid UK format, otherwise the system won't let you save.",
+   "timestamp": 25.0,
+   "keyframe_index": 1,
+   "screen_id": "S02",
+   "kind": "validation",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R009",
+   "statement": "The system saves Customer Details when Address line 1, Address line 2, Town / City, Email address and Phone number are all empty.",
+   "rationale": "The expert names the address lines and town as optional; Email address and Phone number carry no * on screen.",
+   "source_quote": "The address lines and the town are optional.",
+   "timestamp": 25.0,
+   "keyframe_index": 1,
+   "screen_id": "S02",
+   "kind": "validation",
+   "priority": "must",
+   "confidence": "medium"
+  },
+  {
+   "id": "R010",
+   "statement": "The Account type dropdown on Customer Details offers the options Personal and Business.",
+   "rationale": "Both values also appear in the Account type column of the Customer Search results.",
+   "source_quote": "Account type is a dropdown, personal or business",
+   "timestamp": 33.0,
+   "keyframe_index": 1,
+   "screen_id": "S02",
+   "kind": "data",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R011",
+   "statement": "The system records marketing consent as Yes only when the Onboarding Officer has ticked 'Customer has given marketing consent'.",
+   "rationale": "The checkbox is unticked on the frame and Review & Submit shows 'Marketing consent: No'. The business rule is that the officer ticks it only when the customer has said yes.",
+   "source_quote": "the marketing consent box only gets ticked if the customer actually said yes",
+   "timestamp": 33.0,
+   "keyframe_index": 1,
+   "screen_id": "S02",
+   "kind": "data",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R012",
+   "statement": "As an Onboarding Officer, I need to upload an image of the customer's ID document with its Document type, so that proof of identity is attached to the customer record.",
+   "rationale": "The Documents screen has a Choose File control, a Document type dropdown and an Upload button.",
+   "source_quote": "We upload a photo of their ID, usually a passport or a driving licence, and pick the document type from the dropdown.",
+   "timestamp": 43.0,
+   "keyframe_index": 2,
+   "screen_id": "S03",
+   "kind": "functional",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R013",
+   "statement": "The system accepts an ID document upload only when the file is a PDF, JPG or PNG.",
+   "rationale": "Taken from the hint under the file control ('PDF, JPG or PNG, up to 10 MB'); the expert did not say it.",
+   "source_quote": "We upload a photo of their ID",
+   "timestamp": 43.0,
+   "keyframe_index": 2,
+   "screen_id": "S03",
+   "kind": "validation",
+   "priority": "unknown",
+   "confidence": "medium"
+  },
+  {
+   "id": "R014",
+   "statement": "The system accepts an ID document upload only when the file is 10 MB or smaller.",
+   "rationale": "Taken from the hint under the file control ('PDF, JPG or PNG, up to 10 MB'); the expert did not say it.",
+   "source_quote": "We upload a photo of their ID",
+   "timestamp": 43.0,
+   "keyframe_index": 2,
+   "screen_id": "S03",
+   "kind": "validation",
+   "priority": "unknown",
+   "confidence": "medium"
+  },
+  {
+   "id": "R015",
+   "statement": "The system shows an uploaded document with status Pending check until the document has been checked.",
+   "rationale": "Pending check (amber) is visible in the Uploaded documents table on the frame.",
+   "source_quote": "The status column shows pending until the document has been checked.",
+   "timestamp": 52.0,
+   "keyframe_index": 2,
+   "screen_id": "S03",
+   "kind": "workflow",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R016",
+   "statement": "The system changes the status of an uploaded document to Verified once the document has been checked.",
+   "rationale": "Verified (green) is visible in the Uploaded documents table. Who checks the document, and where, is unknown.",
+   "source_quote": "Someone checks them, I'm honestly not sure who, it just changes to verified at some point.",
+   "timestamp": 52.0,
+   "keyframe_index": 2,
+   "screen_id": "S03",
+   "kind": "workflow",
+   "priority": "must",
+   "confidence": "medium"
+  },
+  {
+   "id": "R017",
+   "statement": "The Documents screen lists each uploaded document with File, Document type, Uploaded date and time, Uploaded by and Status.",
+   "rationale": "Column list taken from the Uploaded documents table on the frame; the expert only mentioned the status column.",
+   "source_quote": "The status column shows pending until the document has been checked.",
+   "timestamp": 52.0,
+   "keyframe_index": 2,
+   "screen_id": "S03",
+   "kind": "data",
+   "priority": "unknown",
+   "confidence": "medium"
+  },
+  {
+   "id": "R018",
+   "statement": "The Review & Submit screen shows a read-only summary of Name, Date of birth, Email address, Phone number, Address, Account type, Marketing consent and ID document with its check status.",
+   "rationale": "All eight items are visible on the frame.",
+   "source_quote": "Review and Submit is a summary of everything so far. You read it through, and if it all looks right you press Submit for approval.",
+   "timestamp": 62.0,
+   "keyframe_index": 3,
+   "screen_id": "S04",
+   "kind": "functional",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R019",
+   "statement": "The system locks the customer record against editing once the Onboarding Officer has pressed Submit for approval.",
+   "rationale": "Also written on screen: 'After submission the record is locked for editing.'",
+   "source_quote": "Once you submit, the record locks and you can't edit it any more.",
+   "timestamp": 69.0,
+   "keyframe_index": 3,
+   "screen_id": "S04",
+   "kind": "workflow",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R020",
+   "statement": "A Team Lead can send a submitted customer record back to the Onboarding Officer for editing.",
+   "rationale": "The expert was not sure and no send-back control was seen on any frame. Kept because it is the only stated way to correct a mistake after submission.",
+   "source_quote": "You'd have to ask a team lead to send it back, I think.",
+   "timestamp": 69.0,
+   "keyframe_index": 3,
+   "screen_id": "S04",
+   "kind": "workflow",
+   "priority": "unknown",
+   "confidence": "low"
+  },
+  {
+   "id": "R021",
+   "statement": "The Approval Queue lists every submitted customer as one row with Reference, Customer, Submitted date and time, Submitted by, Status and Assigned to.",
+   "rationale": "Column list taken from the frame. The screen subtitle says oldest first, but the rows on the frame are not in date order, so ordering is left as a question.",
+   "source_quote": "Every submitted customer sits here with a status, and it shows who it's assigned to",
+   "timestamp": 77.0,
+   "keyframe_index": 4,
+   "screen_id": "S05",
+   "kind": "functional",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R022",
+   "statement": "The system shows the Approve button in the Approval Queue only to users in the Team Lead role.",
+   "rationale": "Also stated in the banner on screen: 'Team leads only. The Approve action is shown to users in the Team Lead role.'",
+   "source_quote": "Only team leads can approve. The Approve button doesn't show for the rest of us, and it says team leads only at the top.",
+   "timestamp": 86.0,
+   "keyframe_index": 4,
+   "screen_id": "S05",
+   "kind": "functional",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R023",
+   "statement": "Users outside the Team Lead role can view the Approval Queue.",
+   "rationale": "The banner on screen reads 'Other users can view the queue but cannot approve', and the expert (not a team lead) sees the queue without the Approve button.",
+   "source_quote": "The Approve button doesn't show for the rest of us, and it says team leads only at the top.",
+   "timestamp": 86.0,
+   "keyframe_index": 4,
+   "screen_id": "S05",
+   "kind": "functional",
+   "priority": "must",
+   "confidence": "medium"
+  },
+  {
+   "id": "R024",
+   "statement": "When a customer is approved, the system shows a Confirmation screen with Customer reference number, Approved by, Approved on and Welcome email status.",
+   "rationale": "All four items are visible on the frame. The reference number is what the Onboarding Officer gives to the customer.",
+   "source_quote": "When it's approved, you get the Confirmation screen with a reference number. We give that reference to the customer.",
+   "timestamp": 93.0,
+   "keyframe_index": 5,
+   "screen_id": "S06",
+   "kind": "functional",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R025",
+   "statement": "The system sends a welcome email to the Email address entered on Customer Details when the customer is approved.",
+   "rationale": "The Confirmation screen shows 'Welcome email: Sent to eloette.lunmere@example.com'. The trigger being approval is implied by where the status appears; the expert did not say when it is sent.",
+   "source_quote": "A welcome email goes out automatically to the address we entered.",
+   "timestamp": 99.0,
+   "keyframe_index": 5,
+   "screen_id": "S06",
+   "kind": "functional",
+   "priority": "must",
+   "confidence": "medium"
+  }
+ ],
+ "acceptance_criteria": [
+  {
+   "id": "AC001",
+   "requirement_id": "R001",
+   "given": "An existing customer with surname Lunmere and postcode SW1A 1AA is on file",
+   "when": "The Onboarding Officer enters postcode SW1A 1AA and surname Lunmere on Customer Search and presses Search",
+   "then": "The results table shows that customer as a row",
+   "timestamp": 7.0,
+   "keyframe_index": 0
+  },
+  {
+   "id": "AC002",
+   "requirement_id": "R001",
+   "given": "No customer on file has the surname entered",
+   "when": "The Onboarding Officer presses Search",
+   "then": "The results table shows no rows and the Create new customer button is available",
+   "timestamp": 7.0,
+   "keyframe_index": 0
+  },
+  {
+   "id": "AC003",
+   "requirement_id": "R002",
+   "given": "A search on Customer Search has returned at least one customer",
+   "when": "The Onboarding Officer looks at the results table",
+   "then": "Each row shows a value under Customer ID, Name, Date of birth, Postcode, Account type and Status",
+   "timestamp": 7.0,
+   "keyframe_index": 0
+  },
+  {
+   "id": "AC004",
+   "requirement_id": "R003",
+   "given": "The Onboarding Officer is on Customer Details with every mandatory field filled in except First name",
+   "when": "The Onboarding Officer presses Save and continue",
+   "then": "The system stays on Customer Details and does not save the details",
+   "timestamp": 15.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "AC005",
+   "requirement_id": "R008",
+   "given": "The Onboarding Officer is on Customer Details with every mandatory field filled in except Last name",
+   "when": "The Onboarding Officer presses Save and continue",
+   "then": "The system stays on Customer Details and does not save the details",
+   "timestamp": 15.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "AC006",
+   "requirement_id": "R009",
+   "given": "The Onboarding Officer is on Customer Details with every mandatory field filled in except Date of birth",
+   "when": "The Onboarding Officer presses Save and continue",
+   "then": "The system stays on Customer Details and does not save the details",
+   "timestamp": 15.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "AC007",
+   "requirement_id": "R010",
+   "given": "The Onboarding Officer is on Customer Details with every mandatory field filled in except Account type",
+   "when": "The Onboarding Officer presses Save and continue",
+   "then": "The system stays on Customer Details and does not save the details",
+   "timestamp": 15.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "AC008",
+   "requirement_id": "R011",
+   "given": "The Onboarding Officer is on Customer Details with every mandatory field filled in except Postcode",
+   "when": "The Onboarding Officer presses Save and continue",
+   "then": "The system stays on Customer Details and does not save the details",
+   "timestamp": 15.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "AC009",
+   "requirement_id": "R008",
+   "given": "The Onboarding Officer has entered SW1A 1AA in Postcode with all other mandatory fields filled in",
+   "when": "The Onboarding Officer presses Save and continue",
+   "then": "The system saves the details",
+   "timestamp": 25.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "AC010",
+   "requirement_id": "R008",
+   "given": "The Onboarding Officer has entered 12345 in Postcode with all other mandatory fields filled in",
+   "when": "The Onboarding Officer presses Save and continue",
+   "then": "The system stays on Customer Details and does not save the details",
+   "timestamp": 25.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "AC011",
+   "requirement_id": "R009",
+   "given": "The Onboarding Officer has filled in the five mandatory fields and left Address line 1, Address line 2, Town / City, Email address and Phone number empty",
+   "when": "The Onboarding Officer presses Save and continue",
+   "then": "The system saves the details and shows the Documents screen",
+   "timestamp": 25.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "AC012",
+   "requirement_id": "R010",
+   "given": "The Onboarding Officer is on Customer Details",
+   "when": "The Onboarding Officer opens the Account type dropdown",
+   "then": "The dropdown lists Personal and Business",
+   "timestamp": 33.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "AC013",
+   "requirement_id": "R011",
+   "given": "The Onboarding Officer leaves 'Customer has given marketing consent' unticked and saves Customer Details",
+   "when": "The Onboarding Officer reaches Review & Submit",
+   "then": "Marketing consent shows No",
+   "timestamp": 33.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "AC014",
+   "requirement_id": "R011",
+   "given": "The Onboarding Officer ticks 'Customer has given marketing consent' and saves Customer Details",
+   "when": "The Onboarding Officer reaches Review & Submit",
+   "then": "Marketing consent shows Yes",
+   "timestamp": 33.0,
+   "keyframe_index": 1
+  },
+  {
+   "id": "AC015",
+   "requirement_id": "R012",
+   "given": "The Onboarding Officer is on Documents and has chosen the file passport_elunmere.jpg and Document type Passport",
+   "when": "The Onboarding Officer presses Upload",
+   "then": "The Uploaded documents table shows a row with File passport_elunmere.jpg and Document type Passport",
+   "timestamp": 43.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "AC016",
+   "requirement_id": "R012",
+   "given": "The Onboarding Officer is on Documents",
+   "when": "The Onboarding Officer opens the Document type dropdown",
+   "then": "The dropdown lists Passport and Driving licence",
+   "timestamp": 43.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "AC017",
+   "requirement_id": "R013",
+   "given": "The Onboarding Officer has chosen a .docx file as the ID document",
+   "when": "The Onboarding Officer presses Upload",
+   "then": "The system does not add the file to the Uploaded documents table",
+   "timestamp": 43.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "AC018",
+   "requirement_id": "R013",
+   "given": "The Onboarding Officer has chosen a .png file under 10 MB as the ID document",
+   "when": "The Onboarding Officer presses Upload",
+   "then": "The system adds the file to the Uploaded documents table",
+   "timestamp": 43.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "AC019",
+   "requirement_id": "R014",
+   "given": "The Onboarding Officer has chosen a JPG file of 11 MB as the ID document",
+   "when": "The Onboarding Officer presses Upload",
+   "then": "The system does not add the file to the Uploaded documents table",
+   "timestamp": 43.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "AC020",
+   "requirement_id": "R014",
+   "given": "The Onboarding Officer has chosen a JPG file of 10 MB as the ID document",
+   "when": "The Onboarding Officer presses Upload",
+   "then": "The system adds the file to the Uploaded documents table",
+   "timestamp": 43.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "AC021",
+   "requirement_id": "R015",
+   "given": "The Onboarding Officer has just uploaded an ID document",
+   "when": "The Onboarding Officer looks at the Uploaded documents table",
+   "then": "The Status column for that document shows Pending check",
+   "timestamp": 52.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "AC022",
+   "requirement_id": "R016",
+   "given": "An uploaded document shows Status Pending check",
+   "when": "The document check is completed",
+   "then": "The Status column for that document shows Verified",
+   "timestamp": 52.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "AC023",
+   "requirement_id": "R017",
+   "given": "At least one document has been uploaded for the customer",
+   "when": "The Onboarding Officer looks at the Uploaded documents table on Documents",
+   "then": "Each row shows a value under File, Document type, Uploaded, Uploaded by and Status",
+   "timestamp": 52.0,
+   "keyframe_index": 2
+  },
+  {
+   "id": "AC024",
+   "requirement_id": "R018",
+   "given": "The Onboarding Officer has saved Customer Details for Eloette Lunmere and uploaded a Passport",
+   "when": "The Onboarding Officer presses Continue to review on Documents",
+   "then": "Review & Submit shows Name, Date of birth, Email address, Phone number, Address, Account type, Marketing consent and ID document with the values entered",
+   "timestamp": 62.0,
+   "keyframe_index": 3
+  },
+  {
+   "id": "AC025",
+   "requirement_id": "R018",
+   "given": "The Onboarding Officer is on Review & Submit",
+   "when": "The Onboarding Officer clicks on any summary value",
+   "then": "The value cannot be edited on that screen",
+   "timestamp": 62.0,
+   "keyframe_index": 3
+  },
+  {
+   "id": "AC026",
+   "requirement_id": "R019",
+   "given": "The Onboarding Officer has pressed Submit for approval on Review & Submit",
+   "when": "The Onboarding Officer opens that customer's Customer Details",
+   "then": "Every field is read-only and Save and continue is unavailable",
+   "timestamp": 69.0,
+   "keyframe_index": 3
+  },
+  {
+   "id": "AC027",
+   "requirement_id": "R020",
+   "given": "A customer record has been submitted for approval and is locked",
+   "when": "A Team Lead sends the record back",
+   "then": "The Onboarding Officer can edit the record again",
+   "timestamp": 69.0,
+   "keyframe_index": 3
+  },
+  {
+   "id": "AC028",
+   "requirement_id": "R021",
+   "given": "An Onboarding Officer has just submitted a customer for approval",
+   "when": "A user opens the Approval Queue",
+   "then": "The queue shows a row for that customer with Reference, Customer, Submitted, Submitted by, Status Awaiting approval and Assigned to",
+   "timestamp": 77.0,
+   "keyframe_index": 4
+  },
+  {
+   "id": "AC029",
+   "requirement_id": "R022",
+   "given": "A user in the Team Lead role is signed in",
+   "when": "The user opens the Approval Queue",
+   "then": "Each row with Status Awaiting approval shows an Approve button",
+   "timestamp": 86.0,
+   "keyframe_index": 4
+  },
+  {
+   "id": "AC030",
+   "requirement_id": "R022",
+   "given": "A user in the Onboarding Officer role is signed in",
+   "when": "The user opens the Approval Queue",
+   "then": "No row shows an Approve button",
+   "timestamp": 86.0,
+   "keyframe_index": 4
+  },
+  {
+   "id": "AC031",
+   "requirement_id": "R023",
+   "given": "A user in the Onboarding Officer role is signed in",
+   "when": "The user opens the Approval Queue",
+   "then": "The queue rows are displayed with the 'Team leads only' banner at the top",
+   "timestamp": 86.0,
+   "keyframe_index": 4
+  },
+  {
+   "id": "AC032",
+   "requirement_id": "R024",
+   "given": "A customer row in the Approval Queue has Status Awaiting approval",
+   "when": "A Team Lead presses Approve on that row",
+   "then": "A Confirmation screen shows Customer reference number, Approved by with the Team Lead's name, Approved on with the current date and time, and Welcome email",
+   "timestamp": 93.0,
+   "keyframe_index": 5
+  },
+  {
+   "id": "AC033",
+   "requirement_id": "R025",
+   "given": "A customer was saved with Email address eloette.lunmere@example.com",
+   "when": "A Team Lead approves that customer",
+   "then": "A welcome email is sent to eloette.lunmere@example.com and the Confirmation screen shows 'Sent to eloette.lunmere@example.com'",
+   "timestamp": 99.0,
+   "keyframe_index": 5
+  }
+ ],
+ "questions": [
+  {
+   "id": "Q001",
+   "question": "What counts as a match in Customer Search: exact surname and postcode, or partial / nearby matches? The results include postcode SW1A 1AB for a search on SW1A 1AA.",
+   "why_it_matters": "The matching rule decides how well duplicates are caught and what a developer has to build.",
+   "context_quote": "it lists anyone we already have, so you don't create a duplicate.",
+   "timestamp": 7.0,
+   "keyframe_index": 0,
+   "screen_id": "S01",
+   "category": "ambiguity",
+   "blocks_requirement_ids": [
+    "R001"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q002",
+   "question": "Must both Postcode and Surname be filled in to search, or can either be left blank?",
+   "why_it_matters": "Determines search validation and whether a surname-only search is allowed.",
+   "context_quote": "You put in the postcode and the surname and hit Search",
+   "timestamp": 7.0,
+   "keyframe_index": 0,
+   "screen_id": "S01",
+   "category": "validation rule",
+   "blocks_requirement_ids": [
+    "R001"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q003",
+   "question": "What should happen when the officer presses Open on an existing customer, and can a customer with status Closed be onboarded again?",
+   "why_it_matters": "The Open button and the Closed status were seen but never explained; the team needs to know what path an existing or closed customer follows.",
+   "context_quote": "it lists anyone we already have, so you don't create a duplicate.",
+   "timestamp": 7.0,
+   "keyframe_index": 0,
+   "screen_id": "S01",
+   "category": "edge case",
+   "blocks_requirement_ids": [
+    "R002"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q004",
+   "question": "What exactly is the UK postcode validation rule (accepted patterns, spaces, upper/lower case) and what error message is shown when it fails?",
+   "why_it_matters": "A developer cannot implement 'valid UK format' without the precise rule and the failure behaviour.",
+   "context_quote": "The postcode has to be a valid UK format, otherwise the system won't let you save.",
+   "timestamp": 25.0,
+   "keyframe_index": 1,
+   "screen_id": "S02",
+   "category": "validation rule",
+   "blocks_requirement_ids": [
+    "R008"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q005",
+   "question": "Are there validation rules on Date of birth (DD/MM/YYYY only, no future dates, minimum age), Email address and Phone number, and what does the officer see when a mandatory field is empty?",
+   "why_it_matters": "Only the postcode rule was described; the other fields may also reject bad input, and the empty-field behaviour was not shown.",
+   "context_quote": "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it.",
+   "timestamp": 15.0,
+   "keyframe_index": 1,
+   "screen_id": "S02",
+   "category": "validation rule",
+   "blocks_requirement_ids": [
+    "R005",
+    "R009"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q006",
+   "question": "Does Save and continue create a saved customer record at that point, and can an officer leave and come back to a half-finished onboarding?",
+   "why_it_matters": "Decides whether draft records exist before documents are uploaded and how they show in search.",
+   "context_quote": "Then you press Save and continue.",
+   "timestamp": 33.0,
+   "keyframe_index": 1,
+   "screen_id": "S02",
+   "category": "missing information",
+   "blocks_requirement_ids": [],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q007",
+   "question": "Who checks uploaded documents and changes the status from Pending check to Verified, and is that done inside this system or elsewhere?",
+   "why_it_matters": "The verification step is part of the process but the expert could not say who performs it or where.",
+   "context_quote": "Someone checks them, I'm honestly not sure who, it just changes to verified at some point.",
+   "timestamp": 52.0,
+   "keyframe_index": 2,
+   "screen_id": "S03",
+   "category": "missing information",
+   "blocks_requirement_ids": [
+    "R016"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q008",
+   "question": "Which document types does the system accept for the ID upload: only Passport and Driving licence as the expert named, or others too, such as the Proof of address type seen in the uploaded documents table?",
+   "why_it_matters": "The expert named only two examples, but the uploaded documents table shows a third type, Proof of address; the full accepted list decides what the Document type dropdown must offer and whether a second document is required.",
+   "context_quote": "We upload a photo of their ID, usually a passport or a driving licence, and pick the document type from the dropdown.",
+   "timestamp": 43.0,
+   "keyframe_index": 2,
+   "screen_id": "S03",
+   "category": "data",
+   "blocks_requirement_ids": [
+    "R012"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q009",
+   "question": "What happens when an upload is the wrong file type or over 10 MB, and can an uploaded document be removed or replaced?",
+   "why_it_matters": "The limit is shown on screen but no error or delete behaviour was seen.",
+   "context_quote": "We upload a photo of their ID",
+   "timestamp": 43.0,
+   "keyframe_index": 2,
+   "screen_id": "S03",
+   "category": "edge case",
+   "blocks_requirement_ids": [
+    "R013",
+    "R014"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q010",
+   "question": "Can a record be submitted for approval, and approved, while its ID document is still Pending check? The record on screen was submitted with the ID still pending.",
+   "why_it_matters": "If verification must come first, both Submit for approval and Approve need a gate on document status.",
+   "context_quote": "You read it through, and if it all looks right you press Submit for approval.",
+   "timestamp": 62.0,
+   "keyframe_index": 3,
+   "screen_id": "S04",
+   "category": "validation rule",
+   "blocks_requirement_ids": [
+    "R019",
+    "R022"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q011",
+   "question": "How does a submitted record get sent back for editing, who can do it, and does that unlock the record and return it to the officer?",
+   "why_it_matters": "The expert was unsure and no send-back or reject control was seen; without it a mistake after submission cannot be corrected.",
+   "context_quote": "You'd have to ask a team lead to send it back, I think.",
+   "timestamp": 69.0,
+   "keyframe_index": 3,
+   "screen_id": "S04",
+   "category": "missing information",
+   "blocks_requirement_ids": [
+    "R019",
+    "R020"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q012",
+   "question": "How is a submitted customer assigned to a team lead, and what does Unassigned mean for who picks it up?",
+   "why_it_matters": "The assignment rule affects who sees which work; one row on screen is Unassigned.",
+   "context_quote": "it shows who it's assigned to, though I've never worked out how it picks the person.",
+   "timestamp": 77.0,
+   "keyframe_index": 4,
+   "screen_id": "S05",
+   "category": "missing information",
+   "blocks_requirement_ids": [
+    "R021"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q013",
+   "question": "Can a team lead reject a record from the Approval Queue, and are there statuses other than Awaiting approval and Approved?",
+   "why_it_matters": "Only an Approve action was seen; the team needs the full set of outcomes and statuses.",
+   "context_quote": "Every submitted customer sits here with a status",
+   "timestamp": 77.0,
+   "keyframe_index": 4,
+   "screen_id": "S05",
+   "category": "missing information",
+   "blocks_requirement_ids": [
+    "R021",
+    "R022"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q014",
+   "question": "Which users can view the Approval Queue, and do they see all officers' submissions or only their own?",
+   "why_it_matters": "The banner says other users can view but cannot approve; the scope of what they can see is not stated.",
+   "context_quote": "The Approve button doesn't show for the rest of us, and it says team leads only at the top.",
+   "timestamp": 86.0,
+   "keyframe_index": 4,
+   "screen_id": "S05",
+   "category": "permissions",
+   "blocks_requirement_ids": [
+    "R023"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q015",
+   "question": "In what order should the Approval Queue list its rows? The screen says oldest first, but the rows on the frame are not in date order (the Approved row dated 08/09/2026 is last).",
+   "why_it_matters": "The stated order and the shown order disagree; the team needs one rule, for example by status then by submitted date.",
+   "context_quote": "Every submitted customer sits here with a status",
+   "timestamp": 77.0,
+   "keyframe_index": 4,
+   "screen_id": "S05",
+   "category": "ambiguity",
+   "blocks_requirement_ids": [
+    "R021"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q016",
+   "question": "What should happen when the welcome email bounces or no email address was entered: retry, notify the officer, show a failed state on the Confirmation screen?",
+   "why_it_matters": "Today a bounce goes unnoticed; email is optional on Customer Details, so approvals with no address are possible.",
+   "context_quote": "If the email bounces it just sort of sits there, nobody gets told.",
+   "timestamp": 99.0,
+   "keyframe_index": 5,
+   "screen_id": "S06",
+   "category": "integration",
+   "blocks_requirement_ids": [
+    "R025"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q017",
+   "question": "How is the customer reference number (format NW-2026-31365) generated, and how does it relate to the Customer ID (format C-625922) shown in search results?",
+   "why_it_matters": "Two different identifiers were seen; the team needs to know which is the customer's identity and which is the onboarding case.",
+   "context_quote": "When it's approved, you get the Confirmation screen with a reference number. We give that reference to the customer.",
+   "timestamp": 93.0,
+   "keyframe_index": 5,
+   "screen_id": "S06",
+   "category": "data",
+   "blocks_requirement_ids": [
+    "R024"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q018",
+   "question": "Who sees the Confirmation screen and when: does the Team Lead land on it after pressing Approve, does the Onboarding Officer see it automatically, or must the officer find the record again?",
+   "why_it_matters": "The approval happens in a different role, possibly later; the officer needs a way to get the reference to the customer. The Approve press itself was not shown, so the screen that follows it is inferred.",
+   "context_quote": "When it's approved, you get the Confirmation screen with a reference number.",
+   "timestamp": 93.0,
+   "keyframe_index": 5,
+   "screen_id": "S06",
+   "category": "ambiguity",
+   "blocks_requirement_ids": [
+    "R024"
+   ],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q019",
+   "question": "Which screen does the Onboarding Officer see after pressing Submit for approval? The recording moved to the Approval Queue, but the submit itself was not shown.",
+   "why_it_matters": "The team needs to know whether the officer lands on the Approval Queue, a confirmation message or back on Customer Search.",
+   "context_quote": "Once you submit, the record locks and you can't edit it any more.",
+   "timestamp": 69.0,
+   "keyframe_index": 3,
+   "screen_id": "S04",
+   "category": "ambiguity",
+   "blocks_requirement_ids": [],
+   "answer": null,
+   "status": "open"
+  },
+  {
+   "id": "Q020",
+   "question": "What does Print confirmation produce, and where does Start another customer take the officer?",
+   "why_it_matters": "Both buttons are on the Confirmation screen but neither was pressed or described.",
+   "context_quote": "We give that reference to the customer.",
+   "timestamp": 93.0,
+   "keyframe_index": 5,
+   "screen_id": "S06",
+   "category": "missing information",
+   "blocks_requirement_ids": [],
+   "answer": null,
+   "status": "open"
+  }
+ ]
 }

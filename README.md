@@ -18,7 +18,7 @@
 
 [![Model](https://img.shields.io/badge/Claude_Opus_5_or_Gemini-1A1A1A?style=for-the-badge)](#using-gemini-instead-of-claude)
 [![License](https://img.shields.io/badge/License-MIT-1A1A1A?style=for-the-badge)](./LICENSE)
-[![Recall](https://img.shields.io/badge/answer--key_recall-0.93_to_1.00-2ea043?style=for-the-badge)](#does-it-work)
+[![Recall](https://img.shields.io/badge/answer--key_recall-0.97_to_1.00-2ea043?style=for-the-badge)](#does-it-work)
 [![Tests](https://img.shields.io/badge/offline_tests-570-2ea043?style=for-the-badge)](#development)
 [![CI](https://github.com/patkusch/specto/actions/workflows/ci.yml/badge.svg)](https://github.com/patkusch/specto/actions/workflows/ci.yml)
 
@@ -94,20 +94,17 @@ key:
 | Screens | 6 of 6 | 6 of 6 |
 | Fields | 14 of 14 | 14 of 14 |
 | Actions | 4 of 4 | 4 of 4 |
-| Requirements | 6 of 7 | 6 of 7 |
-| Questions | 5 of 5 | 4 of 5 |
-| Overall recall | 0.97 | 0.93 |
+| Requirements | 6 of 7 | 7 of 7 |
+| Questions | 5 of 5 | 5 of 5 |
+| Overall recall | 0.97 | 1.00 |
 
-The second reading found 6 screens, 44 fields, 21 requirements, 30
-acceptance criteria and 20 questions. In both readings the model noticed
-things the narration never said: the Approve button is visible on screen
-while the expert says only team leads see it, and a record can be submitted
-while its ID document is still "Pending check". Both became questions, each
-naming the requirements it holds up. The requirement the key counts as
-missed is present in both readings, folded into the mandatory-fields rule;
-the question missed the second time (which document types are accepted)
-was raised the first time. That is the kind of variation to expect between
-runs. The current reference result is in `examples/onboarding/reference/`.
+The second reading found 6 screens, 44 fields, 25 requirements, 33
+acceptance criteria and 20 questions, matching every item in the answer
+key. In both readings the model noticed things the narration never said:
+the Approve button is visible on screen while the expert says only team
+leads see it, and a record can be submitted while its ID document is still
+"Pending check". Both became questions, each naming the requirements it
+holds up. The current reference result is in `examples/onboarding/reference/`.
 
 <div align="center">
 
@@ -120,7 +117,7 @@ measured or assumed, a savings calculator, a comparison with named
 neighbours and the roadmap: [docs/scoreboard.html](docs/scoreboard.html).
 
 The second example, the complaints tool recorded inside a meeting frame,
-was read once the same way: 6 screens, 42 fields, 46 requirements, 60
+was read once the same way: 6 screens, 42 fields, 47 requirements, 60
 criteria and 23 questions, and every item in its answer key was found
 (recall 1.00). Its result is in `examples/claims/reference/`.
 

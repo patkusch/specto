@@ -12,20 +12,20 @@ Northwind Onboarding is the tool the team uses to set up a new customer. An Onbo
 - Data fields: 44
 - Actions: 18
 - Journey steps: 7
-- Requirements: 21
-- Acceptance criteria: 30
+- Requirements: 25
+- Acceptance criteria: 33
 - Questions: 20
-- Writing check: 2 requirements and 0 criteria have warnings; 48 notes
+- Writing check: 2 requirements and 0 criteria have warnings; 50 notes
 - Naming check: 63 terms in the glossary; 13 naming clashes to check on the Glossary sheet
 - Personal data: Personal data seen: 3 emails, 2 phone numbers, 5 postcodes, 3 dates of birth, 10 names, 2 addresses, 1 other id on 6 frames. Check before sharing.
-- Gaps: 12 gaps to close: 12 actions leading nowhere; 2 notes.
+- Gaps: 16 gaps to close: 4 requirements without criteria, 12 actions leading nowhere; 2 notes.
 - Model: bring-your-own
 - Model calls: 2
 - Input tokens: 0
 - Output tokens: 0
 - Cache read tokens: 0
 - Cache write tokens: 0
-- Generated: 2026-09-14 21:16
+- Generated: 2026-09-16 21:59
 
 ## The journey, step by step
 
@@ -217,21 +217,58 @@ Acceptance criteria:
 - AC003: Given A search on Customer Search has returned at least one customer, when The Onboarding Officer looks at the results table, then Each row shows a value under Customer ID, Name, Date of birth, Postcode, Account type and Status. ([frame 0 @ 00:07](frames/frame_0000.jpg))
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R003: The system saves Customer Details only when First name, Last name, Date of birth, Account type and Postcode are all filled in.
+### R003: The system does not save Customer Details when First name is empty.
 
 - validation, priority must, confidence high, screen Customer Details. ([frame 1 @ 00:15](frames/frame_0001.jpg))
-- Why: The five fields carry a * on screen and the legend reads 'fields marked * are required'.
+- Why: The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.
 - The expert said: "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it."
-- *Writing check: info: "and" may join two thoughts in one sentence, so split it if it does.; info: "all" is an absolute, so check it is really meant.*
 
 Acceptance criteria:
 
-- AC004: Given The Onboarding Officer is on Customer Details with First name, Last name, Date of birth, Account type and Postcode filled in, when The Onboarding Officer presses Save and continue, then The system saves the details and shows the Documents screen. ([frame 1 @ 00:15](frames/frame_0001.jpg))
-  - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
-- AC005: Given The Onboarding Officer is on Customer Details with Date of birth left empty and the other four mandatory fields filled in, when The Onboarding Officer presses Save and continue, then The system stays on Customer Details and does not save the details. ([frame 1 @ 00:15](frames/frame_0001.jpg))
-  - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
+- AC004: Given The Onboarding Officer is on Customer Details with every mandatory field filled in except First name, when The Onboarding Officer presses Save and continue, then The system stays on Customer Details and does not save the details. ([frame 1 @ 00:15](frames/frame_0001.jpg))
+  - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R004: The system rejects a Customer Details save when Postcode is not in a valid UK postcode format.
+### R004: The system does not save Customer Details when Last name is empty.
+
+- validation, priority must, confidence high, screen Customer Details. ([frame 1 @ 00:15](frames/frame_0001.jpg))
+- Why: The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.
+- The expert said: "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it."
+
+Acceptance criteria:
+
+- None yet.
+
+### R005: The system does not save Customer Details when Date of birth is empty.
+
+- validation, priority must, confidence high, screen Customer Details. ([frame 1 @ 00:15](frames/frame_0001.jpg))
+- Why: The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.
+- The expert said: "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it."
+
+Acceptance criteria:
+
+- None yet.
+
+### R006: The system does not save Customer Details when Account type is empty.
+
+- validation, priority must, confidence high, screen Customer Details. ([frame 1 @ 00:15](frames/frame_0001.jpg))
+- Why: The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.
+- The expert said: "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it."
+
+Acceptance criteria:
+
+- None yet.
+
+### R007: The system does not save Customer Details when Postcode is empty.
+
+- validation, priority must, confidence high, screen Customer Details. ([frame 1 @ 00:15](frames/frame_0001.jpg))
+- Why: The five mandatory fields carry a * on screen and the legend reads 'fields marked * are required'; each is an independent rule a tester can check on its own.
+- The expert said: "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it."
+
+Acceptance criteria:
+
+- None yet.
+
+### R008: The system rejects a Customer Details save when Postcode is not in a valid UK postcode format.
 
 - validation, priority must, confidence high, screen Customer Details. ([frame 1 @ 00:25](frames/frame_0001.jpg))
 - Why: Hint under the field on screen: 'UK postcode format, e.g. SW1A 1AA'. The exact rule is not stated.
@@ -239,12 +276,14 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC006: Given The Onboarding Officer has entered SW1A 1AA in Postcode with all other mandatory fields filled in, when The Onboarding Officer presses Save and continue, then The system saves the details. ([frame 1 @ 00:25](frames/frame_0001.jpg))
+- AC005: Given The Onboarding Officer is on Customer Details with every mandatory field filled in except Last name, when The Onboarding Officer presses Save and continue, then The system stays on Customer Details and does not save the details. ([frame 1 @ 00:15](frames/frame_0001.jpg))
+  - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
+- AC009: Given The Onboarding Officer has entered SW1A 1AA in Postcode with all other mandatory fields filled in, when The Onboarding Officer presses Save and continue, then The system saves the details. ([frame 1 @ 00:25](frames/frame_0001.jpg))
   - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.*
-- AC007: Given The Onboarding Officer has entered 12345 in Postcode with all other mandatory fields filled in, when The Onboarding Officer presses Save and continue, then The system stays on Customer Details and does not save the details. ([frame 1 @ 00:25](frames/frame_0001.jpg))
+- AC010: Given The Onboarding Officer has entered 12345 in Postcode with all other mandatory fields filled in, when The Onboarding Officer presses Save and continue, then The system stays on Customer Details and does not save the details. ([frame 1 @ 00:25](frames/frame_0001.jpg))
   - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R005: The system saves Customer Details when Address line 1, Address line 2, Town / City, Email address and Phone number are all empty.
+### R009: The system saves Customer Details when Address line 1, Address line 2, Town / City, Email address and Phone number are all empty.
 
 - validation, priority must, confidence medium, screen Customer Details. ([frame 1 @ 00:25](frames/frame_0001.jpg))
 - Why: The expert names the address lines and town as optional; Email address and Phone number carry no * on screen.
@@ -253,10 +292,12 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC008: Given The Onboarding Officer has filled in the five mandatory fields and left Address line 1, Address line 2, Town / City, Email address and Phone number empty, when The Onboarding Officer presses Save and continue, then The system saves the details and shows the Documents screen. ([frame 1 @ 00:25](frames/frame_0001.jpg))
+- AC006: Given The Onboarding Officer is on Customer Details with every mandatory field filled in except Date of birth, when The Onboarding Officer presses Save and continue, then The system stays on Customer Details and does not save the details. ([frame 1 @ 00:15](frames/frame_0001.jpg))
+  - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
+- AC011: Given The Onboarding Officer has filled in the five mandatory fields and left Address line 1, Address line 2, Town / City, Email address and Phone number empty, when The Onboarding Officer presses Save and continue, then The system saves the details and shows the Documents screen. ([frame 1 @ 00:25](frames/frame_0001.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R006: The Account type dropdown on Customer Details offers the options Personal and Business.
+### R010: The Account type dropdown on Customer Details offers the options Personal and Business.
 
 - data, priority must, confidence high, screen Customer Details. ([frame 1 @ 00:33](frames/frame_0001.jpg))
 - Why: Both values also appear in the Account type column of the Customer Search results.
@@ -265,10 +306,12 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC009: Given The Onboarding Officer is on Customer Details, when The Onboarding Officer opens the Account type dropdown, then The dropdown lists Personal and Business. ([frame 1 @ 00:33](frames/frame_0001.jpg))
+- AC007: Given The Onboarding Officer is on Customer Details with every mandatory field filled in except Account type, when The Onboarding Officer presses Save and continue, then The system stays on Customer Details and does not save the details. ([frame 1 @ 00:15](frames/frame_0001.jpg))
+  - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
+- AC012: Given The Onboarding Officer is on Customer Details, when The Onboarding Officer opens the Account type dropdown, then The dropdown lists Personal and Business. ([frame 1 @ 00:33](frames/frame_0001.jpg))
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R007: The system records marketing consent as Yes only when the Onboarding Officer has ticked 'Customer has given marketing consent'.
+### R011: The system records marketing consent as Yes only when the Onboarding Officer has ticked 'Customer has given marketing consent'.
 
 - data, priority must, confidence high, screen Customer Details. ([frame 1 @ 00:33](frames/frame_0001.jpg))
 - Why: The checkbox is unticked on the frame and Review & Submit shows 'Marketing consent: No'. The business rule is that the officer ticks it only when the customer has said yes.
@@ -276,12 +319,14 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC010: Given The Onboarding Officer leaves 'Customer has given marketing consent' unticked and saves Customer Details, when The Onboarding Officer reaches Review & Submit, then Marketing consent shows No. ([frame 1 @ 00:33](frames/frame_0001.jpg))
+- AC008: Given The Onboarding Officer is on Customer Details with every mandatory field filled in except Postcode, when The Onboarding Officer presses Save and continue, then The system stays on Customer Details and does not save the details. ([frame 1 @ 00:15](frames/frame_0001.jpg))
+  - *Writing check: info: "and" in the "when" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
+- AC013: Given The Onboarding Officer leaves 'Customer has given marketing consent' unticked and saves Customer Details, when The Onboarding Officer reaches Review & Submit, then Marketing consent shows No. ([frame 1 @ 00:33](frames/frame_0001.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.*
-- AC011: Given The Onboarding Officer ticks 'Customer has given marketing consent' and saves Customer Details, when The Onboarding Officer reaches Review & Submit, then Marketing consent shows Yes. ([frame 1 @ 00:33](frames/frame_0001.jpg))
+- AC014: Given The Onboarding Officer ticks 'Customer has given marketing consent' and saves Customer Details, when The Onboarding Officer reaches Review & Submit, then Marketing consent shows Yes. ([frame 1 @ 00:33](frames/frame_0001.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.*
 
-### R008: As an Onboarding Officer, I need to upload an image of the customer's ID document with its Document type, so that proof of identity is attached to the customer record.
+### R012: As an Onboarding Officer, I need to upload an image of the customer's ID document with its Document type, so that proof of identity is attached to the customer record.
 
 - functional, priority must, confidence high, screen Documents. ([frame 2 @ 00:43](frames/frame_0002.jpg))
 - Why: The Documents screen has a Choose File control, a Document type dropdown and an Upload button.
@@ -290,12 +335,12 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC012: Given The Onboarding Officer is on Documents and has chosen the file passport_elunmere.jpg and Document type Passport, when The Onboarding Officer presses Upload, then The Uploaded documents table shows a row with File passport_elunmere.jpg and Document type Passport. ([frame 2 @ 00:43](frames/frame_0002.jpg))
+- AC015: Given The Onboarding Officer is on Documents and has chosen the file passport_elunmere.jpg and Document type Passport, when The Onboarding Officer presses Upload, then The Uploaded documents table shows a row with File passport_elunmere.jpg and Document type Passport. ([frame 2 @ 00:43](frames/frame_0002.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
-- AC013: Given The Onboarding Officer is on Documents, when The Onboarding Officer opens the Document type dropdown, then The dropdown lists Passport and Driving licence. ([frame 2 @ 00:43](frames/frame_0002.jpg))
+- AC016: Given The Onboarding Officer is on Documents, when The Onboarding Officer opens the Document type dropdown, then The dropdown lists Passport and Driving licence. ([frame 2 @ 00:43](frames/frame_0002.jpg))
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R009: The system accepts an ID document upload only when the file is a PDF, JPG or PNG.
+### R013: The system accepts an ID document upload only when the file is a PDF, JPG or PNG.
 
 - validation, priority unknown, confidence medium, screen Documents. ([frame 2 @ 00:43](frames/frame_0002.jpg))
 - Why: Taken from the hint under the file control ('PDF, JPG or PNG, up to 10 MB'); the expert did not say it.
@@ -304,10 +349,10 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC014: Given The Onboarding Officer has chosen a .docx file as the ID document, when The Onboarding Officer presses Upload, then The system does not add the file to the Uploaded documents table. ([frame 2 @ 00:43](frames/frame_0002.jpg))
-- AC015: Given The Onboarding Officer has chosen a .png file under 10 MB as the ID document, when The Onboarding Officer presses Upload, then The system adds the file to the Uploaded documents table. ([frame 2 @ 00:43](frames/frame_0002.jpg))
+- AC017: Given The Onboarding Officer has chosen a .docx file as the ID document, when The Onboarding Officer presses Upload, then The system does not add the file to the Uploaded documents table. ([frame 2 @ 00:43](frames/frame_0002.jpg))
+- AC018: Given The Onboarding Officer has chosen a .png file under 10 MB as the ID document, when The Onboarding Officer presses Upload, then The system adds the file to the Uploaded documents table. ([frame 2 @ 00:43](frames/frame_0002.jpg))
 
-### R010: The system accepts an ID document upload only when the file is 10 MB or smaller.
+### R014: The system accepts an ID document upload only when the file is 10 MB or smaller.
 
 - validation, priority unknown, confidence medium, screen Documents. ([frame 2 @ 00:43](frames/frame_0002.jpg))
 - Why: Taken from the hint under the file control ('PDF, JPG or PNG, up to 10 MB'); the expert did not say it.
@@ -316,10 +361,10 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC016: Given The Onboarding Officer has chosen a JPG file of 11 MB as the ID document, when The Onboarding Officer presses Upload, then The system does not add the file to the Uploaded documents table. ([frame 2 @ 00:43](frames/frame_0002.jpg))
-- AC017: Given The Onboarding Officer has chosen a JPG file of 10 MB as the ID document, when The Onboarding Officer presses Upload, then The system adds the file to the Uploaded documents table. ([frame 2 @ 00:43](frames/frame_0002.jpg))
+- AC019: Given The Onboarding Officer has chosen a JPG file of 11 MB as the ID document, when The Onboarding Officer presses Upload, then The system does not add the file to the Uploaded documents table. ([frame 2 @ 00:43](frames/frame_0002.jpg))
+- AC020: Given The Onboarding Officer has chosen a JPG file of 10 MB as the ID document, when The Onboarding Officer presses Upload, then The system adds the file to the Uploaded documents table. ([frame 2 @ 00:43](frames/frame_0002.jpg))
 
-### R011: The system shows an uploaded document with status Pending check until the document has been checked.
+### R015: The system shows an uploaded document with status Pending check until the document has been checked.
 
 - workflow, priority must, confidence high, screen Documents. ([frame 2 @ 00:52](frames/frame_0002.jpg))
 - Why: Pending check (amber) is visible in the Uploaded documents table on the frame.
@@ -328,9 +373,9 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC018: Given The Onboarding Officer has just uploaded an ID document, when The Onboarding Officer looks at the Uploaded documents table, then The Status column for that document shows Pending check. ([frame 2 @ 00:52](frames/frame_0002.jpg))
+- AC021: Given The Onboarding Officer has just uploaded an ID document, when The Onboarding Officer looks at the Uploaded documents table, then The Status column for that document shows Pending check. ([frame 2 @ 00:52](frames/frame_0002.jpg))
 
-### R012: The system changes the status of an uploaded document to Verified once the document has been checked.
+### R016: The system changes the status of an uploaded document to Verified once the document has been checked.
 
 - workflow, priority must, confidence medium, screen Documents. ([frame 2 @ 00:52](frames/frame_0002.jpg))
 - Why: Verified (green) is visible in the Uploaded documents table. Who checks the document, and where, is unknown.
@@ -339,9 +384,9 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC019: Given An uploaded document shows Status Pending check, when The document check is completed, then The Status column for that document shows Verified. ([frame 2 @ 00:52](frames/frame_0002.jpg))
+- AC022: Given An uploaded document shows Status Pending check, when The document check is completed, then The Status column for that document shows Verified. ([frame 2 @ 00:52](frames/frame_0002.jpg))
 
-### R013: The Documents screen lists each uploaded document with File, Document type, Uploaded date and time, Uploaded by and Status.
+### R017: The Documents screen lists each uploaded document with File, Document type, Uploaded date and time, Uploaded by and Status.
 
 - data, priority unknown, confidence medium, screen Documents. ([frame 2 @ 00:52](frames/frame_0002.jpg))
 - Why: Column list taken from the Uploaded documents table on the frame; the expert only mentioned the status column.
@@ -350,10 +395,10 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC020: Given At least one document has been uploaded for the customer, when The Onboarding Officer looks at the Uploaded documents table on Documents, then Each row shows a value under File, Document type, Uploaded, Uploaded by and Status. ([frame 2 @ 00:52](frames/frame_0002.jpg))
+- AC023: Given At least one document has been uploaded for the customer, when The Onboarding Officer looks at the Uploaded documents table on Documents, then Each row shows a value under File, Document type, Uploaded, Uploaded by and Status. ([frame 2 @ 00:52](frames/frame_0002.jpg))
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R014: The Review & Submit screen shows a read-only summary of Name, Date of birth, Email address, Phone number, Address, Account type, Marketing consent and ID document with its check status.
+### R018: The Review & Submit screen shows a read-only summary of Name, Date of birth, Email address, Phone number, Address, Account type, Marketing consent and ID document with its check status.
 
 - functional, priority must, confidence high, screen Review & Submit. ([frame 3 @ 01:02](frames/frame_0003.jpg))
 - Why: All eight items are visible on the frame.
@@ -362,11 +407,11 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC021: Given The Onboarding Officer has saved Customer Details for Eloette Lunmere and uploaded a Passport, when The Onboarding Officer presses Continue to review on Documents, then Review & Submit shows Name, Date of birth, Email address, Phone number, Address, Account type, Marketing consent and ID document with the values entered. ([frame 3 @ 01:02](frames/frame_0003.jpg))
+- AC024: Given The Onboarding Officer has saved Customer Details for Eloette Lunmere and uploaded a Passport, when The Onboarding Officer presses Continue to review on Documents, then Review & Submit shows Name, Date of birth, Email address, Phone number, Address, Account type, Marketing consent and ID document with the values entered. ([frame 3 @ 01:02](frames/frame_0003.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
-- AC022: Given The Onboarding Officer is on Review & Submit, when The Onboarding Officer clicks on any summary value, then The value cannot be edited on that screen. ([frame 3 @ 01:02](frames/frame_0003.jpg))
+- AC025: Given The Onboarding Officer is on Review & Submit, when The Onboarding Officer clicks on any summary value, then The value cannot be edited on that screen. ([frame 3 @ 01:02](frames/frame_0003.jpg))
 
-### R015: The system locks the customer record against editing once the Onboarding Officer has pressed Submit for approval.
+### R019: The system locks the customer record against editing once the Onboarding Officer has pressed Submit for approval.
 
 - workflow, priority must, confidence high, screen Review & Submit. ([frame 3 @ 01:09](frames/frame_0003.jpg))
 - Why: Also written on screen: 'After submission the record is locked for editing.'
@@ -374,10 +419,10 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC023: Given The Onboarding Officer has pressed Submit for approval on Review & Submit, when The Onboarding Officer opens that customer's Customer Details, then Every field is read-only and Save and continue is unavailable. ([frame 3 @ 01:09](frames/frame_0003.jpg))
+- AC026: Given The Onboarding Officer has pressed Submit for approval on Review & Submit, when The Onboarding Officer opens that customer's Customer Details, then Every field is read-only and Save and continue is unavailable. ([frame 3 @ 01:09](frames/frame_0003.jpg))
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R016: A Team Lead can send a submitted customer record back to the Onboarding Officer for editing.
+### R020: A Team Lead can send a submitted customer record back to the Onboarding Officer for editing.
 
 - workflow, priority unknown, confidence low, screen Review & Submit. ([frame 3 @ 01:09](frames/frame_0003.jpg))
 - Why: The expert was not sure and no send-back control was seen on any frame. Kept because it is the only stated way to correct a mistake after submission.
@@ -385,10 +430,10 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC024: Given A customer record has been submitted for approval and is locked, when A Team Lead sends the record back, then The Onboarding Officer can edit the record again. ([frame 3 @ 01:09](frames/frame_0003.jpg))
+- AC027: Given A customer record has been submitted for approval and is locked, when A Team Lead sends the record back, then The Onboarding Officer can edit the record again. ([frame 3 @ 01:09](frames/frame_0003.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.*
 
-### R017: The Approval Queue lists every submitted customer as one row with Reference, Customer, Submitted date and time, Submitted by, Status and Assigned to.
+### R021: The Approval Queue lists every submitted customer as one row with Reference, Customer, Submitted date and time, Submitted by, Status and Assigned to.
 
 - functional, priority must, confidence high, screen Approval Queue. ([frame 4 @ 01:17](frames/frame_0004.jpg))
 - Why: Column list taken from the frame. The screen subtitle says oldest first, but the rows on the frame are not in date order, so ordering is left as a question.
@@ -397,10 +442,10 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC025: Given An Onboarding Officer has just submitted a customer for approval, when A user opens the Approval Queue, then The queue shows a row for that customer with Reference, Customer, Submitted, Submitted by, Status Awaiting approval and Assigned to. ([frame 4 @ 01:17](frames/frame_0004.jpg))
+- AC028: Given An Onboarding Officer has just submitted a customer for approval, when A user opens the Approval Queue, then The queue shows a row for that customer with Reference, Customer, Submitted, Submitted by, Status Awaiting approval and Assigned to. ([frame 4 @ 01:17](frames/frame_0004.jpg))
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R018: The system shows the Approve button in the Approval Queue only to users in the Team Lead role.
+### R022: The system shows the Approve button in the Approval Queue only to users in the Team Lead role.
 
 - functional, priority must, confidence high, screen Approval Queue. ([frame 4 @ 01:26](frames/frame_0004.jpg))
 - Why: Also stated in the banner on screen: 'Team leads only. The Approve action is shown to users in the Team Lead role.'
@@ -408,10 +453,10 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC026: Given A user in the Team Lead role is signed in, when The user opens the Approval Queue, then Each row with Status Awaiting approval shows an Approve button. ([frame 4 @ 01:26](frames/frame_0004.jpg))
-- AC027: Given A user in the Onboarding Officer role is signed in, when The user opens the Approval Queue, then No row shows an Approve button. ([frame 4 @ 01:26](frames/frame_0004.jpg))
+- AC029: Given A user in the Team Lead role is signed in, when The user opens the Approval Queue, then Each row with Status Awaiting approval shows an Approve button. ([frame 4 @ 01:26](frames/frame_0004.jpg))
+- AC030: Given A user in the Onboarding Officer role is signed in, when The user opens the Approval Queue, then No row shows an Approve button. ([frame 4 @ 01:26](frames/frame_0004.jpg))
 
-### R019: Users outside the Team Lead role can view the Approval Queue.
+### R023: Users outside the Team Lead role can view the Approval Queue.
 
 - functional, priority must, confidence medium, screen Approval Queue. ([frame 4 @ 01:26](frames/frame_0004.jpg))
 - Why: The banner on screen reads 'Other users can view the queue but cannot approve', and the expert (not a team lead) sees the queue without the Approve button.
@@ -420,9 +465,9 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC028: Given A user in the Onboarding Officer role is signed in, when The user opens the Approval Queue, then The queue rows are displayed with the 'Team leads only' banner at the top. ([frame 4 @ 01:26](frames/frame_0004.jpg))
+- AC031: Given A user in the Onboarding Officer role is signed in, when The user opens the Approval Queue, then The queue rows are displayed with the 'Team leads only' banner at the top. ([frame 4 @ 01:26](frames/frame_0004.jpg))
 
-### R020: When a customer is approved, the system shows a Confirmation screen with Customer reference number, Approved by, Approved on and Welcome email status.
+### R024: When a customer is approved, the system shows a Confirmation screen with Customer reference number, Approved by, Approved on and Welcome email status.
 
 - functional, priority must, confidence high, screen Confirmation. ([frame 5 @ 01:33](frames/frame_0005.jpg))
 - Why: All four items are visible on the frame. The reference number is what the Onboarding Officer gives to the customer.
@@ -431,10 +476,10 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC029: Given A customer row in the Approval Queue has Status Awaiting approval, when A Team Lead presses Approve on that row, then A Confirmation screen shows Customer reference number, Approved by with the Team Lead's name, Approved on with the current date and time, and Welcome email. ([frame 5 @ 01:33](frames/frame_0005.jpg))
+- AC032: Given A customer row in the Approval Queue has Status Awaiting approval, when A Team Lead presses Approve on that row, then A Confirmation screen shows Customer reference number, Approved by with the Team Lead's name, Approved on with the current date and time, and Welcome email. ([frame 5 @ 01:33](frames/frame_0005.jpg))
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R021: The system sends a welcome email to the Email address entered on Customer Details when the customer is approved.
+### R025: The system sends a welcome email to the Email address entered on Customer Details when the customer is approved.
 
 - functional, priority must, confidence medium, screen Confirmation. ([frame 5 @ 01:39](frames/frame_0005.jpg))
 - Why: The Confirmation screen shows 'Welcome email: Sent to eloette.lunmere@example.com'. The trigger being approval is implied by where the status appears; the expert did not say when it is sent.
@@ -443,7 +488,7 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- AC030: Given A customer was saved with Email address eloette.lunmere@example.com, when A Team Lead approves that customer, then A welcome email is sent to eloette.lunmere@example.com and the Confirmation screen shows 'Sent to eloette.lunmere@example.com'. ([frame 5 @ 01:39](frames/frame_0005.jpg))
+- AC033: Given A customer was saved with Email address eloette.lunmere@example.com, when A Team Lead approves that customer, then A welcome email is sent to eloette.lunmere@example.com and the Confirmation screen shows 'Sent to eloette.lunmere@example.com'. ([frame 5 @ 01:39](frames/frame_0005.jpg))
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
 ## Questions for the expert
@@ -453,35 +498,35 @@ Questions that hold up the most requirements come first.
 ### Q005: Are there validation rules on Date of birth (DD/MM/YYYY only, no future dates, minimum age), Email address and Phone number, and what does the officer see when a mandatory field is empty?
 
 - Why it matters: Only the postcode rule was described; the other fields may also reject bad input, and the empty-field behaviour was not shown.
-- Blocks R003, R005
+- Blocks R005, R009
 - Category: validation rule (screen Customer Details). ([frame 1 @ 00:15](frames/frame_0001.jpg))
 - What was said: "First name, last name, date of birth, account type and postcode are mandatory; the rest we fill in when we have it."
 
 ### Q009: What happens when an upload is the wrong file type or over 10 MB, and can an uploaded document be removed or replaced?
 
 - Why it matters: The limit is shown on screen but no error or delete behaviour was seen.
-- Blocks R009, R010
+- Blocks R013, R014
 - Category: edge case (screen Documents). ([frame 2 @ 00:43](frames/frame_0002.jpg))
 - What was said: "We upload a photo of their ID"
 
 ### Q010: Can a record be submitted for approval, and approved, while its ID document is still Pending check? The record on screen was submitted with the ID still pending.
 
 - Why it matters: If verification must come first, both Submit for approval and Approve need a gate on document status.
-- Blocks R015, R018
+- Blocks R019, R022
 - Category: validation rule (screen Review & Submit). ([frame 3 @ 01:02](frames/frame_0003.jpg))
 - What was said: "You read it through, and if it all looks right you press Submit for approval."
 
 ### Q011: How does a submitted record get sent back for editing, who can do it, and does that unlock the record and return it to the officer?
 
 - Why it matters: The expert was unsure and no send-back or reject control was seen; without it a mistake after submission cannot be corrected.
-- Blocks R015, R016
+- Blocks R019, R020
 - Category: missing information (screen Review & Submit). ([frame 3 @ 01:09](frames/frame_0003.jpg))
 - What was said: "You'd have to ask a team lead to send it back, I think."
 
 ### Q013: Can a team lead reject a record from the Approval Queue, and are there statuses other than Awaiting approval and Approved?
 
 - Why it matters: Only an Approve action was seen; the team needs the full set of outcomes and statuses.
-- Blocks R017, R018
+- Blocks R021, R022
 - Category: missing information (screen Approval Queue). ([frame 4 @ 01:17](frames/frame_0004.jpg))
 - What was said: "Every submitted customer sits here with a status"
 
@@ -509,63 +554,63 @@ Questions that hold up the most requirements come first.
 ### Q004: What exactly is the UK postcode validation rule (accepted patterns, spaces, upper/lower case) and what error message is shown when it fails?
 
 - Why it matters: A developer cannot implement 'valid UK format' without the precise rule and the failure behaviour.
-- Blocks R004
+- Blocks R008
 - Category: validation rule (screen Customer Details). ([frame 1 @ 00:25](frames/frame_0001.jpg))
 - What was said: "The postcode has to be a valid UK format, otherwise the system won't let you save."
 
 ### Q007: Who checks uploaded documents and changes the status from Pending check to Verified, and is that done inside this system or elsewhere?
 
 - Why it matters: The verification step is part of the process but the expert could not say who performs it or where.
-- Blocks R012
+- Blocks R016
 - Category: missing information (screen Documents). ([frame 2 @ 00:52](frames/frame_0002.jpg))
 - What was said: "Someone checks them, I'm honestly not sure who, it just changes to verified at some point."
 
-### Q008: What are the full options in the Document type dropdown, and is a proof of address document required as well as the ID document?
+### Q008: Which document types does the system accept for the ID upload: only Passport and Driving licence as the expert named, or others too, such as the Proof of address type seen in the uploaded documents table?
 
-- Why it matters: Passport and Proof of address were seen and driving licence was mentioned; the table lists two documents but the form is labelled 'Upload ID document'.
-- Blocks R008
+- Why it matters: The expert named only two examples, but the uploaded documents table shows a third type, Proof of address; the full accepted list decides what the Document type dropdown must offer and whether a second document is required.
+- Blocks R012
 - Category: data (screen Documents). ([frame 2 @ 00:43](frames/frame_0002.jpg))
 - What was said: "We upload a photo of their ID, usually a passport or a driving licence, and pick the document type from the dropdown."
 
 ### Q012: How is a submitted customer assigned to a team lead, and what does Unassigned mean for who picks it up?
 
 - Why it matters: The assignment rule affects who sees which work; one row on screen is Unassigned.
-- Blocks R017
+- Blocks R021
 - Category: missing information (screen Approval Queue). ([frame 4 @ 01:17](frames/frame_0004.jpg))
 - What was said: "it shows who it's assigned to, though I've never worked out how it picks the person."
 
 ### Q014: Which users can view the Approval Queue, and do they see all officers' submissions or only their own?
 
 - Why it matters: The banner says other users can view but cannot approve; the scope of what they can see is not stated.
-- Blocks R019
+- Blocks R023
 - Category: permissions (screen Approval Queue). ([frame 4 @ 01:26](frames/frame_0004.jpg))
 - What was said: "The Approve button doesn't show for the rest of us, and it says team leads only at the top."
 
 ### Q015: In what order should the Approval Queue list its rows? The screen says oldest first, but the rows on the frame are not in date order (the Approved row dated 08/09/2026 is last).
 
 - Why it matters: The stated order and the shown order disagree; the team needs one rule, for example by status then by submitted date.
-- Blocks R017
+- Blocks R021
 - Category: ambiguity (screen Approval Queue). ([frame 4 @ 01:17](frames/frame_0004.jpg))
 - What was said: "Every submitted customer sits here with a status"
 
 ### Q016: What should happen when the welcome email bounces or no email address was entered: retry, notify the officer, show a failed state on the Confirmation screen?
 
 - Why it matters: Today a bounce goes unnoticed; email is optional on Customer Details, so approvals with no address are possible.
-- Blocks R021
+- Blocks R025
 - Category: integration (screen Confirmation). ([frame 5 @ 01:39](frames/frame_0005.jpg))
 - What was said: "If the email bounces it just sort of sits there, nobody gets told."
 
 ### Q017: How is the customer reference number (format NW-2026-31365) generated, and how does it relate to the Customer ID (format C-625922) shown in search results?
 
 - Why it matters: Two different identifiers were seen; the team needs to know which is the customer's identity and which is the onboarding case.
-- Blocks R020
+- Blocks R024
 - Category: data (screen Confirmation). ([frame 5 @ 01:33](frames/frame_0005.jpg))
 - What was said: "When it's approved, you get the Confirmation screen with a reference number. We give that reference to the customer."
 
 ### Q018: Who sees the Confirmation screen and when: does the Team Lead land on it after pressing Approve, does the Onboarding Officer see it automatically, or must the officer find the record again?
 
 - Why it matters: The approval happens in a different role, possibly later; the officer needs a way to get the reference to the customer. The Approve press itself was not shown, so the screen that follows it is inferred.
-- Blocks R020
+- Blocks R024
 - Category: ambiguity (screen Confirmation). ([frame 5 @ 01:33](frames/frame_0005.jpg))
 - What was said: "When it's approved, you get the Confirmation screen with a reference number."
 
@@ -591,7 +636,14 @@ Questions that hold up the most requirements come first.
 
 What the analysis does not yet cover, so the next conversation with the expert can be aimed at the holes.
 
-12 gaps to close: 12 actions leading nowhere; 2 notes.
+16 gaps to close: 4 requirements without criteria, 12 actions leading nowhere; 2 notes.
+
+**Requirements without criteria**
+
+- R004 The system does not save Customer Details when Last name is empty.: R004 has no acceptance criteria; ask how the expert would know this is done right.
+- R005 The system does not save Customer Details when Date of birth is empty.: R005 has no acceptance criteria; ask how the expert would know this is done right.
+- R006 The system does not save Customer Details when Account type is empty.: R006 has no acceptance criteria; ask how the expert would know this is done right.
+- R007 The system does not save Customer Details when Postcode is empty.: R007 has no acceptance criteria; ask how the expert would know this is done right.
 
 **Actions leading nowhere**
 
@@ -610,7 +662,7 @@ What the analysis does not yet cover, so the next conversation with the expert c
 
 **Low-confidence requirement** (note)
 
-- R016 A Team Lead can send a submitted customer record back to the Onboarding Officer for editing.: R016 was inferred from the screen rather than said by the expert; confirm it with them.
+- R020 A Team Lead can send a submitted customer record back to the Onboarding Officer for editing.: R020 was inferred from the screen rather than said by the expert; confirm it with them.
 
 **Actor never named in a requirement** (note)
 
@@ -654,56 +706,56 @@ Personal data seen: 3 emails, 2 phone numbers, 5 postcodes, 3 dates of birth, 10
 
 | Term | Kind | Where | First seen | Frame | Used in | Definition | Notes |
 |---|---|---|---|---|---|---|---|
-| Customer | role | listed as an actor | 00:07 | 0 | S01, S02, S03, S05, S06, A001, A003, A004, A006, A017, R001, R002, R003, R004, R005, R006, R007, R008, R015, R016, R017, R020, R021, AC001, AC002, AC003, AC004, AC005, AC007, AC009, AC010, AC011, AC020, AC021, AC023, AC024, AC025, AC029, AC030, Q001, Q003, Q006, Q012, Q017, Q020 |  |  |
+| Customer | role | listed as an actor | 00:07 | 0 | S01, S02, S03, S05, S06, A001, A003, A004, A006, A017, R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R019, R020, R021, R024, R025, AC001, AC002, AC003, AC004, AC005, AC006, AC007, AC008, AC010, AC012, AC013, AC014, AC023, AC024, AC026, AC027, AC028, AC032, AC033, Q001, Q003, Q006, Q012, Q017, Q020 |  |  |
 | Document checker (role not identified by the expert) | role | listed as an actor | 00:00 | 0 |  |  |  |
-| Onboarding Officer | role | listed as an actor | 00:00 | 0 | R001, R007, R008, R015, R016, R020, AC001, AC002, AC003, AC004, AC005, AC006, AC007, AC008, AC009, AC010, AC011, AC012, AC013, AC014, AC015, AC016, AC017, AC018, AC020, AC021, AC022, AC023, AC024, AC025, AC027, AC028, Q018, Q019 |  |  |
-| Team Lead | role | listed as an actor | 01:17 | 4 | S05, A016, R016, R018, R019, AC024, AC026, AC028, AC029, AC030, Q012, Q013, Q018 |  |  |
-| Approval Queue | screen | screen S05 | 01:17 | 4 | A015, R017, R018, R019, AC025, AC026, AC027, AC028, AC029, Q013, Q014, Q015, Q019 |  |  |
-| Confirmation | screen | screen S06 | 01:33 | 5 | A018, R020, R021, AC029, AC030, Q016, Q018, Q020 |  |  |
-| Customer Details | screen | screen S02 | 00:15 | 1 | R003, R004, R005, R006, R021, AC004, AC005, AC007, AC009, AC010, AC011, AC021, AC023 |  |  |
-| Customer Search | screen | screen S01 | 00:00 | 0 | R002, R006, AC001, AC003, Q001 |  |  |
-| Documents | screen | screen S03 | 00:43 | 2 | A011, R008, R011, R012, R013, AC004, AC008, AC012, AC013, AC014, AC015, AC016, AC017, AC018, AC020, AC021, Q007 |  |  |
-| Review & Submit | screen | screen S04 | 01:02 | 3 | R007, R014, AC010, AC011, AC021, AC022, AC023 |  |  |
-| Account type | field | Customer Search, Customer Details and Review & Submit screens | 00:00 | 0 | A005, R002, R003, R006, R014, AC003, AC004, AC009, AC021 |  | Info: the field "Account type" appears on 3 screens (Customer Search, Customer Details, Review & Submit), so check it means the same thing on each. |
-| Address | field | Review & Submit screen | 01:02 | 3 | S02, R005, R014, R021, AC008, AC021, AC030, Q005, Q008, Q016 |  |  |
-| Address line 1 | field | Customer Details screen | 00:15 | 1 | R005, AC008 |  | "Address line 1" (field, Customer Details screen) and "Address line 2" (field, Customer Details screen) are one or two letters apart, so pick one spelling and use it everywhere. |
-| Address line 2 | field | Customer Details screen | 00:15 | 1 | R005, AC008 |  | "Address line 1" (field, Customer Details screen) and "Address line 2" (field, Customer Details screen) are one or two letters apart, so pick one spelling and use it everywhere. |
-| Approved by | field | Confirmation screen | 01:33 | 5 | R020, AC029 |  | "Approved by" (field, Confirmation screen) and "Approved on" (field, Confirmation screen) are one or two letters apart, so pick one spelling and use it everywhere. |
-| Approved on | field | Confirmation screen | 01:33 | 5 | R020, AC029 |  | "Approved by" (field, Confirmation screen) and "Approved on" (field, Confirmation screen) are one or two letters apart, so pick one spelling and use it everywhere. |
-| Assigned to | field | Approval Queue screen | 01:17 | 4 | R017, AC025, Q012 |  |  |
-| Customer | field | Approval Queue screen | 01:17 | 4 | S01, S02, S03, S05, S06, A001, A003, A004, A006, A017, R001, R002, R003, R004, R005, R006, R007, R008, R015, R016, R017, R020, R021, AC001, AC002, AC003, AC004, AC005, AC007, AC009, AC010, AC011, AC020, AC021, AC023, AC024, AC025, AC029, AC030, Q001, Q003, Q006, Q012, Q017, Q020 |  | "Customer" (field, Approval Queue screen) and "Customer ID" (field, Customer Search screen) are one or two letters apart, so pick one spelling and use it everywhere. |
-| Customer has given marketing consent | field | Customer Details screen | 00:15 | 1 | A006, R007, AC010, AC011 |  |  |
+| Onboarding Officer | role | listed as an actor | 00:00 | 0 | R001, R011, R012, R019, R020, R024, AC001, AC002, AC003, AC004, AC005, AC006, AC007, AC008, AC009, AC010, AC011, AC012, AC013, AC014, AC015, AC016, AC017, AC018, AC019, AC020, AC021, AC023, AC024, AC025, AC026, AC027, AC028, AC030, AC031, Q018, Q019 |  |  |
+| Team Lead | role | listed as an actor | 01:17 | 4 | S05, A016, R020, R022, R023, AC027, AC029, AC031, AC032, AC033, Q012, Q013, Q018 |  |  |
+| Approval Queue | screen | screen S05 | 01:17 | 4 | A015, R021, R022, R023, AC028, AC029, AC030, AC031, AC032, Q013, Q014, Q015, Q019 |  |  |
+| Confirmation | screen | screen S06 | 01:33 | 5 | A018, R024, R025, AC032, AC033, Q016, Q018, Q020 |  |  |
+| Customer Details | screen | screen S02 | 00:15 | 1 | R003, R004, R005, R006, R007, R008, R009, R010, R025, AC004, AC005, AC006, AC007, AC008, AC010, AC012, AC013, AC014, AC024, AC026 |  |  |
+| Customer Search | screen | screen S01 | 00:00 | 0 | R002, R010, AC001, AC003, Q001 |  |  |
+| Documents | screen | screen S03 | 00:43 | 2 | A011, R012, R015, R016, R017, AC011, AC015, AC016, AC017, AC018, AC019, AC020, AC021, AC023, AC024, Q007, Q008 |  |  |
+| Review & Submit | screen | screen S04 | 01:02 | 3 | R011, R018, AC013, AC014, AC024, AC025, AC026 |  |  |
+| Account type | field | Customer Search, Customer Details and Review & Submit screens | 00:00 | 0 | A005, R002, R003, R004, R005, R006, R007, R010, R018, AC003, AC007, AC012, AC024 |  | Info: the field "Account type" appears on 3 screens (Customer Search, Customer Details, Review & Submit), so check it means the same thing on each. |
+| Address | field | Review & Submit screen | 01:02 | 3 | S02, R009, R018, R025, AC011, AC024, AC033, Q005, Q008, Q016 |  |  |
+| Address line 1 | field | Customer Details screen | 00:15 | 1 | R009, AC011 |  | "Address line 1" (field, Customer Details screen) and "Address line 2" (field, Customer Details screen) are one or two letters apart, so pick one spelling and use it everywhere. |
+| Address line 2 | field | Customer Details screen | 00:15 | 1 | R009, AC011 |  | "Address line 1" (field, Customer Details screen) and "Address line 2" (field, Customer Details screen) are one or two letters apart, so pick one spelling and use it everywhere. |
+| Approved by | field | Confirmation screen | 01:33 | 5 | R024, AC032 |  | "Approved by" (field, Confirmation screen) and "Approved on" (field, Confirmation screen) are one or two letters apart, so pick one spelling and use it everywhere. |
+| Approved on | field | Confirmation screen | 01:33 | 5 | R024, AC032 |  | "Approved by" (field, Confirmation screen) and "Approved on" (field, Confirmation screen) are one or two letters apart, so pick one spelling and use it everywhere. |
+| Assigned to | field | Approval Queue screen | 01:17 | 4 | R021, AC028, Q012 |  |  |
+| Customer | field | Approval Queue screen | 01:17 | 4 | S01, S02, S03, S05, S06, A001, A003, A004, A006, A017, R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R019, R020, R021, R024, R025, AC001, AC002, AC003, AC004, AC005, AC006, AC007, AC008, AC010, AC012, AC013, AC014, AC023, AC024, AC026, AC027, AC028, AC032, AC033, Q001, Q003, Q006, Q012, Q017, Q020 |  | "Customer" (field, Approval Queue screen) and "Customer ID" (field, Customer Search screen) are one or two letters apart, so pick one spelling and use it everywhere. |
+| Customer has given marketing consent | field | Customer Details screen | 00:15 | 1 | A006, R011, AC013, AC014 |  |  |
 | Customer ID | field | Customer Search screen | 00:00 | 0 | R002, AC003, Q017 |  | "Customer" (field, Approval Queue screen) and "Customer ID" (field, Customer Search screen) are one or two letters apart, so pick one spelling and use it everywhere. |
-| Customer reference number | field | Confirmation screen | 01:33 | 5 | S06, R020, AC029, Q017 |  |  |
-| Date of birth | field | Customer Search, Customer Details and Review & Submit screens | 00:00 | 0 | R002, R003, R014, AC003, AC004, AC005, AC021, Q005 |  | Info: the field "Date of birth" appears on 3 screens (Customer Search, Customer Details, Review & Submit), so check it means the same thing on each. |
-| Document type | field | Documents screen | 00:43 | 2 | A010, R008, R013, AC012, AC013, AC020, Q008 |  |  |
-| Email address | field | Customer Details and Review & Submit screens | 00:15 | 1 | R005, R014, R021, AC008, AC021, AC030, Q005, Q016 |  | Info: the field "Email address" appears on 2 screens (Customer Details, Review & Submit), so check it means the same thing on each. |
-| File | field | Documents screen | 00:43 | 2 | A009, R008, R009, R010, R013, AC001, AC002, AC012, AC014, AC015, AC016, AC017, AC020, Q009 |  |  |
-| First name | field | Customer Details screen | 00:15 | 1 | R003, AC004 |  |  |
-| ID document | field | Documents and Review & Submit screens | 00:43 | 2 | A009, R008, R009, R010, R014, AC014, AC015, AC016, AC017, AC018, AC021, Q008, Q010 |  | Info: the field "ID document" appears on 2 screens (Documents, Review & Submit), so check it means the same thing on each. |
-| Last name | field | Customer Details screen | 00:15 | 1 | R003, AC004 |  |  |
-| Marketing consent | field | Review & Submit screen | 01:02 | 3 | S02, A006, R007, R014, AC010, AC011, AC021 |  |  |
-| Name | field | Customer Search and Review & Submit screens | 00:00 | 0 | R002, R003, R005, R014, AC003, AC004, AC021, AC029 |  | Info: the field "Name" appears on 2 screens (Customer Search, Review & Submit), so check it means the same thing on each. |
-| Phone number | field | Customer Details and Review & Submit screens | 00:15 | 1 | R005, R014, AC008, AC021, Q005 |  | Info: the field "Phone number" appears on 2 screens (Customer Details, Review & Submit), so check it means the same thing on each. |
-| Postcode | field | Customer Search and Customer Details screens | 00:00 | 0 | S01, A001, R001, R002, R003, R004, AC001, AC003, AC004, AC006, AC007, Q001, Q002, Q004 |  | Info: the field "Postcode" appears on 2 screens (Customer Search, Customer Details), so check it means the same thing on each. |
-| Reference | field | Approval Queue screen | 01:17 | 4 | S06, R017, R020, AC025, AC029, Q017 |  |  |
-| Status | field | Customer Search, Documents and Approval Queue screens | 00:00 | 0 | S03, S05, S06, A011, A016, R002, R011, R012, R013, R014, R017, R020, R021, AC003, AC018, AC019, AC020, AC025, AC026, AC029, Q003, Q007, Q013 |  | Info: the field "Status" appears on 3 screens (Customer Search, Documents, Approval Queue), so check it means the same thing on each. |
-| Submitted | field | Approval Queue screen | 01:17 | 4 | S05, R016, R017, AC024, AC025, Q010, Q011, Q012 |  | "Submitted" (field, Approval Queue screen) and "Submitted by" (field, Approval Queue screen) are one or two letters apart, so pick one spelling and use it everywhere. |
-| Submitted by | field | Approval Queue screen | 01:17 | 4 | R017, AC025 |  | "Submitted" (field, Approval Queue screen) and "Submitted by" (field, Approval Queue screen) are one or two letters apart, so pick one spelling and use it everywhere. |
+| Customer reference number | field | Confirmation screen | 01:33 | 5 | S06, R024, AC032, Q017 |  |  |
+| Date of birth | field | Customer Search, Customer Details and Review & Submit screens | 00:00 | 0 | R002, R003, R004, R005, R006, R007, R018, AC003, AC006, AC024, Q005 |  | Info: the field "Date of birth" appears on 3 screens (Customer Search, Customer Details, Review & Submit), so check it means the same thing on each. |
+| Document type | field | Documents screen | 00:43 | 2 | A010, R012, R017, AC015, AC016, AC023, Q008 |  |  |
+| Email address | field | Customer Details and Review & Submit screens | 00:15 | 1 | R009, R018, R025, AC011, AC024, AC033, Q005, Q016 |  | Info: the field "Email address" appears on 2 screens (Customer Details, Review & Submit), so check it means the same thing on each. |
+| File | field | Documents screen | 00:43 | 2 | A009, R012, R013, R014, R017, AC001, AC002, AC015, AC017, AC018, AC019, AC020, AC023, Q009 |  |  |
+| First name | field | Customer Details screen | 00:15 | 1 | R003, R004, R005, R006, R007, AC004 |  |  |
+| ID document | field | Documents and Review & Submit screens | 00:43 | 2 | A009, R012, R013, R014, R018, AC017, AC018, AC019, AC020, AC021, AC024, Q010 |  | Info: the field "ID document" appears on 2 screens (Documents, Review & Submit), so check it means the same thing on each. |
+| Last name | field | Customer Details screen | 00:15 | 1 | R003, R004, R005, R006, R007, AC005 |  |  |
+| Marketing consent | field | Review & Submit screen | 01:02 | 3 | S02, A006, R011, R018, AC013, AC014, AC024 |  |  |
+| Name | field | Customer Search and Review & Submit screens | 00:00 | 0 | R002, R003, R004, R005, R006, R007, R009, R018, AC003, AC004, AC005, AC024, AC032 |  | Info: the field "Name" appears on 2 screens (Customer Search, Review & Submit), so check it means the same thing on each. |
+| Phone number | field | Customer Details and Review & Submit screens | 00:15 | 1 | R009, R018, AC011, AC024, Q005 |  | Info: the field "Phone number" appears on 2 screens (Customer Details, Review & Submit), so check it means the same thing on each. |
+| Postcode | field | Customer Search and Customer Details screens | 00:00 | 0 | S01, A001, R001, R002, R003, R004, R005, R006, R007, R008, AC001, AC003, AC008, AC009, AC010, Q001, Q002, Q004 |  | Info: the field "Postcode" appears on 2 screens (Customer Search, Customer Details), so check it means the same thing on each. |
+| Reference | field | Approval Queue screen | 01:17 | 4 | S06, R021, R024, AC028, AC032, Q017 |  |  |
+| Status | field | Customer Search, Documents and Approval Queue screens | 00:00 | 0 | S03, S05, S06, A011, A016, R002, R015, R016, R017, R018, R021, R024, R025, AC003, AC021, AC022, AC023, AC028, AC029, AC032, Q003, Q007, Q013 |  | Info: the field "Status" appears on 3 screens (Customer Search, Documents, Approval Queue), so check it means the same thing on each. |
+| Submitted | field | Approval Queue screen | 01:17 | 4 | S05, R020, R021, AC027, AC028, Q010, Q011, Q012 |  | "Submitted" (field, Approval Queue screen) and "Submitted by" (field, Approval Queue screen) are one or two letters apart, so pick one spelling and use it everywhere. |
+| Submitted by | field | Approval Queue screen | 01:17 | 4 | R021, AC028 |  | "Submitted" (field, Approval Queue screen) and "Submitted by" (field, Approval Queue screen) are one or two letters apart, so pick one spelling and use it everywhere. |
 | Surname | field | Customer Search screen | 00:00 | 0 | S01, A001, R001, AC001, AC002, Q001, Q002 |  |  |
-| Town / City | field | Customer Details screen | 00:15 | 1 | R005, AC008 |  |  |
-| Uploaded | field | Documents screen | 00:43 | 2 | S03, A011, R011, R012, R013, AC012, AC014, AC015, AC016, AC017, AC018, AC019, AC020, AC021, Q007, Q009 |  | "Uploaded" (field, Documents screen) and "Uploaded by" (field, Documents screen) are one or two letters apart, so pick one spelling and use it everywhere. |
-| Uploaded by | field | Documents screen | 00:43 | 2 | R013, AC020 |  | "Uploaded" (field, Documents screen) and "Uploaded by" (field, Documents screen) are one or two letters apart, so pick one spelling and use it everywhere. |
-| Welcome email | field | Confirmation screen | 01:33 | 5 | S06, R020, R021, AC029, AC030, Q016 |  |  |
+| Town / City | field | Customer Details screen | 00:15 | 1 | R009, AC011 |  |  |
+| Uploaded | field | Documents screen | 00:43 | 2 | S03, A011, R015, R016, R017, AC015, AC017, AC018, AC019, AC020, AC021, AC022, AC023, AC024, Q007, Q008, Q009 |  | "Uploaded" (field, Documents screen) and "Uploaded by" (field, Documents screen) are one or two letters apart, so pick one spelling and use it everywhere. |
+| Uploaded by | field | Documents screen | 00:43 | 2 | R017, AC023 |  | "Uploaded" (field, Documents screen) and "Uploaded by" (field, Documents screen) are one or two letters apart, so pick one spelling and use it everywhere. |
+| Welcome email | field | Confirmation screen | 01:33 | 5 | S06, R024, R025, AC032, AC033, Q016 |  |  |
 | Account type (Personal or Business) | action | menu on Customer Details screen | 00:15 | 1 | A005 |  |  |
 | Approve on a row with status Awaiting approval (button only shown | action | button on Approval Queue screen | 01:17 | 4 | A016 |  |  |
-| Back | action | button on Customer Details, Documents and Review & Submit screens | 00:15 | 1 | A007, A012, A014, R016, AC024, Q006, Q011 |  |  |
-| Choose File | action | button on Documents screen | 00:43 | 2 | A009, R008 |  |  |
+| Back | action | button on Customer Details, Documents and Review & Submit screens | 00:15 | 1 | A007, A012, A014, R020, AC027, Q006, Q011 |  |  |
+| Choose File | action | button on Documents screen | 00:43 | 2 | A009, R012 |  |  |
 | Clear | action | button on Customer Search screen | 00:00 | 0 | A002 |  |  |
-| Continue | action | button on Documents screen | 00:43 | 2 | A008, A013, AC004, AC005, AC006, AC007, AC008, AC021, AC023, Q006 |  |  |
+| Continue | action | button on Documents screen | 00:43 | 2 | A008, A013, AC004, AC005, AC006, AC007, AC008, AC009, AC010, AC011, AC024, AC026, Q006 |  |  |
 | Create new customer when the customer is not found | action | button on Customer Search screen | 00:00 | 0 | A004 |  |  |
-| Customer has given marketing consent | action | other on Customer Details screen | 00:15 | 1 | A006, R007, AC010, AC011 |  |  |
-| Document type | action | menu on Documents screen | 00:43 | 2 | A010, R008, R013, AC012, AC013, AC020, Q008 |  |  |
+| Customer has given marketing consent | action | other on Customer Details screen | 00:15 | 1 | A006, R011, AC013, AC014 |  |  |
+| Document type | action | menu on Documents screen | 00:43 | 2 | A010, R012, R017, AC015, AC016, AC023 |  |  |
 | Open on a result row | action | button on Customer Search screen | 00:00 | 0 | A003 |  |  |
 | Print confirmation (not shown in the recording) | action | button on Confirmation screen | 01:33 | 5 | A018 |  |  |
 | Save and continue after filling in the details | action | button on Customer Details screen | 00:15 | 1 | A008 |  |  |
@@ -712,11 +764,11 @@ Personal data seen: 3 emails, 2 phone numbers, 5 postcodes, 3 dates of birth, 10
 | Submit for approval; the record is locked for editing (the next screen shown in the recording was the Approval Queue, but the submit itself was not shown | action | button on Review & Submit screen | 01:02 | 3 | A015 |  |  |
 | Upload; the document appears in the Uploaded documents table with status Pending check | action | button on Documents screen | 00:43 | 2 | A011 |  |  |
 | Active | status value | value of the "Status" field on Customer Search screen | 00:00 | 0 |  |  |  |
-| Approved | status value | in R020 | 01:33 | 5 | S06, R020, R021, AC029, Q010, Q013, Q015 |  |  |
-| Awaiting approval | status value | value of the "Status" field on Approval Queue screen | 01:17 | 4 | A016, AC025, AC026, AC029, Q013 |  |  |
-| Pending check | status value | value of the "Status" field on Documents screen | 00:43 | 2 | A011, R011, AC018, AC019, Q007, Q010 |  |  |
-| Submitted | status value | in R017 | 01:17 | 4 | S05, R016, R017, AC024, AC025, Q010, Q011, Q012 |  |  |
-| Verified | status value | in R012 | 00:52 | 2 | R012, AC019, Q007 |  |  |
+| Approved | status value | in R024 | 01:33 | 5 | S06, R024, R025, AC032, Q010, Q013, Q015 |  |  |
+| Awaiting approval | status value | value of the "Status" field on Approval Queue screen | 01:17 | 4 | A016, AC028, AC029, AC032, Q013 |  |  |
+| Pending check | status value | value of the "Status" field on Documents screen | 00:43 | 2 | A011, R015, AC021, AC022, Q007, Q010 |  |  |
+| Submitted | status value | in R021 | 01:17 | 4 | S05, R020, R021, AC027, AC028, Q010, Q011, Q012 |  |  |
+| Verified | status value | in R016 | 00:52 | 2 | R016, AC022, Q007 |  |  |
 
 
 Naming to check:

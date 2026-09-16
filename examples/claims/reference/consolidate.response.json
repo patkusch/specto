@@ -1,6 +1,6 @@
 {
  "title": "Meridian Complaints: working a complaint from inbox to final response letter",
- "summary": "Meridian Complaints is the tool the complaints team uses to log and work every customer complaint. A complaint handler picks a complaint from the Inbox, investigates it on the Complaint Detail screen and writes notes as they go. When the investigation is done the handler records a decision to uphold, partially uphold or reject the complaint, with a reason and a written summary. For an upheld or partially upheld complaint the handler works out the refund and interest on the Redress screen, with a team lead as second approver over £500. The handler then sends the final response letter from Letter Preview, and the team lead watches the team's workload and SLA position on the Dashboard.",
+ "summary": "Meridian Complaints is the tool the complaints team uses to log and work every customer complaint. A complaint handler picks a complaint from the Inbox, investigates it on the Complaint Detail screen and writes notes as they go. When the investigation is done the handler records a decision to uphold, partially uphold or reject the complaint, with a reason and a written summary. For an upheld or partially upheld complaint the handler works out the refund and interest on the Redress screen, with a team lead as second approver over \u00a3500. The handler then sends the final response letter from Letter Preview, and the team lead watches the team's workload and SLA position on the Dashboard.",
  "actors": [
   "Complaint handler (grade 2 and above)",
   "Trainee complaint handler (below grade 2)",
@@ -250,7 +250,7 @@
    "label": "Policy",
    "field_type": "read-only",
    "required": null,
-   "example_value": "POL-766800 · Pet insurance",
+   "example_value": "POL-766800 \u00b7 Pet insurance",
    "source": "seen on screen",
    "timestamp": 38.0,
    "keyframe_index": 1,
@@ -346,7 +346,7 @@
    "label": "Timeline",
    "field_type": "read-only",
    "required": null,
-   "example_value": "01/08/2026 Complaint received — Logged by Mabo Grawell from a letter",
+   "example_value": "01/08/2026 Complaint received \u2014 Logged by Mabo Grawell from a letter",
    "source": "both",
    "timestamp": 38.0,
    "keyframe_index": 1,
@@ -358,7 +358,7 @@
    "label": "Notes",
    "field_type": "read-only",
    "required": null,
-   "example_value": "Vibo Walridge · 01/07/2026 — Read the claim file. The claim sat unallocated for three weeks before anyone picked it up.",
+   "example_value": "Vibo Walridge \u00b7 01/07/2026 \u2014 Read the claim file. The claim sat unallocated for three weeks before anyone picked it up.",
    "source": "both",
    "timestamp": 38.0,
    "keyframe_index": 1,
@@ -415,7 +415,7 @@
   {
    "id": "F023",
    "screen_id": "S04",
-   "label": "Refund amount (£)",
+   "label": "Refund amount (\u00a3)",
    "field_type": "number",
    "required": true,
    "example_value": "750.00",
@@ -466,11 +466,11 @@
    "label": "Amount",
    "field_type": "table column",
    "required": null,
-   "example_value": "£14.79",
+   "example_value": "\u00a314.79",
    "source": "seen on screen",
    "timestamp": 101.0,
    "keyframe_index": 3,
-   "notes": "Calculation table amounts: Refund £750.00, Interest £14.79, Total redress £764.79. 750.00 × 8% × 90/365 = 14.79, which matches simple interest on a 365-day year."
+   "notes": "Calculation table amounts: Refund \u00a3750.00, Interest \u00a314.79, Total redress \u00a3764.79. 750.00 \u00d7 8% \u00d7 90/365 = 14.79, which matches simple interest on a 365-day year."
   },
   {
    "id": "F028",
@@ -478,7 +478,7 @@
    "label": "Total redress",
    "field_type": "read-only",
    "required": null,
-   "example_value": "£764.79",
+   "example_value": "\u00a3764.79",
    "source": "both",
    "timestamp": 101.0,
    "keyframe_index": 3,
@@ -586,7 +586,7 @@
    "label": "Redress amounts",
    "field_type": "read-only",
    "required": null,
-   "example_value": "£764.79, made up of a refund of £750.00 and interest of £14.79",
+   "example_value": "\u00a3764.79, made up of a refund of \u00a3750.00 and interest of \u00a314.79",
    "source": "both",
    "timestamp": 125.0,
    "keyframe_index": 4,
@@ -747,7 +747,7 @@
   {
    "id": "A011",
    "screen_id": "S04",
-   "description": "Presses Approve redress (over £500 this raises a task for the team lead as second approver)",
+   "description": "Presses Approve redress (over \u00a3500 this raises a task for the team lead as second approver)",
    "control": "button",
    "leads_to_screen_id": "S05",
    "timestamp": 101.0,
@@ -833,7 +833,7 @@
   {
    "order": 7,
    "screen_id": "S04",
-   "description": "If the redress is over £500 the system raises a task for the team lead to give second approval.",
+   "description": "If the redress is over \u00a3500 the system raises a task for the team lead to give second approval.",
    "actor": "Team lead",
    "timestamp": 101.0,
    "keyframe_index": 3
@@ -979,7 +979,7 @@
   {
    "id": "R011",
    "statement": "The Complaint Detail shows the customer's name, policy, phone, email, address, received date with channel, category, status and owner.",
-   "rationale": "Policy, received channel, status and owner were seen on the frame but not named by the expert. Policy shows number and product together (POL-766800 · Pet insurance).",
+   "rationale": "Policy, received channel, status and owner were seen on the frame but not named by the expert. Policy shows number and product together (POL-766800 \u00b7 Pet insurance).",
    "source_quote": "Top left is the customer and their contact details, and on the right is the timeline, every event in order: received, acknowledged, assigned, and so on.",
    "timestamp": 38.0,
    "keyframe_index": 1,
@@ -1015,7 +1015,7 @@
   {
    "id": "R014",
    "statement": "The system stamps each saved note with the name of the handler who added it and the date it was added.",
-   "rationale": "Notes seen on the frame show \"Vibo Walridge · 01/07/2026\" above the note text.",
+   "rationale": "Notes seen on the frame show \"Vibo Walridge \u00b7 01/07/2026\" above the note text.",
    "source_quote": "You type in the box and press Add note, and it stamps your name and the date on it.",
    "timestamp": 51.0,
    "keyframe_index": 1,
@@ -1075,7 +1075,7 @@
   {
    "id": "R019",
    "statement": "The system sends a standard acknowledgement letter within 4 working days of receiving a complaint.",
-   "rationale": "Seen only on the timeline: \"Acknowledgement sent — Standard acknowledgement letter, 4 working days\". The expert did not describe acknowledgement; whether the system or a person sends it is an open question.",
+   "rationale": "Seen only on the timeline: \"Acknowledgement sent \u2014 Standard acknowledgement letter, 4 working days\". The expert did not describe acknowledgement; whether the system or a person sends it is an open question.",
    "source_quote": "on the right is the timeline, every event in order: received, acknowledged, assigned, and so on.",
    "timestamp": 38.0,
    "keyframe_index": 1,
@@ -1087,7 +1087,7 @@
   {
    "id": "R020",
    "statement": "When a complaint is logged, the system assigns it to a handler from the queue for its category.",
-   "rationale": "Seen only on the timeline: \"Assigned to Vibo Walridge — Auto-assigned from the Delayed claim queue\". The expert did not describe assignment, and the frame shows Owner as Mabo Grawell, so the relationship between Owner and Assigned to is an open question.",
+   "rationale": "Seen only on the timeline: \"Assigned to Vibo Walridge \u2014 Auto-assigned from the Delayed claim queue\". The expert did not describe assignment, and the frame shows Owner as Mabo Grawell, so the relationship between Owner and Assigned to is an open question.",
    "source_quote": "on the right is the timeline, every event in order: received, acknowledged, assigned, and so on.",
    "timestamp": 38.0,
    "keyframe_index": 1,
@@ -1206,7 +1206,7 @@
   },
   {
    "id": "R030",
-   "statement": "The Redress screen requires a Refund amount in pounds and a Days out of pocket count before it calculates redress.",
+   "statement": "The Redress screen requires a Refund amount in pounds before it calculates redress.",
    "rationale": "Both fields are marked with a red asterisk. Values seen: 750.00 and 90.",
    "source_quote": "You put in the refund amount and the number of days the customer was out of pocket, and it works out the interest and the total in the little table.",
    "timestamp": 100.0,
@@ -1218,8 +1218,20 @@
   },
   {
    "id": "R031",
+   "statement": "The Redress screen requires a Days out of pocket count before it calculates redress.",
+   "rationale": "Both fields are marked with a red asterisk. Values seen: 750.00 and 90.",
+   "source_quote": "You put in the refund amount and the number of days the customer was out of pocket, and it works out the interest and the total in the little table.",
+   "timestamp": 100.0,
+   "keyframe_index": 3,
+   "screen_id": "S04",
+   "kind": "validation",
+   "priority": "must",
+   "confidence": "high"
+  },
+  {
+   "id": "R032",
    "statement": "The system calculates the interest and the Total redress from the Refund amount and the Days out of pocket and shows them in the Calculation table.",
-   "rationale": "Calculation table rows seen: Refund £750.00; Interest (8% for 90 days) £14.79; Total redress £764.79. The handler presses Recalculate to fill the table.",
+   "rationale": "Calculation table rows seen: Refund \u00a3750.00; Interest (8% for 90 days) \u00a314.79; Total redress \u00a3764.79. The handler presses Recalculate to fill the table.",
    "source_quote": "You put in the refund amount and the number of days the customer was out of pocket, and it works out the interest and the total in the little table.",
    "timestamp": 100.0,
    "keyframe_index": 3,
@@ -1229,7 +1241,7 @@
    "confidence": "high"
   },
   {
-   "id": "R032",
+   "id": "R033",
    "statement": "The system takes the interest rate for redress from the Finance rate table and shows it on the Redress screen as read-only.",
    "rationale": "Field on the frame: Interest rate \"8.00% per year\", greyed out, help text \"From the Finance rate table. Not editable here.\" Where the table lives is an open question.",
    "source_quote": "The interest rate comes from somewhere in finance, I just use whatever it shows.",
@@ -1241,9 +1253,9 @@
    "confidence": "medium"
   },
   {
-   "id": "R033",
-   "statement": "The system calculates interest as simple interest: Refund amount × annual interest rate × Days out of pocket ÷ 365, rounded to the nearest penny.",
-   "rationale": "Banner on the frame: \"Interest is simple interest at the Finance rate table figure, calculated from the number of days the customer was out of pocket.\" The figures seen (750.00 × 8% × 90 ÷ 365 = 14.79) fit a 365-day year; rounding and leap years were not stated.",
+   "id": "R034",
+   "statement": "The system calculates interest as simple interest: Refund amount \u00d7 annual interest rate \u00d7 Days out of pocket \u00f7 365, rounded to the nearest penny.",
+   "rationale": "Banner on the frame: \"Interest is simple interest at the Finance rate table figure, calculated from the number of days the customer was out of pocket.\" The figures seen (750.00 \u00d7 8% \u00d7 90 \u00f7 365 = 14.79) fit a 365-day year; rounding and leap years were not stated.",
    "source_quote": "it works out the interest and the total in the little table.",
    "timestamp": 100.0,
    "keyframe_index": 3,
@@ -1253,9 +1265,9 @@
    "confidence": "medium"
   },
   {
-   "id": "R034",
+   "id": "R035",
    "statement": "The system shows Total redress as the Refund amount plus the calculated interest.",
-   "rationale": "Bold total row on the frame: £764.79 = £750.00 + £14.79.",
+   "rationale": "Bold total row on the frame: \u00a3764.79 = \u00a3750.00 + \u00a314.79.",
    "source_quote": "it works out the interest and the total in the little table.",
    "timestamp": 100.0,
    "keyframe_index": 3,
@@ -1265,7 +1277,7 @@
    "confidence": "high"
   },
   {
-   "id": "R035",
+   "id": "R036",
    "statement": "When the handler presses Approve redress, the system records the Total redress as approved on the complaint.",
    "rationale": null,
    "source_quote": "Then you press Approve redress.",
@@ -1277,9 +1289,9 @@
    "confidence": "high"
   },
   {
-   "id": "R036",
-   "statement": "When the redress is more than £500, the system requires a second approval from the team lead before the redress is approved.",
-   "rationale": "On the frame: \"Redress over £500 needs a second approver (team lead).\" Whether the threshold applies to the total or the refund, and what happens while approval is pending, are open questions.",
+   "id": "R037",
+   "statement": "When the redress is more than \u00a3500, the system requires a second approval from the team lead before the redress is approved.",
+   "rationale": "On the frame: \"Redress over \u00a3500 needs a second approver (team lead).\" Whether the threshold applies to the total or the refund, and what happens while approval is pending, are open questions.",
    "source_quote": "Anything over five hundred pounds needs a second approver, and that pops up as a task for the team lead.",
    "timestamp": 112.0,
    "keyframe_index": 3,
@@ -1289,7 +1301,7 @@
    "confidence": "high"
   },
   {
-   "id": "R037",
+   "id": "R038",
    "statement": "When redress needs a second approval, the system creates a task for the team lead to approve it.",
    "rationale": null,
    "source_quote": "Anything over five hundred pounds needs a second approver, and that pops up as a task for the team lead.",
@@ -1301,7 +1313,7 @@
    "confidence": "high"
   },
   {
-   "id": "R038",
+   "id": "R039",
    "statement": "The system builds the final response letter from a template by merging in the customer's name and address, the complaint reference, policy, product, received date, decision, summary of findings, redress amounts and handler name from the complaint, decision and redress records.",
    "rationale": "Merge fields seen on the frame: letter date, customer name and address (first name repeated in 'Dear Vinel,'), Our reference, policy, product, received date, decision, summary of findings, total redress with refund and interest, and handler name in the sign-off.",
    "source_quote": "It's a template with the customer's name, the reference, the decision and the redress amount merged in from the earlier screens.",
@@ -1313,7 +1325,7 @@
    "confidence": "high"
   },
   {
-   "id": "R039",
+   "id": "R040",
    "statement": "The Letter Preview highlights every merged field in the letter.",
    "rationale": "Seen on the frame: banner \"Merge fields are highlighted\" and highlighted values in the letter. The expert did not mention the highlighting.",
    "source_quote": "It's a template with the customer's name, the reference, the decision and the redress amount merged in from the earlier screens.",
@@ -1325,7 +1337,7 @@
    "confidence": "low"
   },
   {
-   "id": "R040",
+   "id": "R041",
    "statement": "The system shows the Send letter button on Letter Preview only after a decision has been recorded on the complaint.",
    "rationale": "On the frame: \"Send letter appears only once a decision is recorded.\" Whether a saved draft counts as recorded is an open question.",
    "source_quote": "You can't send a letter until a decision is recorded, the Send letter button just won't show up.",
@@ -1337,7 +1349,7 @@
    "confidence": "high"
   },
   {
-   "id": "R041",
+   "id": "R042",
    "statement": "When the handler presses Send letter, the system sends the final response letter to print.",
    "rationale": "What \"print\" means (print queue, mailing house, PDF) is an open question.",
    "source_quote": "You read it through, and if it's right you press Send letter and it goes to print.",
@@ -1349,7 +1361,7 @@
    "confidence": "high"
   },
   {
-   "id": "R042",
+   "id": "R043",
    "statement": "When the customer has asked for email, the system sends the final response letter by email instead of print.",
    "rationale": "Banner on the frame: \"The letter is sent by post unless the customer asked for email.\" The expert does not know where the preference is held.",
    "source_quote": "If the customer asked for email, it's supposed to email it instead of printing. I'm not sure where that preference is set, it's not on any of these screens.",
@@ -1361,7 +1373,7 @@
    "confidence": "medium"
   },
   {
-   "id": "R043",
+   "id": "R044",
    "statement": "The Dashboard shows three figures for the team: the number of open complaints, the number breaching the 8-week SLA, and the uphold rate.",
    "rationale": "Tiles seen: Open complaints 34 \"across the team today\"; Breaching SLA 4 \"past the 8-week deadline\", in red; Uphold rate 38% \"upheld or partially upheld\".",
    "source_quote": "Three numbers: open complaints, how many are breaching SLA, and the uphold rate, and a chart of complaints received by month.",
@@ -1373,7 +1385,7 @@
    "confidence": "high"
   },
   {
-   "id": "R044",
+   "id": "R045",
    "statement": "The Dashboard shows a bar chart of the number of complaints received in each month.",
    "rationale": "Six months were shown on the frame (Apr 2026 to Sep 2026); how many months to show was not stated.",
    "source_quote": "a chart of complaints received by month.",
@@ -1385,7 +1397,7 @@
    "confidence": "high"
   },
   {
-   "id": "R045",
+   "id": "R046",
    "statement": "The Dashboard calculates the uphold rate as the percentage of decided complaints whose Outcome is Uphold or Partially uphold.",
    "rationale": "Tile caption on the frame: \"upheld or partially upheld\". The period the rate covers is an open question.",
    "source_quote": "I think the uphold rate is this month, but it might be rolling, I've never checked.",
@@ -1397,7 +1409,7 @@
    "confidence": "medium"
   },
   {
-   "id": "R046",
+   "id": "R047",
    "statement": "When the team lead presses Export on the Dashboard, the system produces a spreadsheet file of the dashboard figures.",
    "rationale": "On the frame: \"Exports the figures above as a spreadsheet.\" The file layout is an open question.",
    "source_quote": "You press Export to get it all as a spreadsheet.",
@@ -1523,7 +1535,7 @@
    "requirement_id": "R011",
    "given": "complaint CMP-2026-01518 for Vinel Ashby with policy POL-766800 Pet insurance, received 01/08/2026 by Letter",
    "when": "the handler opens its Complaint Detail",
-   "then": "the Customer panel shows the name Vinel Ashby, policy POL-766800 · Pet insurance, phone, email, address, Received 01/08/2026 by Letter, category, status and owner",
+   "then": "the Customer panel shows the name Vinel Ashby, policy POL-766800 \u00b7 Pet insurance, phone, email, address, Received 01/08/2026 by Letter, category, status and owner",
    "timestamp": 38.0,
    "keyframe_index": 1
   },
@@ -1550,7 +1562,7 @@
    "requirement_id": "R014",
    "given": "handler Vibo Walridge is signed in on 01/07/2026",
    "when": "Vibo Walridge adds a note",
-   "then": "the saved note shows \"Vibo Walridge · 01/07/2026\" as its stamp",
+   "then": "the saved note shows \"Vibo Walridge \u00b7 01/07/2026\" as its stamp",
    "timestamp": 51.0,
    "keyframe_index": 1
   },
@@ -1754,7 +1766,7 @@
   },
   {
    "id": "AC039",
-   "requirement_id": "R030",
+   "requirement_id": "R031",
    "given": "the Redress screen is open with Refund amount 750.00 and Days out of pocket empty",
    "when": "the handler presses Recalculate",
    "then": "the system fills no amounts and marks Days out of pocket as required",
@@ -1763,16 +1775,16 @@
   },
   {
    "id": "AC040",
-   "requirement_id": "R031",
+   "requirement_id": "R032",
    "given": "the Redress screen has Refund amount 750.00 and Days out of pocket 90 and the interest rate is 8.00% per year",
    "when": "the handler presses Recalculate",
-   "then": "the Calculation table shows Refund £750.00, Interest (8% for 90 days) £14.79 and Total redress £764.79",
+   "then": "the Calculation table shows Refund \u00a3750.00, Interest (8% for 90 days) \u00a314.79 and Total redress \u00a3764.79",
    "timestamp": 100.0,
    "keyframe_index": 3
   },
   {
    "id": "AC041",
-   "requirement_id": "R032",
+   "requirement_id": "R033",
    "given": "the Finance rate table holds 8.00% per year",
    "when": "the handler opens the Redress screen",
    "then": "the Interest rate field shows 8.00% per year and cannot be typed into",
@@ -1781,7 +1793,7 @@
   },
   {
    "id": "AC042",
-   "requirement_id": "R032",
+   "requirement_id": "R033",
    "given": "the Finance rate table is changed to 9.00% per year",
    "when": "the handler opens the Redress screen for a new complaint",
    "then": "the Interest rate field shows 9.00% per year",
@@ -1790,44 +1802,44 @@
   },
   {
    "id": "AC043",
-   "requirement_id": "R033",
+   "requirement_id": "R034",
    "given": "Refund amount 750.00, interest rate 8.00% per year and Days out of pocket 90",
    "when": "the system calculates interest",
-   "then": "the Interest row shows £14.79",
+   "then": "the Interest row shows \u00a314.79",
    "timestamp": 100.0,
    "keyframe_index": 3
   },
   {
    "id": "AC044",
-   "requirement_id": "R033",
+   "requirement_id": "R034",
    "given": "Refund amount 1000.00, interest rate 8.00% per year and Days out of pocket 365",
    "when": "the system calculates interest",
-   "then": "the Interest row shows £80.00",
+   "then": "the Interest row shows \u00a380.00",
    "timestamp": 100.0,
    "keyframe_index": 3
   },
   {
    "id": "AC045",
-   "requirement_id": "R034",
-   "given": "the Calculation table shows Refund £750.00 and Interest £14.79",
+   "requirement_id": "R035",
+   "given": "the Calculation table shows Refund \u00a3750.00 and Interest \u00a314.79",
    "when": "the handler views the Redress screen",
-   "then": "the Total redress row shows £764.79",
+   "then": "the Total redress row shows \u00a3764.79",
    "timestamp": 100.0,
    "keyframe_index": 3
   },
   {
    "id": "AC046",
-   "requirement_id": "R035",
-   "given": "the Calculation table shows Total redress £400.00",
+   "requirement_id": "R036",
+   "given": "the Calculation table shows Total redress \u00a3400.00",
    "when": "the handler presses Approve redress",
-   "then": "the complaint holds an approved redress of £400.00",
+   "then": "the complaint holds an approved redress of \u00a3400.00",
    "timestamp": 112.0,
    "keyframe_index": 3
   },
   {
    "id": "AC047",
-   "requirement_id": "R036",
-   "given": "the Calculation table shows Total redress £764.79",
+   "requirement_id": "R037",
+   "given": "the Calculation table shows Total redress \u00a3764.79",
    "when": "the handler presses Approve redress",
    "then": "the redress is held as awaiting second approval from the team lead",
    "timestamp": 112.0,
@@ -1835,8 +1847,8 @@
   },
   {
    "id": "AC048",
-   "requirement_id": "R036",
-   "given": "the Calculation table shows Total redress £500.00",
+   "requirement_id": "R037",
+   "given": "the Calculation table shows Total redress \u00a3500.00",
    "when": "the handler presses Approve redress",
    "then": "the redress is approved with no second approval",
    "timestamp": 112.0,
@@ -1844,25 +1856,25 @@
   },
   {
    "id": "AC049",
-   "requirement_id": "R037",
-   "given": "a handler has pressed Approve redress on a Total redress of £764.79",
+   "requirement_id": "R038",
+   "given": "a handler has pressed Approve redress on a Total redress of \u00a3764.79",
    "when": "the team lead signs in",
-   "then": "the team lead sees a task to approve the £764.79 redress on that complaint",
+   "then": "the team lead sees a task to approve the \u00a3764.79 redress on that complaint",
    "timestamp": 112.0,
    "keyframe_index": 3
   },
   {
    "id": "AC050",
-   "requirement_id": "R038",
-   "given": "complaint CMP-2026-01518 for Vinel Ashby with decision Partially uphold and Total redress £764.79 (refund £750.00, interest £14.79)",
+   "requirement_id": "R039",
+   "given": "complaint CMP-2026-01518 for Vinel Ashby with decision Partially uphold and Total redress \u00a3764.79 (refund \u00a3750.00, interest \u00a314.79)",
    "when": "the handler opens Letter Preview",
-   "then": "the letter shows Vinel Ashby and the address, Our reference CMP-2026-01518, \"partially uphold\", and \"£764.79, made up of a refund of £750.00 and interest of £14.79\"",
+   "then": "the letter shows Vinel Ashby and the address, Our reference CMP-2026-01518, \"partially uphold\", and \"\u00a3764.79, made up of a refund of \u00a3750.00 and interest of \u00a314.79\"",
    "timestamp": 125.0,
    "keyframe_index": 4
   },
   {
    "id": "AC051",
-   "requirement_id": "R038",
+   "requirement_id": "R039",
    "given": "the Summary of findings on the recorded decision reads \"The claim was accepted and paid in full, but it took longer than it should have.\"",
    "when": "the handler opens Letter Preview",
    "then": "that sentence appears in the letter body",
@@ -1871,7 +1883,7 @@
   },
   {
    "id": "AC052",
-   "requirement_id": "R039",
+   "requirement_id": "R040",
    "given": "a letter with merged values for name, reference and decision",
    "when": "the handler views Letter Preview",
    "then": "each merged value is shown with a highlight that the fixed template text does not have",
@@ -1880,7 +1892,7 @@
   },
   {
    "id": "AC053",
-   "requirement_id": "R040",
+   "requirement_id": "R041",
    "given": "a complaint with no recorded decision",
    "when": "the handler opens Letter Preview",
    "then": "no Send letter button is shown",
@@ -1889,7 +1901,7 @@
   },
   {
    "id": "AC054",
-   "requirement_id": "R040",
+   "requirement_id": "R041",
    "given": "a complaint with a recorded decision",
    "when": "the handler opens Letter Preview",
    "then": "the Send letter button is shown",
@@ -1898,7 +1910,7 @@
   },
   {
    "id": "AC055",
-   "requirement_id": "R041",
+   "requirement_id": "R042",
    "given": "a complaint with a recorded decision whose customer has not asked for email",
    "when": "the handler presses Send letter on Letter Preview",
    "then": "the letter is sent to print",
@@ -1907,7 +1919,7 @@
   },
   {
    "id": "AC056",
-   "requirement_id": "R042",
+   "requirement_id": "R043",
    "given": "a complaint with a recorded decision whose customer has asked for email",
    "when": "the handler presses Send letter on Letter Preview",
    "then": "the letter is emailed to the customer and nothing is sent to print",
@@ -1916,7 +1928,7 @@
   },
   {
    "id": "AC057",
-   "requirement_id": "R043",
+   "requirement_id": "R044",
    "given": "the team has 34 open complaints of which 4 are past the 8-week deadline",
    "when": "the team lead opens the Dashboard",
    "then": "the Open complaints tile shows 34 and the Breaching SLA tile shows 4",
@@ -1925,7 +1937,7 @@
   },
   {
    "id": "AC058",
-   "requirement_id": "R044",
+   "requirement_id": "R045",
    "given": "the team received 24 complaints in Apr 2026 and 40 in May 2026",
    "when": "the team lead opens the Dashboard",
    "then": "the chart shows a bar of 24 for Apr 2026 and a bar of 40 for May 2026",
@@ -1934,7 +1946,7 @@
   },
   {
    "id": "AC059",
-   "requirement_id": "R045",
+   "requirement_id": "R046",
    "given": "in the period the rate covers, 100 complaints were decided: 20 Uphold, 18 Partially uphold, 62 Reject",
    "when": "the team lead opens the Dashboard",
    "then": "the Uphold rate tile shows 38%",
@@ -1943,7 +1955,7 @@
   },
   {
    "id": "AC060",
-   "requirement_id": "R046",
+   "requirement_id": "R047",
    "given": "the Dashboard shows Open complaints 34, Breaching SLA 4 and Uphold rate 38%",
    "when": "the team lead presses Export",
    "then": "a spreadsheet file downloads containing those three figures and the monthly received counts",
@@ -1965,7 +1977,7 @@
     "R005",
     "R006",
     "R007",
-    "R043"
+    "R044"
    ],
    "answer": null,
    "status": "open"
@@ -2013,7 +2025,7 @@
    "blocks_requirement_ids": [
     "R001",
     "R003",
-    "R043"
+    "R044"
    ],
    "answer": null,
    "status": "open"
@@ -2139,7 +2151,7 @@
    "category": "missing information",
    "blocks_requirement_ids": [
     "R028",
-    "R040"
+    "R041"
    ],
    "answer": null,
    "status": "open"
@@ -2154,7 +2166,7 @@
    "screen_id": "S04",
    "category": "integration",
    "blocks_requirement_ids": [
-    "R032"
+    "R033"
    ],
    "answer": null,
    "status": "open"
@@ -2162,21 +2174,21 @@
   {
    "id": "Q014",
    "question": "What is the exact interest formula: day-count basis (365 or 366 days in a leap year), rounding rule, and is interest applied to the refund amount only?",
-   "why_it_matters": "The figures on screen (750.00 at 8% for 90 days = £14.79) fit 365-day simple interest, but rounding and leap-year handling were not stated and affect what the customer is paid.",
+   "why_it_matters": "The figures on screen (750.00 at 8% for 90 days = \u00a314.79) fit 365-day simple interest, but rounding and leap-year handling were not stated and affect what the customer is paid.",
    "context_quote": "it works out the interest and the total in the little table.",
    "timestamp": 100.0,
    "keyframe_index": 3,
    "screen_id": "S04",
    "category": "validation rule",
    "blocks_requirement_ids": [
-    "R033"
+    "R034"
    ],
    "answer": null,
    "status": "open"
   },
   {
    "id": "Q015",
-   "question": "When redress over £500 needs a second approver, what happens next: does the complaint wait until the team lead approves, can the letter be sent before that, who counts as the team lead, and what happens if the team lead rejects or changes the amount? Is the £500 threshold on the Total redress or the refund only?",
+   "question": "When redress over \u00a3500 needs a second approver, what happens next: does the complaint wait until the team lead approves, can the letter be sent before that, who counts as the team lead, and what happens if the team lead rejects or changes the amount? Is the \u00a3500 threshold on the Total redress or the refund only?",
    "why_it_matters": "This is a control on paying money out; the delivery team needs the full approval workflow, not just the trigger.",
    "context_quote": "Anything over five hundred pounds needs a second approver, and that pops up as a task for the team lead.",
    "timestamp": 112.0,
@@ -2184,9 +2196,9 @@
    "screen_id": "S04",
    "category": "missing information",
    "blocks_requirement_ids": [
-    "R036",
     "R037",
-    "R035"
+    "R038",
+    "R036"
    ],
    "answer": null,
    "status": "open"
@@ -2202,7 +2214,7 @@
    "category": "edge case",
    "blocks_requirement_ids": [
     "R029",
-    "R038"
+    "R039"
    ],
    "answer": null,
    "status": "open"
@@ -2217,7 +2229,7 @@
    "screen_id": "S05",
    "category": "integration",
    "blocks_requirement_ids": [
-    "R042"
+    "R043"
    ],
    "answer": null,
    "status": "open"
@@ -2232,7 +2244,7 @@
    "screen_id": "S05",
    "category": "integration",
    "blocks_requirement_ids": [
-    "R041"
+    "R042"
    ],
    "answer": null,
    "status": "open"
@@ -2247,7 +2259,7 @@
    "screen_id": "S05",
    "category": "permissions",
    "blocks_requirement_ids": [
-    "R038"
+    "R039"
    ],
    "answer": null,
    "status": "open"
@@ -2262,7 +2274,7 @@
    "screen_id": "S06",
    "category": "ambiguity",
    "blocks_requirement_ids": [
-    "R045"
+    "R046"
    ],
    "answer": null,
    "status": "open"
@@ -2277,8 +2289,8 @@
    "screen_id": "S06",
    "category": "permissions",
    "blocks_requirement_ids": [
-    "R043",
-    "R044"
+    "R044",
+    "R045"
    ],
    "answer": null,
    "status": "open"
@@ -2293,8 +2305,8 @@
    "screen_id": "S06",
    "category": "missing information",
    "blocks_requirement_ids": [
-    "R046",
-    "R044"
+    "R047",
+    "R045"
    ],
    "answer": null,
    "status": "open"

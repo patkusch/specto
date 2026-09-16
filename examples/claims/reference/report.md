@@ -12,10 +12,10 @@ Meridian Complaints is the tool the complaints team uses to log and work every c
 - Data fields: 42
 - Actions: 14
 - Journey steps: 9
-- Requirements: 46
+- Requirements: 47
 - Acceptance criteria: 60
 - Questions: 23
-- Writing check: 5 requirements and 9 criteria have warnings; 81 notes
+- Writing check: 5 requirements and 9 criteria have warnings; 80 notes
 - Naming check: 61 terms in the glossary; 6 naming clashes to check on the Glossary sheet
 - Personal data: Personal data seen: 1 email, 2 phone numbers, 10 names, 2 addresses on 6 frames. Check before sharing.
 - Gaps: 11 gaps to close: 3 fields never mentioned, 8 actions leading nowhere; 12 notes.
@@ -25,7 +25,7 @@ Meridian Complaints is the tool the complaints team uses to log and work every c
 - Output tokens: 0
 - Cache read tokens: 0
 - Cache write tokens: 0
-- Generated: 2026-09-14 21:23
+- Generated: 2026-09-16 22:01
 
 ## The journey, step by step
 
@@ -520,21 +520,29 @@ Acceptance criteria:
 
 - AC037: Given a complaint with a recorded decision of Partially uphold, when the handler goes to Redress, then the Redress screen opens for that complaint. ([frame 3 @ 01:40](frames/frame_0003.jpg))
 
-### R030: The Redress screen requires a Refund amount in pounds and a Days out of pocket count before it calculates redress.
+### R030: The Redress screen requires a Refund amount in pounds before it calculates redress.
 
 - validation, priority must, confidence high, screen Redress. ([frame 3 @ 01:40](frames/frame_0003.jpg))
 - Why: Both fields are marked with a red asterisk. Values seen: 750.00 and 90.
 - The expert said: "You put in the refund amount and the number of days the customer was out of pocket, and it works out the interest and the total in the little table."
-- *Writing check: info: "and" may join two thoughts in one sentence, so split it if it does.*
 
 Acceptance criteria:
 
 - AC038: Given the Redress screen is open with Refund amount empty, when the handler presses Recalculate, then the system fills no amounts and marks Refund amount as required. ([frame 3 @ 01:40](frames/frame_0003.jpg))
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.; warn: "as required" in the "then" part lets the rule be skipped, so say exactly when it applies.*
+
+### R031: The Redress screen requires a Days out of pocket count before it calculates redress.
+
+- validation, priority must, confidence high, screen Redress. ([frame 3 @ 01:40](frames/frame_0003.jpg))
+- Why: Both fields are marked with a red asterisk. Values seen: 750.00 and 90.
+- The expert said: "You put in the refund amount and the number of days the customer was out of pocket, and it works out the interest and the total in the little table."
+
+Acceptance criteria:
+
 - AC039: Given the Redress screen is open with Refund amount 750.00 and Days out of pocket empty, when the handler presses Recalculate, then the system fills no amounts and marks Days out of pocket as required. ([frame 3 @ 01:40](frames/frame_0003.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.; warn: "as required" in the "then" part lets the rule be skipped, so say exactly when it applies.*
 
-### R031: The system calculates the interest and the Total redress from the Refund amount and the Days out of pocket and shows them in the Calculation table.
+### R032: The system calculates the interest and the Total redress from the Refund amount and the Days out of pocket and shows them in the Calculation table.
 
 - functional, priority must, confidence high, screen Redress. ([frame 3 @ 01:40](frames/frame_0003.jpg))
 - Why: Calculation table rows seen: Refund £750.00; Interest (8% for 90 days) £14.79; Total redress £764.79. The handler presses Recalculate to fill the table.
@@ -546,7 +554,7 @@ Acceptance criteria:
 - AC040: Given the Redress screen has Refund amount 750.00 and Days out of pocket 90 and the interest rate is 8.00% per year, when the handler presses Recalculate, then the Calculation table shows Refund £750.00, Interest (8% for 90 days) £14.79 and Total redress £764.79. ([frame 3 @ 01:40](frames/frame_0003.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R032: The system takes the interest rate for redress from the Finance rate table and shows it on the Redress screen as read-only.
+### R033: The system takes the interest rate for redress from the Finance rate table and shows it on the Redress screen as read-only.
 
 - data, priority must, confidence medium, screen Redress. ([frame 3 @ 01:52](frames/frame_0003.jpg))
 - Why: Field on the frame: Interest rate "8.00% per year", greyed out, help text "From the Finance rate table. Not editable here." Where the table lives is an open question.
@@ -559,7 +567,7 @@ Acceptance criteria:
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 - AC042: Given the Finance rate table is changed to 9.00% per year, when the handler opens the Redress screen for a new complaint, then the Interest rate field shows 9.00% per year. ([frame 3 @ 01:52](frames/frame_0003.jpg))
 
-### R033: The system calculates interest as simple interest: Refund amount × annual interest rate × Days out of pocket ÷ 365, rounded to the nearest penny.
+### R034: The system calculates interest as simple interest: Refund amount × annual interest rate × Days out of pocket ÷ 365, rounded to the nearest penny.
 
 - validation, priority must, confidence medium, screen Redress. ([frame 3 @ 01:40](frames/frame_0003.jpg))
 - Why: Banner on the frame: "Interest is simple interest at the Finance rate table figure, calculated from the number of days the customer was out of pocket." The figures seen (750.00 × 8% × 90 ÷ 365 = 14.79) fit a 365-day year; rounding and leap years were not stated.
@@ -573,7 +581,7 @@ Acceptance criteria:
 - AC044: Given Refund amount 1000.00, interest rate 8.00% per year and Days out of pocket 365, when the system calculates interest, then the Interest row shows £80.00. ([frame 3 @ 01:40](frames/frame_0003.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.*
 
-### R034: The system shows Total redress as the Refund amount plus the calculated interest.
+### R035: The system shows Total redress as the Refund amount plus the calculated interest.
 
 - validation, priority must, confidence high, screen Redress. ([frame 3 @ 01:40](frames/frame_0003.jpg))
 - Why: Bold total row on the frame: £764.79 = £750.00 + £14.79.
@@ -584,7 +592,7 @@ Acceptance criteria:
 - AC045: Given the Calculation table shows Refund £750.00 and Interest £14.79, when the handler views the Redress screen, then the Total redress row shows £764.79. ([frame 3 @ 01:40](frames/frame_0003.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.*
 
-### R035: When the handler presses Approve redress, the system records the Total redress as approved on the complaint.
+### R036: When the handler presses Approve redress, the system records the Total redress as approved on the complaint.
 
 - functional, priority must, confidence high, screen Redress. ([frame 3 @ 01:52](frames/frame_0003.jpg))
 - The expert said: "Then you press Approve redress."
@@ -594,7 +602,7 @@ Acceptance criteria:
 
 - AC046: Given the Calculation table shows Total redress £400.00, when the handler presses Approve redress, then the complaint holds an approved redress of £400.00. ([frame 3 @ 01:52](frames/frame_0003.jpg))
 
-### R036: When the redress is more than £500, the system requires a second approval from the team lead before the redress is approved.
+### R037: When the redress is more than £500, the system requires a second approval from the team lead before the redress is approved.
 
 - workflow, priority must, confidence high, screen Redress. ([frame 3 @ 01:52](frames/frame_0003.jpg))
 - Why: On the frame: "Redress over £500 needs a second approver (team lead)." Whether the threshold applies to the total or the refund, and what happens while approval is pending, are open questions.
@@ -606,7 +614,7 @@ Acceptance criteria:
 - AC047: Given the Calculation table shows Total redress £764.79, when the handler presses Approve redress, then the redress is held as awaiting second approval from the team lead. ([frame 3 @ 01:52](frames/frame_0003.jpg))
 - AC048: Given the Calculation table shows Total redress £500.00, when the handler presses Approve redress, then the redress is approved with no second approval. ([frame 3 @ 01:52](frames/frame_0003.jpg))
 
-### R037: When redress needs a second approval, the system creates a task for the team lead to approve it.
+### R038: When redress needs a second approval, the system creates a task for the team lead to approve it.
 
 - workflow, priority must, confidence high, screen Redress. ([frame 3 @ 01:52](frames/frame_0003.jpg))
 - The expert said: "Anything over five hundred pounds needs a second approver, and that pops up as a task for the team lead."
@@ -615,7 +623,7 @@ Acceptance criteria:
 
 - AC049: Given a handler has pressed Approve redress on a Total redress of £764.79, when the team lead signs in, then the team lead sees a task to approve the £764.79 redress on that complaint. ([frame 3 @ 01:52](frames/frame_0003.jpg))
 
-### R038: The system builds the final response letter from a template by merging in the customer's name and address, the complaint reference, policy, product, received date, decision, summary of findings, redress amounts and handler name from the complaint, decision and redress records.
+### R039: The system builds the final response letter from a template by merging in the customer's name and address, the complaint reference, policy, product, received date, decision, summary of findings, redress amounts and handler name from the complaint, decision and redress records.
 
 - functional, priority must, confidence high, screen Letter Preview. ([frame 4 @ 02:05](frames/frame_0004.jpg))
 - Why: Merge fields seen on the frame: letter date, customer name and address (first name repeated in 'Dear Vinel,'), Our reference, policy, product, received date, decision, summary of findings, total redress with refund and interest, and handler name in the sign-off.
@@ -629,7 +637,7 @@ Acceptance criteria:
 - AC051: Given the Summary of findings on the recorded decision reads "The claim was accepted and paid in full, but it took longer than it should have.", when the handler opens Letter Preview, then that sentence appears in the letter body. ([frame 4 @ 02:05](frames/frame_0004.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; warn: "but" in the "given" part joins two thoughts in one sentence, so write one sentence per thought.*
 
-### R039: The Letter Preview highlights every merged field in the letter.
+### R040: The Letter Preview highlights every merged field in the letter.
 
 - functional, priority unknown, confidence low, screen Letter Preview. ([frame 4 @ 02:05](frames/frame_0004.jpg))
 - Why: Seen on the frame: banner "Merge fields are highlighted" and highlighted values in the letter. The expert did not mention the highlighting.
@@ -641,7 +649,7 @@ Acceptance criteria:
 - AC052: Given a letter with merged values for name, reference and decision, when the handler views Letter Preview, then each merged value is shown with a highlight that the fixed template text does not have. ([frame 4 @ 02:05](frames/frame_0004.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.*
 
-### R040: The system shows the Send letter button on Letter Preview only after a decision has been recorded on the complaint.
+### R041: The system shows the Send letter button on Letter Preview only after a decision has been recorded on the complaint.
 
 - validation, priority must, confidence high, screen Letter Preview. ([frame 4 @ 02:15](frames/frame_0004.jpg))
 - Why: On the frame: "Send letter appears only once a decision is recorded." Whether a saved draft counts as recorded is an open question.
@@ -653,7 +661,7 @@ Acceptance criteria:
 - AC053: Given a complaint with no recorded decision, when the handler opens Letter Preview, then no Send letter button is shown. ([frame 4 @ 02:15](frames/frame_0004.jpg))
 - AC054: Given a complaint with a recorded decision, when the handler opens Letter Preview, then the Send letter button is shown. ([frame 4 @ 02:15](frames/frame_0004.jpg))
 
-### R041: When the handler presses Send letter, the system sends the final response letter to print.
+### R042: When the handler presses Send letter, the system sends the final response letter to print.
 
 - workflow, priority must, confidence high, screen Letter Preview. ([frame 4 @ 02:15](frames/frame_0004.jpg))
 - Why: What "print" means (print queue, mailing house, PDF) is an open question.
@@ -664,7 +672,7 @@ Acceptance criteria:
 
 - AC055: Given a complaint with a recorded decision whose customer has not asked for email, when the handler presses Send letter on Letter Preview, then the letter is sent to print. ([frame 4 @ 02:15](frames/frame_0004.jpg))
 
-### R042: When the customer has asked for email, the system sends the final response letter by email instead of print.
+### R043: When the customer has asked for email, the system sends the final response letter by email instead of print.
 
 - workflow, priority must, confidence medium, screen Letter Preview. ([frame 4 @ 02:25](frames/frame_0004.jpg))
 - Why: Banner on the frame: "The letter is sent by post unless the customer asked for email." The expert does not know where the preference is held.
@@ -675,7 +683,7 @@ Acceptance criteria:
 - AC056: Given a complaint with a recorded decision whose customer has asked for email, when the handler presses Send letter on Letter Preview, then the letter is emailed to the customer and nothing is sent to print. ([frame 4 @ 02:25](frames/frame_0004.jpg))
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R043: The Dashboard shows three figures for the team: the number of open complaints, the number breaching the 8-week SLA, and the uphold rate.
+### R044: The Dashboard shows three figures for the team: the number of open complaints, the number breaching the 8-week SLA, and the uphold rate.
 
 - reporting, priority must, confidence high, screen Dashboard. ([frame 5 @ 02:35](frames/frame_0005.jpg))
 - Why: Tiles seen: Open complaints 34 "across the team today"; Breaching SLA 4 "past the 8-week deadline", in red; Uphold rate 38% "upheld or partially upheld".
@@ -687,7 +695,7 @@ Acceptance criteria:
 - AC057: Given the team has 34 open complaints of which 4 are past the 8-week deadline, when the team lead opens the Dashboard, then the Open complaints tile shows 34 and the Breaching SLA tile shows 4. ([frame 5 @ 02:35](frames/frame_0005.jpg))
   - *Writing check: info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R044: The Dashboard shows a bar chart of the number of complaints received in each month.
+### R045: The Dashboard shows a bar chart of the number of complaints received in each month.
 
 - reporting, priority must, confidence high, screen Dashboard. ([frame 5 @ 02:35](frames/frame_0005.jpg))
 - Why: Six months were shown on the frame (Apr 2026 to Sep 2026); how many months to show was not stated.
@@ -698,7 +706,7 @@ Acceptance criteria:
 - AC058: Given the team received 24 complaints in Apr 2026 and 40 in May 2026, when the team lead opens the Dashboard, then the chart shows a bar of 24 for Apr 2026 and a bar of 40 for May 2026. ([frame 5 @ 02:35](frames/frame_0005.jpg))
   - *Writing check: info: "and" in the "given" part may join two thoughts in one sentence, so split it if it does.; info: "and" in the "then" part may join two thoughts in one sentence, so split it if it does.*
 
-### R045: The Dashboard calculates the uphold rate as the percentage of decided complaints whose Outcome is Uphold or Partially uphold.
+### R046: The Dashboard calculates the uphold rate as the percentage of decided complaints whose Outcome is Uphold or Partially uphold.
 
 - reporting, priority must, confidence medium, screen Dashboard. ([frame 5 @ 02:47](frames/frame_0005.jpg))
 - Why: Tile caption on the frame: "upheld or partially upheld". The period the rate covers is an open question.
@@ -709,7 +717,7 @@ Acceptance criteria:
 
 - AC059: Given in the period the rate covers, 100 complaints were decided: 20 Uphold, 18 Partially uphold, 62 Reject, when the team lead opens the Dashboard, then the Uphold rate tile shows 38%. ([frame 5 @ 02:47](frames/frame_0005.jpg))
 
-### R046: When the team lead presses Export on the Dashboard, the system produces a spreadsheet file of the dashboard figures.
+### R047: When the team lead presses Export on the Dashboard, the system produces a spreadsheet file of the dashboard figures.
 
 - reporting, priority must, confidence high, screen Dashboard. ([frame 5 @ 02:47](frames/frame_0005.jpg))
 - Why: On the frame: "Exports the figures above as a spreadsheet." The file layout is an open question.
@@ -728,14 +736,14 @@ Questions that hold up the most requirements come first.
 ### Q001: How exactly is SLA remaining calculated: from which date and time does the clock start, does it count calendar or working days, when is the 8-week end point, and what is known about the cases where the clock is wrong? Is the automatic Ombudsman referral driven by the same clock?
 
 - Why it matters: The SLA drives the inbox sort order, the Breached flag, the automatic Ombudsman referral and the Breaching SLA dashboard figure; the expert says the current clock is sometimes wrong, so the rule must be pinned down rather than copied.
-- Blocks R005, R006, R007, R043
+- Blocks R005, R006, R007, R044
 - Category: validation rule (screen Complaints Inbox). ([frame 0 @ 00:24](frames/frame_0000.jpg))
 - What was said: "Sometimes the SLA clock is wrong, honestly, nobody knows why, so you double-check the received date."
 
 ### Q004: What is the full list of statuses (New, Investigating, Awaiting customer, Decided and Referred were seen), what does "open" mean for the inbox and the dashboard, and what moves a complaint from one status to the next: a handler by hand, or the system when a decision is recorded or a letter is sent?
 
 - Why it matters: The expert never described how status changes; without the transitions the workflow cannot be built and the Open complaints figure cannot be defined.
-- Blocks R001, R003, R043
+- Blocks R001, R003, R044
 - Category: missing information (screen Complaints Inbox). ([frame 0 @ 00:12](frames/frame_0000.jpg))
 - What was said: "Each row has the reference, the customer, when it came in, the category, the status and the SLA countdown."
 
@@ -749,7 +757,7 @@ Questions that hold up the most requirements come first.
 ### Q015: When redress over £500 needs a second approver, what happens next: does the complaint wait until the team lead approves, can the letter be sent before that, who counts as the team lead, and what happens if the team lead rejects or changes the amount? Is the £500 threshold on the Total redress or the refund only?
 
 - Why it matters: This is a control on paying money out; the delivery team needs the full approval workflow, not just the trigger.
-- Blocks R036, R037, R035
+- Blocks R037, R038, R036
 - Category: missing information (screen Redress). ([frame 3 @ 01:52](frames/frame_0003.jpg))
 - What was said: "Anything over five hundred pounds needs a second approver, and that pops up as a task for the team lead."
 
@@ -784,28 +792,28 @@ Questions that hold up the most requirements come first.
 ### Q012: What does Save draft save, who can see a draft decision, and does a draft count as "a decision is recorded" for the purpose of showing the Send letter button?
 
 - Why it matters: The expert did not mention drafts; the delivery team needs the draft lifecycle and confirmation that a draft must not unlock the letter.
-- Blocks R028, R040
+- Blocks R028, R041
 - Category: missing information (screen Decision). ([frame 2 @ 01:24](frames/frame_0002.jpg))
 - What was said: "Then you press Record decision."
 
 ### Q016: For a rejected complaint, or a partially upheld complaint with no money owed, is the Redress screen skipped, and does the letter template change to leave out the payment paragraph?
 
 - Why it matters: The walkthrough only showed the partially upheld path with a payment; the other outcomes need their own path through redress and the letter.
-- Blocks R029, R038
+- Blocks R029, R039
 - Category: edge case (screen Redress). ([frame 3 @ 01:40](frames/frame_0003.jpg))
 - What was said: "If it's upheld or partially upheld, you go to Redress."
 
 ### Q021: Who can see the Dashboard, and how is the team it shows chosen? The frame shows a grade 2 handler viewing 'Team view for Dalo Walwell's team' although the expert says it is for the team lead.
 
 - Why it matters: Decides access control for the dashboard and whether a handler can see teams other than their own.
-- Blocks R043, R044
+- Blocks R044, R045
 - Category: permissions (screen Dashboard). ([frame 5 @ 02:35](frames/frame_0005.jpg))
 - What was said: "And the Dashboard is what the team lead looks at."
 
 ### Q022: What exactly does Export contain and in what format: the three headline figures, the monthly counts, or the underlying complaint list, and how many months of history?
 
 - Why it matters: The screen only says "Exports the figures above as a spreadsheet"; the delivery team needs the file layout.
-- Blocks R046, R044
+- Blocks R047, R045
 - Category: missing information (screen Dashboard). ([frame 5 @ 02:47](frames/frame_0005.jpg))
 - What was said: "You press Export to get it all as a spreadsheet."
 
@@ -840,42 +848,42 @@ Questions that hold up the most requirements come first.
 ### Q013: Where does the Finance rate table live and how does the system read it: a table in this system or a feed from a finance system? Which rate applies when the rate changes: the rate on the day of calculation, or the rate over the period out of pocket?
 
 - Why it matters: The interest figure goes into the customer's letter and payment, so the source and versioning of the rate must be defined.
-- Blocks R032
+- Blocks R033
 - Category: integration (screen Redress). ([frame 3 @ 01:52](frames/frame_0003.jpg))
 - What was said: "The interest rate comes from somewhere in finance, I just use whatever it shows."
 
 ### Q014: What is the exact interest formula: day-count basis (365 or 366 days in a leap year), rounding rule, and is interest applied to the refund amount only?
 
 - Why it matters: The figures on screen (750.00 at 8% for 90 days = £14.79) fit 365-day simple interest, but rounding and leap-year handling were not stated and affect what the customer is paid.
-- Blocks R033
+- Blocks R034
 - Category: validation rule (screen Redress). ([frame 3 @ 01:40](frames/frame_0003.jpg))
 - What was said: "it works out the interest and the total in the little table."
 
 ### Q017: Where is the customer's preference for email over post held, and how does the system read it when Send letter is pressed?
 
 - Why it matters: The expert says email is supposed to happen instead of print but the preference is not on any screen shown, so the source of that data is unknown.
-- Blocks R042
+- Blocks R043
 - Category: integration (screen Letter Preview). ([frame 4 @ 02:25](frames/frame_0004.jpg))
 - What was said: "If the customer asked for email, it's supposed to email it instead of printing. I'm not sure where that preference is set, it's not on any of these screens."
 
 ### Q018: What does "goes to print" mean technically (a print queue, a mailing house, a PDF)? Is a copy of the sent letter stored on the complaint, and does sending the letter change the complaint status or close it?
 
 - Why it matters: Sending the final response is the end of the process; the delivery team needs the integration and the record it leaves.
-- Blocks R041
+- Blocks R042
 - Category: integration (screen Letter Preview). ([frame 4 @ 02:15](frames/frame_0004.jpg))
 - What was said: "You read it through, and if it's right you press Send letter and it goes to print."
 
 ### Q019: Who is allowed to use Edit template, and does it change the template for every future letter or only the letter for this complaint? Are the fixed sentences (payment within 10 working days, Ombudsman referral within six months) regulatory wording that must stay uneditable?
 
 - Why it matters: Editing a template used for regulated final responses needs clear ownership and controls; the Edit template button was seen but never described.
-- Blocks R038
+- Blocks R039
 - Category: permissions (screen Letter Preview). ([frame 4 @ 02:05](frames/frame_0004.jpg))
 - What was said: "It's a template with the customer's name, the reference, the decision and the redress amount merged in from the earlier screens."
 
 ### Q020: Over what period is the uphold rate calculated (this calendar month, a rolling window, or all time), and is it based on decisions recorded or complaints received in that period?
 
 - Why it matters: The expert is unsure; the figure is a headline team-performance measure and its definition must be agreed before it is built.
-- Blocks R045
+- Blocks R046
 - Category: ambiguity (screen Dashboard). ([frame 5 @ 02:47](frames/frame_0005.jpg))
 - What was said: "I think the uphold rate is this month, but it might be rolling, I've never checked."
 
@@ -914,7 +922,7 @@ What the analysis does not yet cover, so the next conversation with the expert c
 - R019 The system sends a standard acknowledgement letter within 4 working days of receiving a complaint.: R019 was inferred from the screen rather than said by the expert; confirm it with them.
 - R020 When a complaint is logged, the system assigns it to a handler from the queue for its category.: R020 was inferred from the screen rather than said by the expert; confirm it with them.
 - R028 The handler can save the Decision screen as a draft without recording the decision.: R028 was inferred from the screen rather than said by the expert; confirm it with them.
-- R039 The Letter Preview highlights every merged field in the letter.: R039 was inferred from the screen rather than said by the expert; confirm it with them.
+- R040 The Letter Preview highlights every merged field in the letter.: R040 was inferred from the screen rather than said by the expert; confirm it with them.
 
 **Question with no screen** (note)
 
@@ -958,64 +966,64 @@ Personal data seen: 1 email, 2 phone numbers, 10 names, 2 addresses on 6 frames.
 |---|---|---|---|---|---|---|---|
 | Complaint handler (grade 2 and above) | role | listed as an actor | 00:00 | 0 |  |  |  |
 | Complaint logger (whoever logs the complaint) | role | listed as an actor | 00:00 | 0 |  |  |  |
-| Customer | role | listed as an actor | 00:00 | 0 | S02, S04, R001, R003, R005, R006, R011, R012, R030, R031, R033, R038, R039, R042, AC001, AC013, AC055, AC056, Q002, Q004, Q017 |  |  |
+| Customer | role | listed as an actor | 00:00 | 0 | S02, S04, R001, R003, R005, R006, R011, R012, R030, R031, R032, R034, R039, R040, R043, AC001, AC013, AC055, AC056, Q002, Q004, Q017 |  |  |
 | Finance (owner of the interest rate table) | role | listed as an actor | 00:00 | 0 |  |  |  |
 | Ombudsman (external body) | role | listed as an actor | 00:00 | 0 |  |  |  |
 | Supervisor | role | listed as an actor | 00:51 | 1 | R015, R026, R027, Q007, Q011 |  |  |
-| Team lead | role | listed as an actor | 01:41 | 3 | S06, A011, R036, R037, R046, AC047, AC049, AC057, AC058, AC059, AC060, Q015, Q021 |  |  |
+| Team lead | role | listed as an actor | 01:41 | 3 | S06, A011, R037, R038, R047, AC047, AC049, AC057, AC058, AC059, AC060, Q015, Q021 |  |  |
 | Trainee complaint handler (below grade 2) | role | listed as an actor | 00:00 | 0 |  |  |  |
 | Complaint Detail | screen | screen S02 | 00:38 | 1 | R009, R010, R011, R012, R017, AC011, AC012, AC013, AC014, AC015, AC017, AC018, AC019, AC020, AC021 |  |  |
 | Complaints Inbox | screen | screen S01 | 00:00 | 0 | R001, R002, R003, R004, R009, R010, AC001, AC002, AC003, AC004, AC005, AC006, AC007, AC008, AC010, AC011, AC012, AC019, Q003 |  |  |
-| Dashboard | screen | screen S06 | 02:36 | 5 | A014, R043, R044, R045, R046, AC057, AC058, AC059, AC060, Q004, Q021 |  |  |
-| Decision | screen | screen S03 | 01:11 | 2 | S05, A005, A008, R021, R022, R023, R024, R025, R026, R027, R028, R038, R039, R040, AC009, AC024, AC025, AC026, AC027, AC028, AC029, AC030, AC032, AC033, AC034, AC035, AC036, AC037, AC050, AC051, AC052, AC053, AC054, AC055, AC056, Q004, Q011, Q012, Q020 |  |  |
-| Letter Preview | screen | screen S05 | 02:05 | 4 | R039, R040, AC050, AC051, AC052, AC053, AC054, AC055, AC056 |  |  |
-| Redress | screen | screen S04 | 01:41 | 3 | S05, A011, R021, R029, R030, R031, R032, R034, R035, R036, R037, R038, R039, AC037, AC038, AC039, AC040, AC041, AC042, AC045, AC046, AC047, AC048, AC049, AC050, Q015, Q016 |  |  |
-| Address | field | Complaint Detail screen | 00:38 | 1 | R011, R038, AC013, AC050 |  |  |
-| Amount | field | Redress screen | 01:41 | 3 | A010, R030, R031, R033, R034, R038, R039, AC038, AC039, AC040, AC043, AC044, Q014, Q015 |  |  |
-| Breaching SLA | field | Dashboard screen | 02:36 | 5 | R043, AC057, AC060 |  |  |
+| Dashboard | screen | screen S06 | 02:36 | 5 | A014, R044, R045, R046, R047, AC057, AC058, AC059, AC060, Q004, Q021 |  |  |
+| Decision | screen | screen S03 | 01:11 | 2 | S05, A005, A008, R021, R022, R023, R024, R025, R026, R027, R028, R039, R040, R041, AC009, AC024, AC025, AC026, AC027, AC028, AC029, AC030, AC032, AC033, AC034, AC035, AC036, AC037, AC050, AC051, AC052, AC053, AC054, AC055, AC056, Q004, Q011, Q012, Q020 |  |  |
+| Letter Preview | screen | screen S05 | 02:05 | 4 | R040, R041, AC050, AC051, AC052, AC053, AC054, AC055, AC056 |  |  |
+| Redress | screen | screen S04 | 01:41 | 3 | S05, A011, R021, R029, R030, R031, R032, R033, R035, R036, R037, R038, R039, R040, AC037, AC038, AC039, AC040, AC041, AC042, AC045, AC046, AC047, AC048, AC049, AC050, Q015, Q016 |  |  |
+| Address | field | Complaint Detail screen | 00:38 | 1 | R011, R039, AC013, AC050 |  |  |
+| Amount | field | Redress screen | 01:41 | 3 | A010, R030, R031, R032, R034, R035, R039, R040, AC038, AC039, AC040, AC043, AC044, Q014, Q015 |  |  |
+| Breaching SLA | field | Dashboard screen | 02:36 | 5 | R044, AC057, AC060 |  |  |
 | Category | field | Complaints Inbox and Complaint Detail screens | 00:00 | 0 | S02, A004, R003, R005, R006, R011, R017, R018, R020, AC003, AC013, AC019, AC020, AC021, AC023, Q005, Q006, Q009 |  | Info: the field "Category" appears on 2 screens (Complaints Inbox, Complaint Detail), so check it means the same thing on each. |
-| Complaints received by month | field | Dashboard screen | 02:36 | 5 | S06, R043, R044 |  |  |
-| Customer | field | Complaints Inbox screen | 00:00 | 0 | S02, S04, R001, R003, R005, R006, R011, R012, R030, R031, R033, R038, R039, R042, AC001, AC013, AC055, AC056, Q002, Q004, Q017 |  |  |
-| Customer name and address | field | Letter Preview screen | 02:05 | 4 | R038 |  |  |
-| Days out of pocket | field | Redress screen | 01:41 | 3 | A010, R030, R031, R033, AC039, AC040, AC043, AC044 |  |  |
-| Decision | field | Letter Preview screen | 02:05 | 4 | S05, A005, A008, R021, R022, R023, R024, R025, R026, R027, R028, R038, R039, R040, AC009, AC024, AC025, AC026, AC027, AC028, AC029, AC030, AC032, AC033, AC034, AC035, AC036, AC037, AC050, AC051, AC052, AC053, AC054, AC055, AC056, Q004, Q011, Q012, Q020 |  |  |
-| Email | field | Complaint Detail screen | 00:38 | 1 | R011, R042, AC013, AC055, AC056, Q017 |  |  |
-| Handler name | field | Letter Preview screen | 02:05 | 4 | R038 |  |  |
-| Interest rate | field | Redress screen | 01:41 | 3 | R032, R033, AC040, AC041, AC042, AC043, AC044 |  |  |
+| Complaints received by month | field | Dashboard screen | 02:36 | 5 | S06, R044, R045 |  |  |
+| Customer | field | Complaints Inbox screen | 00:00 | 0 | S02, S04, R001, R003, R005, R006, R011, R012, R030, R031, R032, R034, R039, R040, R043, AC001, AC013, AC055, AC056, Q002, Q004, Q017 |  |  |
+| Customer name and address | field | Letter Preview screen | 02:05 | 4 | R039 |  |  |
+| Days out of pocket | field | Redress screen | 01:41 | 3 | A010, R031, R032, R034, AC039, AC040, AC043, AC044 |  |  |
+| Decision | field | Letter Preview screen | 02:05 | 4 | S05, A005, A008, R021, R022, R023, R024, R025, R026, R027, R028, R039, R040, R041, AC009, AC024, AC025, AC026, AC027, AC028, AC029, AC030, AC032, AC033, AC034, AC035, AC036, AC037, AC050, AC051, AC052, AC053, AC054, AC055, AC056, Q004, Q011, Q012, Q020 |  |  |
+| Email | field | Complaint Detail screen | 00:38 | 1 | R011, R043, AC013, AC055, AC056, Q017 |  |  |
+| Handler name | field | Letter Preview screen | 02:05 | 4 | R039 |  |  |
+| Interest rate | field | Redress screen | 01:41 | 3 | R033, R034, AC040, AC041, AC042, AC043, AC044 |  |  |
 | Item | field | Redress screen | 01:41 | 3 |  |  |  |
-| Letter date | field | Letter Preview screen | 02:05 | 4 | R038 |  |  |
-| Name | field | Complaint Detail screen | 00:38 | 1 | R011, R013, R014, R038, R039, AC013, AC052, Q011 |  |  |
+| Letter date | field | Letter Preview screen | 02:05 | 4 | R039 |  |  |
+| Name | field | Complaint Detail screen | 00:38 | 1 | R011, R013, R014, R039, R040, AC013, AC052, Q011 |  |  |
 | Notes | field | Complaint Detail screen | 00:38 | 1 | S02, R014, R015, R016, AC015, AC021, Q007 |  |  |
-| Open complaints | field | Dashboard screen | 02:36 | 5 | S06, R043, AC002, AC057, AC060 |  |  |
-| Our reference | field | Letter Preview screen | 02:05 | 4 | R038, AC050 |  |  |
-| Outcome | field | Decision screen | 01:11 | 2 | S03, A006, R021, R025, R029, R045, AC024, AC025, AC026, AC027, AC028, AC029, AC032, AC036, Q009 |  |  |
+| Open complaints | field | Dashboard screen | 02:36 | 5 | S06, R044, AC002, AC057, AC060 |  |  |
+| Our reference | field | Letter Preview screen | 02:05 | 4 | R039, AC050 |  |  |
+| Outcome | field | Decision screen | 01:11 | 2 | S03, A006, R021, R025, R029, R046, AC024, AC025, AC026, AC027, AC028, AC029, AC032, AC036, Q009 |  |  |
 | Owner | field | Complaints Inbox and Complaint Detail screens | 00:00 | 0 | R003, R011, R020, AC003, AC013, Q003, Q005 |  | Info: the field "Owner" appears on 2 screens (Complaints Inbox, Complaint Detail), so check it means the same thing on each. |
 | Phone | field | Complaint Detail screen | 00:38 | 1 | R011, AC013 |  |  |
-| Policy | field | Complaint Detail and Letter Preview screens | 00:38 | 1 | R011, R017, R038, AC013 |  | Info: the field "Policy" appears on 2 screens (Complaint Detail, Letter Preview), so check it means the same thing on each. |
-| Product | field | Letter Preview screen | 02:05 | 4 | R011, R038 |  |  |
+| Policy | field | Complaint Detail and Letter Preview screens | 00:38 | 1 | R011, R017, R039, AC013 |  | Info: the field "Policy" appears on 2 screens (Complaint Detail, Letter Preview), so check it means the same thing on each. |
+| Product | field | Letter Preview screen | 02:05 | 4 | R011, R039 |  |  |
 | Reason | field | Decision screen | 01:11 | 2 | S03, A007, R021, R022, R025, AC020, AC021, AC025, AC026, AC027, AC028, AC029, AC032, Q006, Q009 |  |  |
-| Received | field | Complaints Inbox and Complaint Detail screens | 00:00 | 0 | S06, R003, R005, R011, R012, R019, R020, R038, R043, R044, AC003, AC004, AC005, AC006, AC008, AC009, AC013, AC014, AC022, AC058, AC060, Q020 |  | Info: the field "Received" appears on 2 screens (Complaints Inbox, Complaint Detail), so check it means the same thing on each. |
-| Received date | field | Letter Preview screen | 02:05 | 4 | R003, R005, R011, R038, AC004 |  |  |
-| Redress amounts | field | Letter Preview screen | 02:05 | 4 | R038 |  |  |
-| Reference | field | Complaints Inbox screen | 00:00 | 0 | R003, R005, R006, R038, R039, AC050, AC052, Q010 |  |  |
+| Received | field | Complaints Inbox and Complaint Detail screens | 00:00 | 0 | S06, R003, R005, R011, R012, R019, R020, R039, R044, R045, AC003, AC004, AC005, AC006, AC008, AC009, AC013, AC014, AC022, AC058, AC060, Q020 |  | Info: the field "Received" appears on 2 screens (Complaints Inbox, Complaint Detail), so check it means the same thing on each. |
+| Received date | field | Letter Preview screen | 02:05 | 4 | R003, R005, R011, R039, AC004 |  |  |
+| Redress amounts | field | Letter Preview screen | 02:05 | 4 | R039 |  |  |
+| Reference | field | Complaints Inbox screen | 00:00 | 0 | R003, R005, R006, R039, R040, AC050, AC052, Q010 |  |  |
 | Refund amount (£) | field | Redress screen | 01:41 | 3 |  |  |  |
 | SLA remaining | field | Complaints Inbox screen | 00:00 | 0 | S01, R002, R003, R005, R006, AC002, AC003, AC004, AC005, AC006, AC007, AC008, Q001 |  |  |
 | Status | field | Complaints Inbox and Complaint Detail screens | 00:00 | 0 | R001, R003, R005, R006, R007, R008, R011, AC001, AC003, AC010, AC013, Q002, Q004, Q018 |  | Info: the field "Status" appears on 2 screens (Complaints Inbox, Complaint Detail), so check it means the same thing on each. |
-| Summary of findings | field | Decision and Letter Preview screens | 01:11 | 2 | S03, A007, R023, R024, R025, R038, AC027, AC028, AC029, AC030, AC031, AC051 |  | Info: the field "Summary of findings" appears on 2 screens (Decision, Letter Preview), so check it means the same thing on each. |
+| Summary of findings | field | Decision and Letter Preview screens | 01:11 | 2 | S03, A007, R023, R024, R025, R039, AC027, AC028, AC029, AC030, AC031, AC051 |  | Info: the field "Summary of findings" appears on 2 screens (Decision, Letter Preview), so check it means the same thing on each. |
 | Timeline | field | Complaint Detail screen | 00:38 | 1 | S02, R005, R011, R012, R019, R020, AC014, AC022, AC023, Q005 |  |  |
-| Total redress | field | Redress screen | 01:41 | 3 | R031, R034, R035, R038, AC040, AC045, AC046, AC047, AC048, AC049, AC050, Q015 |  |  |
-| Uphold rate | field | Dashboard screen | 02:36 | 5 | S06, R025, R043, R045, AC059, AC060, Q020 |  |  |
+| Total redress | field | Redress screen | 01:41 | 3 | R032, R035, R036, R039, AC040, AC045, AC046, AC047, AC048, AC049, AC050, Q015 |  |  |
+| Uphold rate | field | Dashboard screen | 02:36 | 5 | S06, R025, R044, R046, AC059, AC060, Q020 |  |  |
 | Write a note | field | Complaint Detail screen | 00:38 | 1 | A003, R013, R015, AC015 |  |  |
 | Add note | action | button on Complaint Detail screen | 00:38 | 1 | A003, R013, R014, AC015 |  |  |
 | Approve redress (over £500 this raises a task for the team lead as second approver) | action | button on Redress screen | 01:41 | 3 | A011 |  |  |
 | Change next | action | button on Complaint Detail screen | 00:38 | 1 | A004, AC019 |  |  |
 | Decision in the left navigation once the investigation is done | action | menu on Complaint Detail screen | 00:38 | 1 | A005 |  |  |
 | Edit template | action | button on Letter Preview screen | 02:05 | 4 | A013, Q019 |  |  |
-| Export | action | button on Dashboard screen | 02:36 | 5 | S06, A014, R046, AC060, Q022 |  |  |
-| Recalculate | action | button on Redress screen | 01:41 | 3 | A010, R031, AC038, AC039, AC040 |  |  |
+| Export | action | button on Dashboard screen | 02:36 | 5 | S06, A014, R047, AC060, Q022 |  |  |
+| Recalculate | action | button on Redress screen | 01:41 | 3 | A010, R032, AC038, AC039, AC040 |  |  |
 | Record decision (disabled for handlers below grade 2) | action | button on Decision screen | 01:11 | 2 | A008 |  |  |
 | Save draft | action | button on Decision screen | 01:11 | 2 | A009, R028, AC036, Q012 |  |  |
-| Send letter | action | button on Letter Preview screen | 02:05 | 4 | A012, R025, R040, R041, AC053, AC054, AC055, AC056, Q012, Q017 |  |  |
+| Send letter | action | button on Letter Preview screen | 02:05 | 4 | A012, R025, R041, R042, AC053, AC054, AC055, AC056, Q012, Q017 |  |  |
 | Investigating | status value | value of the "Status" field on Complaints Inbox screen | 00:00 | 0 | R001, AC001, AC003, AC010, Q004 |  |  |
 
 
