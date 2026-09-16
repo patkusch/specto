@@ -19,7 +19,7 @@
 [![Model](https://img.shields.io/badge/Claude_Opus_5_or_Gemini-1A1A1A?style=for-the-badge)](#using-gemini-instead-of-claude)
 [![License](https://img.shields.io/badge/License-MIT-1A1A1A?style=for-the-badge)](./LICENSE)
 [![Recall](https://img.shields.io/badge/answer--key_recall-0.97_to_1.00-2ea043?style=for-the-badge)](#does-it-work)
-[![Tests](https://img.shields.io/badge/offline_tests-570-2ea043?style=for-the-badge)](#development)
+[![Tests](https://img.shields.io/badge/offline_tests-581-2ea043?style=for-the-badge)](#development)
 [![CI](https://github.com/patkusch/specto/actions/workflows/ci.yml/badge.svg)](https://github.com/patkusch/specto/actions/workflows/ci.yml)
 
 </div>
@@ -77,7 +77,7 @@ Plus a single web page with the frames inside it, a Markdown report, a screen-fl
 
 </div>
 
-570 offline tests. Runs without an API key. Nothing leaves your machine except the frames and words you choose to send to a model service.
+581 offline tests. Runs without an API key. Nothing leaves your machine except the frames and words you choose to send to a model service.
 
 ---
 
@@ -155,7 +155,11 @@ files the stages hand to each other.
 **One file to send.** `report.html` is the whole analysis in a single page
 with the frames inside it, so it can be emailed or dropped in a chat and
 opens anywhere with nothing else attached. The SME Questions table has
-answer cells you can type into during the follow-up call, then print to PDF.
+answer cells and a status dropdown you can fill in during the follow-up
+call; they are saved in that browser as you go, and an Export answers
+button turns them into a file that flows back into the workbook (see
+[After the follow-up call](#after-the-follow-up-call)). Print to PDF instead
+to keep a paper copy.
 
 **Into Jira or Azure DevOps.** `jira_import.csv` holds one Story per
 requirement with its acceptance criteria and source in the description, and
@@ -335,16 +339,37 @@ setup costs nothing before pointing it at a real model.
 
 ## After the follow-up call
 
-Type the expert's answers into the Answer column of the SME Questions sheet
-(and "not needed" in Status for the ones that no longer matter), then:
+Two ways to get the expert's answers back into the analysis; use whichever
+one the answers were typed into.
+
+**Typed into the workbook.** Type the expert's answers into the Answer
+column of the SME Questions sheet (and "not needed" in Status for the ones
+that no longer matter), then:
 
 ```bash
 specto answers out/walkthrough
+```
+
+**Typed into the web page.** `report.html` can be filled in instead, by
+whoever has the file, without needing the workbook at all. Open it, type
+each answer into its Answer cell and pick a Status from the dropdown next
+to it; both are saved in that browser as they are typed, so the page can be
+closed and reopened later without losing anything. When every answer is in,
+click **Export answers** at the top of the SME questions table, save the
+file it downloads next to `analysis.xlsx` as `answers.json`, and run:
+
+```bash
+specto answers out/walkthrough --from-html answers.json
+```
+
+Either command reads the answers back and rewrites every output with them.
+Then, whichever route was used:
+
+```bash
 specto resolve out/walkthrough
 ```
 
-The first reads the answers back and rewrites every output with them. The
-second sends only the answered questions to the model and adds what the
+This sends only the answered questions to the model and adds what the
 answers establish: new requirements with their source marked as the answer,
 changed wording on existing ones with the reason recorded, criteria for
 each, and any follow-up questions the answers raised. Running it again only
@@ -412,7 +437,7 @@ Ctrl-C) saves what it has read so far and picks up from there next time.
 | `specto requests DIR`, `specto load DIR`, `specto status DIR` | write the model requests as files, read the answers back, see what is left; no key needed |
 | `specto merge DIR DIR... --out DIR` | several sessions into one workbook: same screens, requirements and questions folded together, no model call |
 | `specto redact DIR` | paint over the personal data on the frames and mask it in the outputs; `specto restore DIR` undoes it |
-| `specto answers DIR` | read the Answer and Status columns typed into the workbook back in |
+| `specto answers DIR [--from-html FILE]` | read the Answer and Status columns typed into the workbook back in, or, with `--from-html`, the answers.json exported from report.html |
 | `specto resolve DIR` | turn the answered questions into requirements and criteria, and raise any follow-ups |
 
 ### Options
