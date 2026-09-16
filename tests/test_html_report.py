@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from specto.html_report import esc, export_html, frame_alt
+from specto.html_report import STATUS_OPTIONS, esc, export_html, frame_alt, storage_key
 from specto.lint import format_findings, lint_analysis, summarize
 from specto.model import Analysis, Recording
 
@@ -124,6 +124,38 @@ def test_questions_have_editable_answer_cells(analysis, recording, tmp_path):
         assert 'contenteditable="true"' in row
 
 
+def test_questions_have_status_dropdown_and_export_button(analysis, recording, tmp_path):
+    text = export_html(analysis, recording, tmp_path).read_text(encoding="utf-8")
+    assert '<button type="button" id="specto-export-answers">Export answers</button>' in text
+    assert "<th>Status</th><th>Answer</th>" in text
+    for q in analysis.questions:
+        row = text[text.index(f'<tr id="{q.id}">'):]
+        row = row[:row.index("</tr>")]
+        select = row[row.index('<td class="status">'):row.index("</td>", row.index('<td class="status">'))]
+        assert '<select class="statusSelect"' in select
+        for value in STATUS_OPTIONS:
+            assert f'<option value="{value}"' in select
+        # The question's current status is preselected.
+        assert f'<option value="{q.status}" selected>{q.status}</option>' in select
+
+
+def test_storage_key_is_embedded_and_stable_per_output_folder(analysis, recording, tmp_path):
+    text = export_html(analysis, recording, tmp_path).read_text(encoding="utf-8")
+    key = storage_key(tmp_path)
+    assert f"var SPECTO_STORAGE_KEY = {json.dumps(key)};" in text
+    # Rendering again for the same folder gives the same key; a different folder differs.
+    assert storage_key(tmp_path) == key
+    assert storage_key(tmp_path / "elsewhere") != key
+
+
+def test_export_answers_script_reads_and_writes_localstorage(analysis, recording, tmp_path):
+    text = export_html(analysis, recording, tmp_path).read_text(encoding="utf-8")
+    assert "localStorage.getItem(SPECTO_STORAGE_KEY" in text
+    assert "localStorage.setItem(SPECTO_STORAGE_KEY" in text
+    assert "download = 'answers.json'" in text
+    assert text.count("<script>") == 1  # still one script block, alongside the filter/lightbox JS
+
+
 def test_questions_table_has_blocks_column_and_order(analysis, recording, tmp_path):
     base = analysis.questions[0]
     analysis.questions = [
@@ -224,6 +256,34 @@ def test_no_javascript_needed_for_lightbox(analysis, recording, tmp_path, frames
     text = export_html(analysis, recording, tmp_path).read_text(encoding="utf-8")
     assert "figure.big:target { display:flex; }" in text
     assert text.count("<script>") == 1
+
+
+def test_html_export_json_round_trips_through_read_answers_from_html_export(analysis, recording, tmp_path):
+    """Render report.html, then build the JSON the Export answers button would
+    produce for a browser session where the analyst typed into two questions
+    and left the rest untouched, and check it reads back correctly.
+    """
+    from specto.answers import apply_answers, read_answers_from_html_export
+
+    export_html(analysis, recording, tmp_path)  # the rendered file itself is not parsed; its shape is
+    q1, q2 = analysis.questions[0], analysis.questions[1]
+    payload = {q.id: {"answer": "", "status": "open"} for q in analysis.questions}
+    payload[q1.id] = {"answer": "Only team leads, and it is logged.", "status": "open"}
+    payload[q2.id] = {"answer": "No, it is optional.", "status": "not needed"}
+    export_path = tmp_path / "answers.json"
+    export_path.write_text(json.dumps(payload, indent=2))
+
+    answers = read_answers_from_html_export(export_path)
+    # Every other question was left untouched (empty answer, default "open" status), so it drops out.
+    assert set(answers) == {q1.id, q2.id}
+    assert answers[q1.id] == ("Only team leads, and it is logged.", "answered")
+    assert answers[q2.id] == ("No, it is optional.", "not needed")
+
+    updated, result = apply_answers(analysis.model_copy(deep=True), answers)
+    assert result.changed == 2
+    by_id = {q.id: q for q in updated.questions}
+    assert by_id[q1.id].status == "answered" and by_id[q1.id].answer == "Only team leads, and it is logged."
+    assert by_id[q2.id].status == "not needed" and by_id[q2.id].answer == "No, it is optional."
 
 
 def test_flow_section_has_inline_svg(analysis, recording, tmp_path):

@@ -7,7 +7,9 @@ from pathlib import Path
 import pytest
 from openpyxl import load_workbook
 
-from specto.answers import ImportResult, apply_answers, import_answers, normalise_status, read_answers
+from specto.answers import (
+    ImportResult, apply_answers, import_answers, normalise_status, read_answers, read_answers_from_html_export,
+)
 from specto.export import export_xlsx
 from specto.model import Analysis, Recording
 
@@ -177,6 +179,84 @@ def test_missing_sheet_or_header_is_a_clear_error(tmp_path):
     wb.save(tmp_path / "no_status.xlsx")
     with pytest.raises(ValueError, match="Status"):
         read_answers(tmp_path / "no_status.xlsx")
+
+
+# ------------------------------------------------------------- the report.html export
+
+
+def html_export_payload() -> dict:
+    """What report.html's Export answers button produces for the same three
+    answers `answered_workbook` types into the xlsx: Q002 typed with the
+    Status dropdown left on its default "open" (the same as leaving the
+    workbook's Status cell blank), Q003 typed with "answered" picked, Q004
+    left blank with "not needed" picked, Q001 left completely untouched.
+    """
+    return {
+        "Q001": {"answer": "", "status": "open"},
+        "Q002": {"answer": Q002_ANSWER, "status": "open"},
+        "Q003": {"answer": Q003_ANSWER, "status": "answered"},
+        "Q004": {"answer": "", "status": "not needed"},
+    }
+
+
+@pytest.fixture
+def answered_html_export(tmp_path) -> Path:
+    path = tmp_path / "answers.json"
+    path.write_text(json.dumps(html_export_payload(), indent=2))
+    return path
+
+
+def test_read_answers_from_html_export_matches_the_xlsx_reading(answered_workbook, answered_html_export):
+    assert read_answers_from_html_export(answered_html_export) == read_answers(answered_workbook)
+
+
+def test_html_export_round_trips_through_apply_answers_identically_to_xlsx(analysis, answered_workbook, answered_html_export):
+    from_xlsx, xlsx_result = apply_answers(analysis.model_copy(deep=True), read_answers(answered_workbook))
+    from_html, html_result = apply_answers(analysis.model_copy(deep=True), read_answers_from_html_export(answered_html_export))
+
+    assert xlsx_result == html_result == ImportResult(changed=3, unknown_ids=[])
+    assert from_xlsx.model_dump() == from_html.model_dump()
+
+
+def test_import_answers_auto_detects_the_json_export_by_extension(analysis, answered_html_export, tmp_path):
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    (out_dir / "analysis.json").write_text(analysis.model_dump_json(indent=2))
+
+    result = import_answers(out_dir, answered_html_export)
+
+    assert result == ImportResult(changed=3, unknown_ids=[])
+    reloaded = Analysis.model_validate_json((out_dir / "analysis.json").read_text())
+    by_id = {q.id: q for q in reloaded.questions}
+    assert by_id["Q002"].answer == Q002_ANSWER and by_id["Q002"].status == "answered"
+    assert by_id["Q003"].status == "answered"
+    assert by_id["Q004"].status == "not needed" and by_id["Q004"].answer is None
+
+
+def test_html_export_unknown_id_is_reported_not_applied(analysis, answered_html_export):
+    data = json.loads(answered_html_export.read_text())
+    data["Q999"] = {"answer": "A question that is not in the analysis.", "status": "answered"}
+    answered_html_export.write_text(json.dumps(data))
+
+    answers = read_answers_from_html_export(answered_html_export)
+    assert answers["Q999"] == ("A question that is not in the analysis.", "answered")
+
+    analysis, result = apply_answers(analysis, answers)
+    assert result.changed == 3
+    assert result.unknown_ids == ["Q999"]
+
+
+def test_html_export_blank_entries_are_skipped(tmp_path):
+    path = tmp_path / "answers.json"
+    path.write_text(json.dumps({"Q001": {"answer": "", "status": "open"}}))
+    assert read_answers_from_html_export(path) == {}
+
+
+def test_html_export_must_be_a_json_object(tmp_path):
+    path = tmp_path / "answers.json"
+    path.write_text(json.dumps(["not", "an", "object"]))
+    with pytest.raises(ValueError, match="JSON object"):
+        read_answers_from_html_export(path)
 
 
 @pytest.mark.parametrize("typed, expected", [

@@ -1,15 +1,18 @@
-"""Read the analyst's answers back out of the workbook.
+"""Read the analyst's answers back out of the workbook, or out of report.html.
 
 After the follow-up call with the expert, the analyst types what was said into
-the Answer and Status columns of the SME Questions sheet. This module reads
-those cells, matches them to the questions by id, and stores them in
-analysis.json so the next stage (resolve) can turn them into requirements.
+the Answer and Status columns of the SME Questions sheet, or into the same
+cells on the questions table in report.html (see `specto/html_report.py`).
+This module reads those answers, matches them to the questions by id, and
+stores them in analysis.json so the next stage (resolve) can turn them into
+requirements.
 
 Columns are found by their header text, not by position, so a workbook where
 someone inserted or moved a column still reads correctly.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -115,6 +118,37 @@ def read_answers(xlsx_path: Path | str) -> Answers:
     return answers
 
 
+def read_answers_from_html_export(path: Path | str) -> Answers:
+    """Read id -> (answer, status) from the JSON file report.html's "Export answers"
+    button produces: `{"Q001": {"answer": "...", "status": "answered"}, ...}`.
+
+    Returns exactly the shape `read_answers` returns, so `apply_answers` and
+    `import_answers` do not need to know which source they were given. The
+    Status dropdown only offers "open", "answered" and "not needed" (unlike
+    the free-text Status column in the workbook, a `<select>` cannot be left
+    blank), so "open" is treated the same way a blank Status cell is: on its
+    own it changes nothing, and typing an answer without changing the
+    dropdown away from "open" still counts the question as answered.
+    """
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{path} is not a JSON object of question id -> {{answer, status}}")
+
+    answers: Answers = {}
+    for question_id, entry in data.items():
+        if not isinstance(entry, dict):
+            continue
+        answer = _cell_text(entry.get("answer"))
+        status_text = _cell_text(entry.get("status"))
+        status = normalise_status(status_text)
+        if answer is not None and status is None:
+            status = "answered"
+        if answer is None and status is None:
+            continue
+        answers[question_id] = (answer, status)
+    return answers
+
+
 # ------------------------------------------------------------------ applying
 
 
@@ -146,15 +180,22 @@ def apply_answers(analysis: Analysis, answers: Answers) -> tuple[Analysis, Impor
 
 
 def import_answers(out_dir: Path | str, xlsx_path: Optional[Path | str] = None) -> ImportResult:
-    """Read the workbook's answers into out_dir/analysis.json and save it.
+    """Read a source of answers into out_dir/analysis.json and save it.
 
-    The workbook defaults to out_dir/analysis.xlsx; pass a path when the
-    analyst worked on a copy. This does not re-export the workbook.
+    `xlsx_path` accepts either an .xlsx workbook (the SME Questions sheet, as
+    before) or a .json file exported from report.html's "Export answers"
+    button; the format is auto-detected by extension. It defaults to
+    out_dir/analysis.xlsx; pass a path when the analyst worked on a copy, or
+    on the HTML export. This does not re-export the workbook.
     """
     out_dir = Path(out_dir)
     analysis_path = out_dir / "analysis.json"
     analysis = Analysis.model_validate_json(analysis_path.read_text())
-    answers = read_answers(Path(xlsx_path) if xlsx_path else out_dir / "analysis.xlsx")
+    source = Path(xlsx_path) if xlsx_path else out_dir / "analysis.xlsx"
+    if source.suffix.lower() == ".json":
+        answers = read_answers_from_html_export(source)
+    else:
+        answers = read_answers(source)
     analysis, result = apply_answers(analysis, answers)
     analysis_path.write_text(analysis.model_dump_json(indent=2))
     return result

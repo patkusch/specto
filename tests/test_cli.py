@@ -145,6 +145,32 @@ def test_cli_answers_then_resolve_with_fake_model(synthetic_video: Path, tmp_pat
     assert len(resolved.requirements) > len(before.requirements)
 
 
+def test_cli_answers_from_html_export(synthetic_video: Path, tmp_path: Path) -> None:
+    import json
+
+    vtt = tmp_path / "w.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    out = tmp_path / "o"
+    assert main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(out), "--fake"]) == 0
+    before = Analysis.model_validate_json((out / "analysis.json").read_text())
+    first_q = before.questions[0].id
+
+    export_path = tmp_path / "answers.json"
+    export_path.write_text(json.dumps({
+        first_q: {"answer": "Only team leads, and it must be logged.", "status": "open"},
+    }))
+
+    assert main(["answers", str(out), "--from-html", str(export_path)]) == 0
+    after = Analysis.model_validate_json((out / "analysis.json").read_text())
+    answered = next(q for q in after.questions if q.id == first_q)
+    assert answered.status == "answered" and "team leads" in (answered.answer or "")
+    html = (out / "report.html").read_text()
+    assert "Only team leads, and it must be logged." in html
+
+    # --xlsx and --from-html together is refused, and neither is touched.
+    assert main(["answers", str(out), "--xlsx", str(out / "analysis.xlsx"), "--from-html", str(export_path)]) == 2
+
+
 def test_cli_run_from_a_folder_of_screenshots(tmp_path: Path) -> None:
     from PIL import Image, ImageDraw
 

@@ -205,8 +205,12 @@ def cmd_answers(args: argparse.Namespace) -> int:
     from .answers import import_answers
     from .export import export_all
 
+    if args.xlsx and args.from_html:
+        print("answers: pass either --xlsx or --from-html, not both")
+        return 2
+
     out_dir = Path(args.out_dir)
-    result = import_answers(out_dir, args.xlsx)
+    result = import_answers(out_dir, args.from_html or args.xlsx)
     print(f"answers: {result.changed} question(s) updated" + (f"; unknown ids ignored: {', '.join(result.unknown_ids)}" if result.unknown_ids else ""))
     analysis = _load(out_dir / "analysis.json", Analysis)
     recording = _load(out_dir / "recording.json", Recording)
@@ -628,9 +632,10 @@ def build_parser() -> argparse.ArgumentParser:
     live.add_argument("--fake", action="store_true", help="stand-in model, no key needed")
     live.set_defaults(func=cmd_live)
 
-    an = sub.add_parser("answers", help="read the Answer and Status columns typed into the workbook back into the analysis")
+    an = sub.add_parser("answers", help="read the Answer and Status typed into the workbook, or exported from report.html, back into the analysis")
     an.add_argument("out_dir")
     an.add_argument("--xlsx", help="the workbook with the answers (default: out_dir/analysis.xlsx)")
+    an.add_argument("--from-html", help="the answers.json exported from report.html's Export answers button")
     an.set_defaults(func=cmd_answers)
 
     rs = sub.add_parser("resolve", help="turn answered questions into requirements and criteria")

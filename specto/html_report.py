@@ -15,8 +15,10 @@ boxes and the Escape key, and printing works without them.
 from __future__ import annotations
 
 import base64
+import hashlib
 import html
 import io
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -85,6 +87,23 @@ def frame_alt(index: int, timestamp: float) -> str:
     return f"frame {index} at {mmss(timestamp)}"
 
 
+# --------------------------------------------------------------- answers in the browser
+
+STATUS_OPTIONS = ["open", "answered", "not needed"]
+
+
+def storage_key(out_dir: Path | str) -> str:
+    """A short id for this report, used as its localStorage key in the browser.
+
+    Built from the output folder's absolute path, so a browser that has typed
+    answers into this exact report remembers them when the file is reopened,
+    while a different analysis (a different output folder) gets its own key
+    even if its report.html happens to be opened from the same browser.
+    """
+    digest = hashlib.sha256(str(Path(out_dir).resolve()).encode("utf-8")).hexdigest()
+    return f"specto-answers:{digest[:16]}"
+
+
 # ------------------------------------------------------------------ escaping
 
 
@@ -107,10 +126,11 @@ def _required_text(required: Optional[bool]) -> str:
 class _Page:
     """Builds the HTML piece by piece; every method appends escaped markup to `parts`."""
 
-    def __init__(self, analysis: Analysis, recording: Recording, frames: dict[int, FrameImage]):
+    def __init__(self, analysis: Analysis, recording: Recording, frames: dict[int, FrameImage], storage_key: str):
         self.analysis = analysis
         self.recording = recording
         self.frames = frames
+        self.storage_key = storage_key
         self.names = screen_names(analysis)
         self.criteria = criteria_by_requirement(analysis)
         self.checks = lint_analysis(analysis)
@@ -144,6 +164,14 @@ class _Page:
 
     def pill(self, kind: str, text: str) -> str:
         return f'<span class="pill {esc(kind)} {esc(kind)}-{esc(text)}">{esc(text)}</span>'
+
+    def status_select(self, question_id: str, status: str) -> str:
+        """A native dropdown of the valid statuses, so the export stays parseable."""
+        options = "".join(
+            f'<option value="{esc(value)}"{" selected" if value == status else ""}>{esc(value)}</option>'
+            for value in STATUS_OPTIONS
+        )
+        return f'<select class="statusSelect" aria-label="Status of {esc(question_id)}">{options}</select>'
 
     def findings(self, item_id: str) -> str:
         found: list[Finding] = self.checks.get(item_id, [])
@@ -286,17 +314,22 @@ class _Page:
         a = self.analysis
         self.add('<section id="questions">\n<h2>SME questions</h2>\n'
                  '<p class="muted">Questions that hold up the most requirements come first. '
-                 'The Answer column can be typed into in the browser; print to PDF to keep the answers.</p>\n')
+                 'Type the Answer and pick a Status in the browser; they are kept in this browser '
+                 'until you export them. Click Export answers, save the file next to analysis.xlsx as '
+                 '<code>answers.json</code>, then run <code>specto answers --from-html answers.json</code>. '
+                 'Print to PDF instead to keep a paper copy.</p>\n'
+                 '<p class="export"><button type="button" id="specto-export-answers">Export answers</button></p>\n')
         if not a.questions:
             self.add("<p class=\"muted\">No questions recorded.</p>\n</section>\n")
             return
         self.add("<table class=\"questions\">\n<thead><tr><th>Id</th><th>Question</th><th>Why it matters</th><th>Category</th>"
-                 "<th>Screen</th><th>Blocks</th><th>What was said</th><th>Frame</th><th>Answer</th></tr></thead>\n<tbody>\n")
+                 "<th>Screen</th><th>Blocks</th><th>What was said</th><th>Frame</th><th>Status</th><th>Answer</th></tr></thead>\n<tbody>\n")
         for q in questions_to_ask_first(a):
             self.add(f'<tr id="{esc(q.id)}"><td class="id">{esc(q.id)}</td><td>{esc(q.question)}</td><td>{esc(q.why_it_matters)}</td>'
                      f"<td>{esc(q.category)}</td><td>{self.screen(q.screen_id)}</td>"
                      f'<td class="blocks">{esc(blocks_text(q))}</td><td>{esc(q.context_quote)}</td>'
                      f"<td>{self.time_and_thumb(q.keyframe_index, q.timestamp)}</td>"
+                     f'<td class="status">{self.status_select(q.id, q.status)}</td>'
                      f'<td class="answer" contenteditable="true" aria-label="Answer to {esc(q.id)}">{esc(q.answer or "")}</td></tr>\n')
         self.add("</tbody>\n</table>\n</section>\n")
 
@@ -325,7 +358,8 @@ class _Page:
                      f'<figcaption>{alt} <a href="#_">close</a></figcaption></div></figure>\n')
 
     def tail(self) -> None:
-        self.add(f"<script>\n{JS}\n</script>\n</body>\n</html>\n")
+        key_js = json.dumps(self.storage_key)
+        self.add(f"<script>\nvar SPECTO_STORAGE_KEY = {key_js};\n{JS}\n</script>\n</body>\n</html>\n")
 
     def render(self) -> str:
         self.head()
@@ -397,6 +431,10 @@ figure.quote figcaption { display:flex; flex-direction:column; gap:4px; align-it
 td .check { margin-top:6px; }
 .answer { min-width:180px; background:#fffdf3; }
 .answer:focus { outline:2px solid var(--link); }
+.status select { font:inherit; padding:4px 6px; border:1px solid var(--line); border-radius:4px; background:#fff; }
+.export { margin:8px 0 16px; }
+.export button { font:inherit; padding:6px 14px; border:1px solid var(--line); border-radius:4px; background:var(--soft); cursor:pointer; }
+.export button:hover { background:#e9edf1; }
 .filter input { width:100%; max-width:420px; padding:6px 10px; border:1px solid var(--line); border-radius:4px; font:inherit; }
 .hide { display:none !important; }
 figure.big { display:none; position:fixed; inset:0; z-index:20; margin:0; background:rgba(20,22,25,0.85); align-items:center; justify-content:center; }
@@ -407,7 +445,7 @@ figure.big img { max-width:96vw; max-height:88vh; width:auto; height:auto; borde
 figure.big figcaption { color:#fff; font-size:0.9em; }
 figure.big figcaption a { color:#fff; margin-left:12px; }
 @media print {
-  .toc, .filter, figure.big, script { display:none !important; }
+  .toc, .filter, .export, figure.big, script { display:none !important; }
   main { max-width:none; padding:0; }
   article.screen, article.req, tr { break-inside:avoid; }
   .thumb svg { width:180px; }
@@ -429,6 +467,67 @@ document.querySelectorAll('input[data-filter]').forEach(function (box) {
 document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape' && location.hash.indexOf('#big-') === 0) { location.hash = '#_'; }
 });
+
+// SME questions: what is typed into the Answer cell and picked in the Status
+// dropdown is saved to this browser's localStorage as it changes, and read
+// back here when the report is reopened in the same browser. Nothing is sent
+// anywhere; "Export answers" is the only way the data leaves the browser, as
+// an answers.json file the analyst saves next to the workbook.
+function spectoLoadAnswers() {
+  try { return JSON.parse(localStorage.getItem(SPECTO_STORAGE_KEY) || '{}'); } catch (e) { return {}; }
+}
+function spectoSaveAnswers(data) {
+  try { localStorage.setItem(SPECTO_STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
+}
+function spectoRowState(row) {
+  var answerCell = row.querySelector('.answer');
+  var statusSelect = row.querySelector('.status select');
+  return {
+    answer: answerCell ? answerCell.textContent.trim() : '',
+    status: statusSelect ? statusSelect.value : 'open',
+  };
+}
+(function () {
+  var rows = document.querySelectorAll('table.questions tbody tr');
+  if (!rows.length) { return; }
+  var saved = spectoLoadAnswers();
+  rows.forEach(function (row) {
+    var entry = saved[row.id];
+    if (!entry) { return; }
+    var answerCell = row.querySelector('.answer');
+    var statusSelect = row.querySelector('.status select');
+    if (answerCell && entry.answer) { answerCell.textContent = entry.answer; }
+    if (statusSelect && entry.status) { statusSelect.value = entry.status; }
+  });
+  rows.forEach(function (row) {
+    function save() {
+      var data = spectoLoadAnswers();
+      data[row.id] = spectoRowState(row);
+      spectoSaveAnswers(data);
+    }
+    var answerCell = row.querySelector('.answer');
+    var statusSelect = row.querySelector('.status select');
+    if (answerCell) {
+      answerCell.addEventListener('input', save);
+      answerCell.addEventListener('blur', save);
+    }
+    if (statusSelect) { statusSelect.addEventListener('change', save); }
+  });
+  var exportButton = document.getElementById('specto-export-answers');
+  if (exportButton) {
+    exportButton.addEventListener('click', function () {
+      var data = {};
+      rows.forEach(function (row) { data[row.id] = spectoRowState(row); });
+      var json = JSON.stringify(data, null, 2);
+      var link = document.createElement('a');
+      link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+      link.download = 'answers.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  }
+})();
 """.strip()
 
 
@@ -450,7 +549,7 @@ def export_html(analysis: Analysis, recording: Recording, out_dir: Path, filenam
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     frames = encode_frames(recording, out_dir, thumb_width, large_width)
-    page = _Page(analysis, recording, frames).render()
+    page = _Page(analysis, recording, frames, storage_key(out_dir)).render()
     path = out_dir / filename
     path.write_text(page, encoding="utf-8")
     return path
