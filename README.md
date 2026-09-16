@@ -19,7 +19,7 @@
 [![Model](https://img.shields.io/badge/Claude_Opus_5_or_Gemini-1A1A1A?style=for-the-badge)](#using-gemini-instead-of-claude)
 [![License](https://img.shields.io/badge/License-MIT-1A1A1A?style=for-the-badge)](./LICENSE)
 [![Recall](https://img.shields.io/badge/answer--key_recall-0.93_to_1.00-2ea043?style=for-the-badge)](#does-it-work)
-[![Tests](https://img.shields.io/badge/offline_tests-563-2ea043?style=for-the-badge)](#development)
+[![Tests](https://img.shields.io/badge/offline_tests-570-2ea043?style=for-the-badge)](#development)
 [![CI](https://github.com/patkusch/specto/actions/workflows/ci.yml/badge.svg)](https://github.com/patkusch/specto/actions/workflows/ci.yml)
 
 </div>
@@ -77,7 +77,7 @@ Plus a single web page with the frames inside it, a Markdown report, a screen-fl
 
 </div>
 
-563 offline tests. Runs without an API key. Nothing leaves your machine except the frames and words you choose to send to a model service.
+570 offline tests. Runs without an API key. Nothing leaves your machine except the frames and words you choose to send to a model service.
 
 ---
 
@@ -317,6 +317,25 @@ project's APIs & Services, Library, enable the Generative Language API, and
 run it again. An existing Google API key from another product (Maps,
 YouTube) works once that API is enabled on its project.
 
+## Batch mode: watch a shared folder
+
+```bash
+specto watch shared/incoming --out shared/out
+```
+
+For a team that gets a steady stream of walkthroughs: point specto at one
+shared folder and it processes whatever lands there, so nobody has to run a
+command by hand for every recording. Drop in a finished video, or a folder
+of screenshots, and specto notices it within ten seconds, then writes the
+same workbook, report and questions `specto run` would, in its own folder
+under `--out`. An item specto has already finished is left alone, so
+stopping and restarting `watch` does not redo work; dropping in a replacement
+recording under the same name does get reprocessed. One bad file (a corrupt
+recording, say) is logged and skipped without holding up the rest of the
+folder. Add `--once` to process whatever is there right now and exit, for a
+scheduled job rather than a machine left running, and `--fake` to check the
+setup costs nothing before pointing it at a real model.
+
 ## After the follow-up call
 
 Type the expert's answers into the Answer column of the SME Questions sheet
@@ -388,6 +407,7 @@ Ctrl-C) saves what it has read so far and picks up from there next time.
 |---|---|
 | `specto run VIDEO` | the whole pipeline on a recording |
 | `specto live --out DIR` | screen and microphone during a call, questions every five minutes |
+| `specto watch FOLDER --out DIR` | process every recording a team drops into a shared folder |
 | `specto export DIR` | rebuild every output from a finished analysis |
 | `specto score DIR KEY` | compare an output with an answer key |
 | `specto demo [--example onboarding\|claims] [--open]` | run a real example end to end with a saved reading, no key and no model call |

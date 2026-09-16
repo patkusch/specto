@@ -6,6 +6,7 @@
     specto score out/walkthrough expected.json   # compare with an answer key
     specto doctor                        # what is installed, what is missing
     specto merge out/day1 out/day2 --out out/all   # several sessions, one workbook
+    specto watch shared/incoming --out shared/out  # process every recording dropped into a folder
     specto requests out/walkthrough      # write the model requests as files (no key needed)
     specto load out/walkthrough          # read the answers back and write every output
     specto redact out/walkthrough        # paint over personal data on the frames
@@ -20,8 +21,11 @@ again picks up where it left off. Pass --force to redo everything.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .model import Analysis, Recording
@@ -53,13 +57,15 @@ def make_caller(args: argparse.Namespace, model: str | None = None):
     return ClaudeCaller(model=model, effort=args.effort)
 
 
-def cmd_run(args: argparse.Namespace) -> int:
+def run_pipeline(source: Path, out_dir: Path, args: argparse.Namespace) -> int:
+    """The single-item pipeline `specto run` uses: ingest, estimate (with the
+    --max-cost cap), extract, export. `source` is a video file or a folder of
+    screenshots; `out_dir` is where every stage writes its output. Shared by
+    `cmd_run` and `cmd_watch` so the two never drift apart."""
     from .export import export_all
     from .extract import extract
     from .ingest import ingest
 
-    source = Path(args.video)
-    out_dir = Path(args.out or Path("out") / (source.name or "run"))
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if source.is_dir():
@@ -154,6 +160,12 @@ def cmd_run(args: argparse.Namespace) -> int:
     for name, p in paths.items():
         print(f"wrote {name}: {p}")
     return 0
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    source = Path(args.video)
+    out_dir = Path(args.out or Path("out") / (source.name or "run"))
+    return run_pipeline(source, out_dir, args)
 
 
 def cmd_export(args: argparse.Namespace) -> int:
@@ -319,6 +331,149 @@ def cmd_merge(args: argparse.Namespace) -> int:
     print(merge_report(args.sources, analysis))
     for name, p in export_all(analysis, recording, out_dir).items():
         print(f"wrote {name}: {p}")
+    return 0
+
+
+WATCH_VIDEO_SUFFIXES = (".mp4", ".mov", ".mkv", ".webm")
+WATCH_TRANSCRIPT_SUFFIXES = (".vtt", ".srt", ".json", ".txt", ".md")
+WATCH_STATE_FILENAME = ".specto-watch-state.json"
+
+
+def _watch_items(folder: Path, out_root: Path) -> list[tuple[str, str, Path]]:
+    """New-item candidates in `folder`: `(stem, kind, source)` for every video
+    file and every subfolder that looks like a screenshot set (holds at least
+    one image), skipping dotfiles and the output folder itself."""
+    from .live import SCREENSHOT_SUFFIXES
+
+    try:
+        out_root_resolved = out_root.resolve()
+    except OSError:
+        out_root_resolved = out_root
+    items = []
+    for entry in sorted(folder.iterdir(), key=lambda p: p.name):
+        if entry.name.startswith("."):
+            continue
+        if entry.resolve() == out_root_resolved:
+            continue
+        if entry.is_file() and entry.suffix.lower() in WATCH_VIDEO_SUFFIXES:
+            items.append((entry.stem, "video", entry))
+        elif entry.is_dir():
+            if any(p.is_file() and p.suffix.lower() in SCREENSHOT_SUFFIXES for p in entry.iterdir()):
+                items.append((entry.name, "screenshots", entry))
+    return items
+
+
+def _watch_sibling_transcript(folder: Path, stem: str) -> Optional[Path]:
+    """A transcript or notes file dropped next to the item, `stem.vtt` etc.
+    Watch mode has no per-item --transcript flag, so this is the only way an
+    item picks one up; without one, video is transcribed locally and a
+    screenshot set is read with no notes."""
+    for suffix in WATCH_TRANSCRIPT_SUFFIXES:
+        candidate = folder / f"{stem}{suffix}"
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _watch_source_mtime(kind: str, source: Path) -> float:
+    """The newest mtime among a video file, or the files inside a screenshot
+    folder, used to tell a touched-up source from one already processed."""
+    if kind == "video":
+        return source.stat().st_mtime
+    mtimes = [p.stat().st_mtime for p in source.iterdir() if p.is_file()]
+    return max(mtimes) if mtimes else source.stat().st_mtime
+
+
+def _watch_item_args(args: argparse.Namespace) -> argparse.Namespace:
+    """The run_pipeline options for one watched item: the model/provider/fake
+    settings watch was given, everything else at specto run's defaults."""
+    return argparse.Namespace(
+        model=args.model, provider=args.provider, effort="high", reader_model=None,
+        frames_per_call=8, max_frames=240, crop=None, detect="hash", hash_distance=8,
+        sample_fps=1.0, scene_threshold=0.3, ocr=True, whisper_model="base",
+        ingest_only=False, estimate=False, max_cost=args.max_cost, fake=args.fake,
+        force=False, transcript=None,
+    )
+
+
+def _watch_pass(folder: Path, out_root: Path, args: argparse.Namespace, state: dict) -> tuple[int, int, int]:
+    """One pass over `folder`: process every new or touched item, skip the
+    rest, and return (processed, skipped, failed). Updates `state` in place;
+    the caller writes it to disk."""
+    processed = skipped = failed = 0
+    for stem, kind, source in _watch_items(folder, out_root):
+        item_out = out_root / stem
+        analysis_path = item_out / "analysis.json"
+        src_mtime = _watch_source_mtime(kind, source)
+        reprocess = False
+        if analysis_path.exists():
+            if src_mtime > analysis_path.stat().st_mtime:
+                reprocess = True
+            else:
+                skipped += 1
+                continue
+
+        print(f"watch: {'reprocessing' if reprocess else 'processing'} {stem} ({kind})")
+        item_args = _watch_item_args(args)
+        transcript = _watch_sibling_transcript(folder, stem)
+        item_args.transcript = str(transcript) if transcript else None
+        item_args.force = reprocess
+        try:
+            rc = run_pipeline(source, item_out, item_args)
+            if rc != 0:
+                raise RuntimeError(f"run_pipeline exited with code {rc}")
+        except Exception as error:
+            failed += 1
+            print(f"watch: FAILED {stem}: {error}", file=sys.stderr)
+            state[stem] = {
+                "kind": kind, "source": str(source), "source_mtime": src_mtime,
+                "out_dir": str(item_out), "status": "error", "error": str(error),
+                "processed_at": datetime.now(timezone.utc).isoformat(),
+            }
+        else:
+            processed += 1
+            print(f"watch: done {stem} -> {item_out}")
+            state[stem] = {
+                "kind": kind, "source": str(source), "source_mtime": src_mtime,
+                "out_dir": str(item_out), "status": "ok", "error": None,
+                "processed_at": datetime.now(timezone.utc).isoformat(),
+            }
+    return processed, skipped, failed
+
+
+def cmd_watch(args: argparse.Namespace) -> int:
+    folder = Path(args.folder)
+    if not folder.is_dir():
+        print(f"watch: {folder} is not a folder", file=sys.stderr)
+        return 2
+    out_root = Path(args.out) if args.out else folder.parent / "out"
+    out_root.mkdir(parents=True, exist_ok=True)
+    state_path = folder / WATCH_STATE_FILENAME
+    state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else {}
+
+    totals = {"processed": 0, "skipped": 0, "failed": 0}
+
+    def run_once() -> None:
+        processed, skipped, failed = _watch_pass(folder, out_root, args, state)
+        state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        totals["processed"] += processed
+        totals["skipped"] += skipped
+        totals["failed"] += failed
+        print(f"watch: pass done: {processed} processed, {skipped} skipped, {failed} failed "
+              f"(running totals: {totals['processed']} processed, {totals['skipped']} skipped, "
+              f"{totals['failed']} failed)")
+
+    if args.once:
+        run_once()
+        return 0
+
+    print(f"watch: watching {folder} every {args.interval:g}s, writing to {out_root} (Ctrl-C to stop)")
+    try:
+        while True:
+            run_once()
+            time.sleep(args.interval)
+    except KeyboardInterrupt:
+        print("watch: stopped")
     return 0
 
 
@@ -513,6 +668,17 @@ def build_parser() -> argparse.ArgumentParser:
     mg.add_argument("sources", nargs="+", help="output folders of finished runs, in session order")
     mg.add_argument("--out", required=True, help="folder for the merged result")
     mg.set_defaults(func=cmd_merge)
+
+    wt = sub.add_parser("watch", help="watch a shared folder and process every recording dropped into it, for a team")
+    wt.add_argument("folder", help="folder to watch for new video files and new screenshot-set subfolders")
+    wt.add_argument("--out", help="where each item's output goes, one subfolder per item (default: FOLDER/../out)")
+    wt.add_argument("--model", default="claude-opus-5", help="Claude model id (default: claude-opus-5)")
+    wt.add_argument("--provider", default="claude", choices=["claude", "gemini"], help="which model service to call (default claude)")
+    wt.add_argument("--fake", action="store_true", help="use a fake model (no API key needed) to check the pipeline")
+    wt.add_argument("--max-cost", type=float, metavar="N", help="skip an item's model call if its estimate is above this many dollars")
+    wt.add_argument("--interval", type=float, default=10, help="seconds between polls of the folder (default 10)")
+    wt.add_argument("--once", action="store_true", help="process everything currently in the folder and exit, instead of looping")
+    wt.set_defaults(func=cmd_watch)
 
     dm = sub.add_parser("demo", help="run a real example end to end with a saved reading: no key, no model call")
     dm.add_argument("--example", default="onboarding", choices=sorted(DEMO_EXAMPLES), help="which example (default onboarding)")
