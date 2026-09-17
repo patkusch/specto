@@ -345,6 +345,22 @@ folder. Add `--once` to process whatever is there right now and exit, for a
 scheduled job rather than a machine left running, and `--fake` to check the
 setup costs nothing before pointing it at a real model.
 
+## Comparing two recordings
+
+```bash
+specto compare out/before out/after --out out/diff
+```
+
+Two ways this comes up: the system changed and someone asks "did the
+requirements change too?", or two experts walked through the same process
+and their readings do not agree. Point `specto compare` at two finished
+output folders and it writes `compare.md` and `compare.html` listing what
+was added, what was dropped, and what stayed the same item but was said
+differently, with each one naming which analysis it came from and, where
+known, the frame it was seen on. Nothing is merged and no model is called;
+pass `--label-a` and `--label-b` to name the two sides in the report
+(default "before" and "after").
+
 ## After the follow-up call
 
 Two ways to get the expert's answers back into the analysis; use whichever
@@ -444,6 +460,7 @@ Ctrl-C) saves what it has read so far and picks up from there next time.
 | `specto doctor` | what is installed and what is missing |
 | `specto requests DIR`, `specto load DIR`, `specto status DIR` | write the model requests as files, read the answers back, see what is left; no key needed |
 | `specto merge DIR DIR... --out DIR` | several sessions into one workbook: same screens, requirements and questions folded together, no model call |
+| `specto compare DIR_A DIR_B --out DIR` | two finished analyses of the same journey: what was added, removed and reworded, no model call |
 | `specto redact DIR` | paint over the personal data on the frames and mask it in the outputs; `specto restore DIR` undoes it |
 | `specto answers DIR [--from-html FILE]` | read the Answer and Status columns typed into the workbook back in, or, with `--from-html`, the answers.json exported from report.html |
 | `specto resolve DIR` | turn the answered questions into requirements and criteria, and raise any follow-ups |

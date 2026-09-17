@@ -6,6 +6,7 @@
     specto score out/walkthrough expected.json   # compare with an answer key
     specto doctor                        # what is installed, what is missing
     specto merge out/day1 out/day2 --out out/all   # several sessions, one workbook
+    specto compare out/before out/after --out out/diff   # what changed between two analyses
     specto watch shared/incoming --out shared/out  # process every recording dropped into a folder
     specto requests out/walkthrough      # write the model requests as files (no key needed)
     specto load out/walkthrough          # read the answers back and write every output
@@ -335,6 +336,19 @@ def cmd_merge(args: argparse.Namespace) -> int:
     print(merge_report(args.sources, analysis))
     for name, p in export_all(analysis, recording, out_dir).items():
         print(f"wrote {name}: {p}")
+    return 0
+
+
+def cmd_compare(args: argparse.Namespace) -> int:
+    from .compare import compare_dirs
+
+    dir_a, dir_b = Path(args.dir_a), Path(args.dir_b)
+    out_dir = Path(args.out) if args.out else dir_a.parent / f"{dir_a.name}-vs-{dir_b.name}"
+    comparison, md_path, html_path = compare_dirs(dir_a, dir_b, out_dir, label_a=args.label_a, label_b=args.label_b)
+    print(f"compare: {len(comparison.added)} added, {len(comparison.removed)} removed, "
+          f"{len(comparison.changed)} changed")
+    print(f"wrote markdown: {md_path}")
+    print(f"wrote html: {html_path}")
     return 0
 
 
@@ -673,6 +687,14 @@ def build_parser() -> argparse.ArgumentParser:
     mg.add_argument("sources", nargs="+", help="output folders of finished runs, in session order")
     mg.add_argument("--out", required=True, help="folder for the merged result")
     mg.set_defaults(func=cmd_merge)
+
+    cp = sub.add_parser("compare", help="compare two finished analyses of the same journey: what changed")
+    cp.add_argument("dir_a", metavar="DIR_A", help="output folder of the first (e.g. 'before') run")
+    cp.add_argument("dir_b", metavar="DIR_B", help="output folder of the second (e.g. 'after') run")
+    cp.add_argument("--out", help="folder for compare.md and compare.html (default: a new folder next to DIR_A)")
+    cp.add_argument("--label-a", default="before", help="label for DIR_A in the report (default: before)")
+    cp.add_argument("--label-b", default="after", help="label for DIR_B in the report (default: after)")
+    cp.set_defaults(func=cmd_compare)
 
     wt = sub.add_parser("watch", help="watch a shared folder and process every recording dropped into it, for a team")
     wt.add_argument("folder", help="folder to watch for new video files and new screenshot-set subfolders")
