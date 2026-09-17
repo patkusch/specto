@@ -69,7 +69,7 @@ One workbook and one web page a delivery team can build from:
 | Gaps | What the analysis does not cover yet: screens with no requirement, fields never mentioned, requirements with no criteria |
 | Personal Data | Every email, phone number, postcode, date of birth, card or account number, name and address that appeared, masked, with the frame |
 
-Plus a single web page with the frames inside it, a Markdown report, a screen-flow picture, and import files for Jira and Azure DevOps.
+Plus a single web page with the frames inside it, a Markdown report, a screen-flow picture, import files for Jira and Azure DevOps, and two plain pages ready to paste into Confluence or SharePoint.
 
 <div align="center">
 
@@ -149,8 +149,8 @@ specto run walkthrough.mp4 --transcript walkthrough.vtt
 ```
 
 Output lands in `out/walkthrough/`: `analysis.xlsx`, `report.md`,
-`report.html`, a `frames/` folder, two ticket import files, and the JSON
-files the stages hand to each other.
+`report.html`, a `frames/` folder, two ticket import files, two wiki pages,
+and the JSON files the stages hand to each other.
 
 **One file to send.** `report.html` is the whole analysis in a single page
 with the frames inside it, so it can be emailed or dropped in a chat and
@@ -169,6 +169,14 @@ holds one User Story per requirement and one Issue per question. In Azure
 DevOps go to Boards, Queries, Import Work Items, pick the file, then Save
 items. On a Scrum or Basic project change "User Story" to "Product Backlog
 Item" in the file first.
+
+**Into Confluence or SharePoint.** `confluence.html` and `sharepoint.html`
+hold the same journey, screens, requirements, criteria, questions and
+glossary as plain tables, with no frame pictures and nothing that needs a
+key to open. In Confluence, create a page, then Import (or paste the file's
+content into the editor) and it lands as ordinary wiki tables. In
+SharePoint, add a page and use its Word/HTML import, or point a File Viewer
+web part at the file.
 
 If you have no transcript file, leave `--transcript` off and specto transcribes
 the audio on your machine (needs `pip install -e ".[whisper]"`; the first run

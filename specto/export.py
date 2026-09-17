@@ -498,9 +498,11 @@ def export_markdown(analysis: Analysis, recording: Recording, out_dir: Path, fil
 
 def export_all(analysis: Analysis, recording: Recording, out_dir: Path) -> dict[str, Path]:
     """Write every output: the workbook, the Markdown report, the self-contained
-    HTML report, and the Jira and Azure DevOps import files. Returns a name -> path dict."""
+    HTML report, the Jira and Azure DevOps import files, and the Confluence and
+    SharePoint pages. Returns a name -> path dict."""
     from .html_report import export_html
     from .tickets import export_tickets
+    from .wiki_export import export_wiki_pages
 
     paths = {
         "xlsx": export_xlsx(analysis, recording, out_dir),
@@ -508,4 +510,5 @@ def export_all(analysis: Analysis, recording: Recording, out_dir: Path) -> dict[
         "html": export_html(analysis, recording, out_dir),
     }
     paths.update(export_tickets(analysis, recording, out_dir))
+    paths.update(export_wiki_pages(analysis, recording, out_dir))
     return paths
