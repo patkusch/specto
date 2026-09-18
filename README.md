@@ -465,6 +465,26 @@ Ctrl-C) saves what it has read so far and picks up from there next time.
 | `specto answers DIR [--from-html FILE]` | read the Answer and Status columns typed into the workbook back in, or, with `--from-html`, the answers.json exported from report.html |
 | `specto resolve DIR` | turn the answered questions into requirements and criteria, and raise any follow-ups |
 
+## Project settings
+
+If your team runs specto with the same flags every time, write them down once. `specto init` creates a `specto.toml` in the current folder with every setting listed and switched off; remove the `#` from a line to use it.
+
+```toml
+[run]
+provider = "gemini"
+max_cost = 5.0
+out = "team-out"
+
+[watch]
+interval = 30
+```
+
+Settings in `[run]` are the flag names with underscores: `provider`, `model`, `reader_model`, `effort`, `max_cost`, `crop`, `detect`, `hash_distance`, `sample_fps`, `max_frames`, `frames_per_call`, `ocr`, `out`, `whisper_model`. `[watch]` takes `interval`. `run`, `watch`, `live`, `resolve` and `demo` use the settings they have flags for, and `watch` applies all of `[run]` to every recording it picks up.
+
+A flag typed on the command line always wins, then the file, then the built-in default. Typing a flag with its default value still wins over the file. The file is `./specto.toml`, or the one named by `--config PATH`.
+
+A mistake stops the command with one line naming the file, the key and the allowed keys. Keys never go in this file: a setting that looks like an API key is refused, so keep `ANTHROPIC_API_KEY` and `GEMINI_API_KEY` in the environment. `specto doctor` shows whether a file was found and what it sets. `specto init --force` replaces an existing file.
+
 ### Options
 
 | Flag | Meaning | Default |
