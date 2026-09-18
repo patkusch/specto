@@ -1,0 +1,48 @@
+{
+  "_note": "Hand-written answer key for the deliveries example, written on 2026-09-18 from the narration script and the screen designs in make_example.py BEFORE any model read the recording. No prompt has ever been tuned against it. Matching is case-insensitive substring; a group written as 'a|b' matches when any alternative is present; an item matches when every group in it is present. Only things the narration or the screens actually contain are listed. Two questions (the phone number and the hazardous badge) can only come from looking at the screen.",
+  "screens": [
+    "runs",
+    "stop detail",
+    "proof of delivery",
+    "failed delivery",
+    "reassign",
+    "end of day"
+  ],
+  "fields": [
+    {"screen": "runs", "label": "status"},
+    {"screen": "runs", "label": "window|time"},
+    {"screen": "stop detail", "label": "parcel"},
+    {"screen": "stop detail", "label": "instruction"},
+    {"screen": "proof of delivery", "label": "photo"},
+    {"screen": "proof of delivery", "label": "recipient"},
+    {"screen": "proof of delivery", "label": "signature"},
+    {"screen": "failed delivery", "label": "reason"},
+    {"screen": "failed delivery", "label": "note|free text|comment|detail"},
+    {"screen": "reassign", "label": "driver"},
+    {"screen": "reassign", "label": "reason"},
+    {"screen": "end of day", "label": "cash"},
+    {"screen": "end of day", "label": "mileage|miles"}
+  ],
+  "actions": [
+    ["delivered|deliver", "press|tap|mark|confirm|complete|submit|record"],
+    ["fail", "report|mark|record|press|tap|submit|select|confirm"],
+    ["reassign", "press|tap|move|submit|confirm|change|assign"],
+    ["submit", "day"]
+  ],
+  "requirements": [
+    ["hundred|100", "photo", "signature"],
+    ["delivered", "photo", "grey|gray|disabled|until|enabled|only"],
+    ["three|3", "attempt|fail", "depot"],
+    ["supervisor", "reassign"],
+    ["fail", "reason", "select|pick|choose|required|must|mandatory|cannot|can't|won't"],
+    ["reassign", "reason", "audit|required|must|mandatory|write|enter"],
+    ["submit", "pending|every stop|all stops|delivered or failed|outstanding|open"]
+  ],
+  "questions": [
+    ["red", "window|time", "why|reason|mean|cause|unknown|unclear|rule"],
+    ["cash", "finance|source|where|come|calculated|derived"],
+    ["phone|number", "no number|not on file|missing|no phone|without|contradict|conflict|disagree|discrepan|grey|disabled|unavailable"],
+    ["hazard", "badge|mean|rule|handling|special|requirement|restriction|process|procedure|different|what"],
+    ["signature", "under|below|less than|not over|other parcels|optional|all parcels|every parcel|lower|all deliveries"]
+  ]
+}
