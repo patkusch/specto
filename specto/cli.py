@@ -5,6 +5,7 @@
     specto export out/walkthrough        # rebuild the workbook from analysis.json
     specto score out/walkthrough expected.json   # compare with an answer key
     specto doctor                        # what is installed, what is missing
+    specto init                          # write a commented starter specto.toml for the team
     specto merge out/day1 out/day2 --out out/all   # several sessions, one workbook
     specto compare out/before out/after --out out/diff   # what changed between two analyses
     specto watch shared/incoming --out shared/out  # process every recording dropped into a folder
@@ -18,6 +19,9 @@
 
 Each stage saves its result in the output folder, so running the same command
 again picks up where it left off. Pass --force to redo everything.
+
+A specto.toml in the current folder (or --config PATH) sets flags once for the
+team; a flag typed on the command line always beats it. Run specto init.
 """
 from __future__ import annotations
 
@@ -29,6 +33,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from . import config as project_config
+from .config import UNSET
 from .model import Analysis, Recording
 
 
@@ -403,14 +409,16 @@ def _watch_source_mtime(kind: str, source: Path) -> float:
 
 
 def _watch_item_args(args: argparse.Namespace) -> argparse.Namespace:
-    """The run_pipeline options for one watched item: the model/provider/fake
-    settings watch was given, everything else at specto run's defaults."""
+    """The run_pipeline options for one watched item: the settings watch was
+    given (flags, then specto.toml, then the built-in defaults), the same ones
+    `specto run` would use, plus the per-item plumbing."""
+    v = lambda name: project_config.value_or_default(args, name)  # noqa: E731
     return argparse.Namespace(
-        model=args.model, provider=args.provider, effort="high", reader_model=None,
-        frames_per_call=8, max_frames=240, crop=None, detect="hash", hash_distance=8,
-        sample_fps=1.0, scene_threshold=0.3, ocr=True, whisper_model="base",
-        ingest_only=False, estimate=False, max_cost=args.max_cost, fake=args.fake,
-        force=False, transcript=None,
+        model=v("model"), provider=v("provider"), effort=v("effort"), reader_model=v("reader_model"),
+        frames_per_call=v("frames_per_call"), max_frames=v("max_frames"), crop=v("crop"), detect=v("detect"),
+        hash_distance=v("hash_distance"), sample_fps=v("sample_fps"), scene_threshold=0.3, ocr=v("ocr"),
+        whisper_model=v("whisper_model"), ingest_only=False, estimate=False, max_cost=v("max_cost"),
+        fake=args.fake, force=False, transcript=None,
     )
 
 
@@ -583,9 +591,29 @@ def cmd_demo(args: argparse.Namespace) -> int:
 
 
 def cmd_doctor(args: argparse.Namespace) -> int:
-    from .doctor import main as doctor_main
+    from .doctor import Check, main as doctor_main
 
-    return doctor_main([])
+    try:
+        config = project_config.load_config(getattr(args, "config", None))
+    except project_config.ConfigError as error:
+        check = Check(name="Project settings", ok=False, detail=str(error))
+    else:
+        if config is None:
+            check = Check(name="Project settings", ok=False,
+                          detail=f"no {project_config.CONFIG_FILENAME} here (optional; specto init writes a commented starter)")
+        else:
+            check = Check(name="Project settings", ok=True, detail=project_config.describe(config))
+    return doctor_main([], extra_checks=[check])
+
+
+def cmd_init(args: argparse.Namespace) -> int:
+    path = Path(project_config.CONFIG_FILENAME)
+    if path.exists() and not args.force:
+        print(f"init: {path} already exists; pass --force to replace it", file=sys.stderr)
+        return 2
+    path.write_text(project_config.starter_text(), encoding="utf-8")
+    print(f"init: wrote {path}. Every setting is commented out; remove the # from a line to use it.")
+    return 0
 
 
 def cmd_score(args: argparse.Namespace) -> int:
@@ -598,30 +626,33 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="specto", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
+    cfg = argparse.ArgumentParser(add_help=False)
+    cfg.add_argument("--config", metavar="PATH",
+                     help="project settings file (default: ./specto.toml if there is one); a flag typed here beats the file")
 
-    run = sub.add_parser("run", help="watch a recording and write the workbook")
+    run = sub.add_parser("run", parents=[cfg], help="watch a recording and write the workbook")
     run.add_argument("video", help="video file (mp4, mov, mkv, webm), or a folder of screenshots (png, jpg, webp)")
     run.add_argument("--transcript", help="transcript file (.vtt, .srt, .txt, .json); transcribed locally if omitted. "
                      "With a screenshot folder, plain notes (.txt or .md without timestamps) are spread over the screenshots")
-    run.add_argument("--out", help="output folder (default: out/<video name>)")
-    run.add_argument("--model", default="claude-opus-5", help="Claude model id (default: claude-opus-5)")
-    run.add_argument("--provider", default="claude", choices=["claude", "gemini"], help="which model service to call (default claude)")
-    run.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
-    run.add_argument("--reader-model", help="a cheaper model for reading the frames, e.g. claude-sonnet-5; the merge still uses --model")
-    run.add_argument("--frames-per-call", type=int, default=8, help="frames sent per model call (default 8)")
-    run.add_argument("--max-frames", type=int, default=240, help="cap on still frames kept; the least-changed frames go first (default 240)")
-    run.add_argument("--crop", metavar="x,y,w,h|auto", help="keep only this part of the picture (pixels), or 'auto' to find the shared window and drop the border, toolbar and gallery strip around it")
-    run.add_argument("--detect", default="hash", choices=["hash", "scene"],
+    run.add_argument("--out", default=UNSET, help="output folder (default: out/<video name>)")
+    run.add_argument("--model", default=UNSET, help="Claude model id (default: claude-opus-5)")
+    run.add_argument("--provider", default=UNSET, choices=["claude", "gemini"], help="which model service to call (default claude)")
+    run.add_argument("--effort", default=UNSET, choices=["low", "medium", "high", "xhigh", "max"])
+    run.add_argument("--reader-model", default=UNSET, help="a cheaper model for reading the frames, e.g. claude-sonnet-5; the merge still uses --model")
+    run.add_argument("--frames-per-call", type=int, default=UNSET, help="frames sent per model call (default 8)")
+    run.add_argument("--max-frames", type=int, default=UNSET, help="cap on still frames kept; the least-changed frames go first (default 240)")
+    run.add_argument("--crop", metavar="x,y,w,h|auto", default=UNSET, help="keep only this part of the picture (pixels), or 'auto' to find the shared window and drop the border, toolbar and gallery strip around it")
+    run.add_argument("--detect", default=UNSET, choices=["hash", "scene"],
                      help="how screen changes are found: image hash (default) or ffmpeg brightness")
-    run.add_argument("--hash-distance", type=int, default=8, help="how different a frame must be to count as new (default 8; lower catches typed text)")
-    run.add_argument("--sample-fps", type=float, default=1.0, help="frames looked at per second in hash mode (default 1)")
+    run.add_argument("--hash-distance", type=int, default=UNSET, help="how different a frame must be to count as new (default 8; lower catches typed text)")
+    run.add_argument("--sample-fps", type=float, default=UNSET, help="frames looked at per second in hash mode (default 1)")
     run.add_argument("--scene-threshold", type=float, default=0.3, help="ffmpeg scene-change threshold 0..1, scene mode only (default 0.3)")
-    run.add_argument("--ocr", action=argparse.BooleanOptionalAction, default=True,
+    run.add_argument("--ocr", action=argparse.BooleanOptionalAction, default=UNSET,
                      help="read the text on each frame and show it to the model (needs pip install 'specto[ocr]')")
-    run.add_argument("--whisper-model", default="base", help="faster-whisper model size when transcribing locally")
+    run.add_argument("--whisper-model", default=UNSET, help="faster-whisper model size when transcribing locally")
     run.add_argument("--ingest-only", action="store_true", help="stop after frames and transcript")
     run.add_argument("--estimate", action="store_true", help="print the expected cost for each model and stop before calling one")
-    run.add_argument("--max-cost", type=float, metavar="USD", help="stop before the model if the estimate is above this many dollars")
+    run.add_argument("--max-cost", type=float, metavar="USD", default=UNSET, help="stop before the model if the estimate is above this many dollars")
     run.add_argument("--fake", action="store_true", help="use a fake model (no API key needed) to check the pipeline")
     run.add_argument("--force", action="store_true", help="redo every stage even if outputs exist")
     run.set_defaults(func=cmd_run)
@@ -630,8 +661,8 @@ def build_parser() -> argparse.ArgumentParser:
     exp.add_argument("out_dir")
     exp.set_defaults(func=cmd_export)
 
-    live = sub.add_parser("live", help="watch the shared screen and microphone during a call (macOS)")
-    live.add_argument("--out", required=True, help="output folder; an existing one is resumed")
+    live = sub.add_parser("live", parents=[cfg], help="watch the shared screen and microphone during a call (macOS)")
+    live.add_argument("--out", default=UNSET, help="output folder; an existing one is resumed (required, here or in specto.toml)")
     live.add_argument("--replay", metavar="DIR", help="instead of capturing, feed a folder of screenshots named shot_<seconds>.png")
     live.add_argument("--transcript", help="transcript file to use with --replay")
     live.add_argument("--every", type=float, default=300, help="seconds between analyses (default 300)")
@@ -639,10 +670,10 @@ def build_parser() -> argparse.ArgumentParser:
     live.add_argument("--audio-chunk", type=float, default=30, help="seconds of microphone per transcribed chunk (default 30)")
     live.add_argument("--display", type=int, default=1, help="which display to capture (default 1)")
     live.add_argument("--audio-device", default=":0", help="ffmpeg avfoundation audio device (default :0)")
-    live.add_argument("--whisper-model", default="base")
-    live.add_argument("--model", default="claude-opus-5")
-    live.add_argument("--provider", default="claude", choices=["claude", "gemini"], help="which model service to call (default claude)")
-    live.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
+    live.add_argument("--whisper-model", default=UNSET)
+    live.add_argument("--model", default=UNSET)
+    live.add_argument("--provider", default=UNSET, choices=["claude", "gemini"], help="which model service to call (default claude)")
+    live.add_argument("--effort", default=UNSET, choices=["low", "medium", "high", "xhigh", "max"])
     live.add_argument("--fake", action="store_true", help="stand-in model, no key needed")
     live.set_defaults(func=cmd_live)
 
@@ -652,11 +683,11 @@ def build_parser() -> argparse.ArgumentParser:
     an.add_argument("--from-html", help="the answers.json exported from report.html's Export answers button")
     an.set_defaults(func=cmd_answers)
 
-    rs = sub.add_parser("resolve", help="turn answered questions into requirements and criteria")
+    rs = sub.add_parser("resolve", parents=[cfg], help="turn answered questions into requirements and criteria")
     rs.add_argument("out_dir")
-    rs.add_argument("--model", default="claude-opus-5")
-    rs.add_argument("--provider", default="claude", choices=["claude", "gemini"], help="which model service to call (default claude)")
-    rs.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
+    rs.add_argument("--model", default=UNSET)
+    rs.add_argument("--provider", default=UNSET, choices=["claude", "gemini"], help="which model service to call (default claude)")
+    rs.add_argument("--effort", default=UNSET, choices=["low", "medium", "high", "xhigh", "max"])
     rs.add_argument("--fake", action="store_true", help="stand-in model, no key needed")
     rs.set_defaults(func=cmd_resolve)
 
@@ -696,24 +727,28 @@ def build_parser() -> argparse.ArgumentParser:
     cp.add_argument("--label-b", default="after", help="label for DIR_B in the report (default: after)")
     cp.set_defaults(func=cmd_compare)
 
-    wt = sub.add_parser("watch", help="watch a shared folder and process every recording dropped into it, for a team")
+    wt = sub.add_parser("watch", parents=[cfg], help="watch a shared folder and process every recording dropped into it, for a team")
     wt.add_argument("folder", help="folder to watch for new video files and new screenshot-set subfolders")
-    wt.add_argument("--out", help="where each item's output goes, one subfolder per item (default: FOLDER/../out)")
-    wt.add_argument("--model", default="claude-opus-5", help="Claude model id (default: claude-opus-5)")
-    wt.add_argument("--provider", default="claude", choices=["claude", "gemini"], help="which model service to call (default claude)")
+    wt.add_argument("--out", default=UNSET, help="where each item's output goes, one subfolder per item (default: FOLDER/../out)")
+    wt.add_argument("--model", default=UNSET, help="Claude model id (default: claude-opus-5)")
+    wt.add_argument("--provider", default=UNSET, choices=["claude", "gemini"], help="which model service to call (default claude)")
     wt.add_argument("--fake", action="store_true", help="use a fake model (no API key needed) to check the pipeline")
-    wt.add_argument("--max-cost", type=float, metavar="N", help="skip an item's model call if its estimate is above this many dollars")
-    wt.add_argument("--interval", type=float, default=10, help="seconds between polls of the folder (default 10)")
+    wt.add_argument("--max-cost", type=float, metavar="N", default=UNSET, help="skip an item's model call if its estimate is above this many dollars")
+    wt.add_argument("--interval", type=float, default=UNSET, help="seconds between polls of the folder (default 10)")
     wt.add_argument("--once", action="store_true", help="process everything currently in the folder and exit, instead of looping")
     wt.set_defaults(func=cmd_watch)
 
-    dm = sub.add_parser("demo", help="run a real example end to end with a saved reading: no key, no model call")
+    dm = sub.add_parser("demo", parents=[cfg], help="run a real example end to end with a saved reading: no key, no model call")
     dm.add_argument("--example", default="onboarding", choices=sorted(DEMO_EXAMPLES), help="which example (default onboarding)")
-    dm.add_argument("--out", help="output folder (default: out/demo-<example>)")
+    dm.add_argument("--out", default=UNSET, help="output folder (default: out/demo-<example>)")
     dm.add_argument("--open", action="store_true", help="open report.html in the default browser when done")
     dm.set_defaults(func=cmd_demo)
 
-    doc = sub.add_parser("doctor", help="check what is installed and what is missing")
+    ini = sub.add_parser("init", help="write a commented starter specto.toml in this folder")
+    ini.add_argument("--force", action="store_true", help="replace specto.toml if it already exists")
+    ini.set_defaults(func=cmd_init)
+
+    doc = sub.add_parser("doctor", parents=[cfg], help="check what is installed and what is missing")
     doc.set_defaults(func=cmd_doctor)
 
     sc = sub.add_parser("score", help="compare an output folder with a hand-written answer key")
@@ -725,7 +760,19 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.command in project_config.COMMAND_KEYS:
+        try:
+            config = project_config.load_config(args.config)
+        except project_config.ConfigError as error:
+            print(error, file=sys.stderr)
+            return 2
+        from_file = project_config.apply_config(args, config)
+        if from_file:
+            print(f"config: {config.path} sets {', '.join(from_file)}")
+        if args.command == "live" and not args.out:
+            parser.error("the following arguments are required: --out (or set out in specto.toml)")
     return args.func(args)
 
 

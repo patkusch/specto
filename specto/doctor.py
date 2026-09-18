@@ -365,9 +365,10 @@ def format_checks(checks: list[Check]) -> str:
     return "\n".join(lines)
 
 
-def main(argv: Optional[list[str]] = None) -> int:
-    """Print the checks; exit 0 when everything required is ok, 1 otherwise."""
-    checks = run_checks()
+def main(argv: Optional[list[str]] = None, extra_checks: Optional[list[Check]] = None) -> int:
+    """Print the checks; exit 0 when everything required is ok, 1 otherwise.
+    `extra_checks` are lines the caller worked out itself (the project settings file)."""
+    checks = run_checks() + list(extra_checks or [])
     print(format_checks(checks))
     return 0 if all(c.ok for c in checks if c.required) else 1
 
