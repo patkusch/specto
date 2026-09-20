@@ -1,0 +1,64 @@
+{
+  "categories": {
+    "screens": {
+      "expected": 6,
+      "found": 6,
+      "recall": 1.0,
+      "missed": [],
+      "extras": 0
+    },
+    "fields": {
+      "expected": 13,
+      "found": 12,
+      "recall": 0.9230769230769231,
+      "missed": [
+        {
+          "screen": "failed delivery",
+          "label": "note|free text|comment|detail"
+        }
+      ],
+      "extras": 25
+    },
+    "actions": {
+      "expected": 4,
+      "found": 4,
+      "recall": 1.0,
+      "missed": [],
+      "extras": 13
+    },
+    "requirements": {
+      "expected": 7,
+      "found": 7,
+      "recall": 1.0,
+      "missed": [],
+      "extras": 31
+    },
+    "questions": {
+      "expected": 5,
+      "found": 4,
+      "recall": 0.8,
+      "missed": [
+        [
+          "signature",
+          "under|below|less than|not over|other parcels|optional|all parcels|every parcel|lower|all deliveries"
+        ]
+      ],
+      "extras": 13
+    }
+  },
+  "overall_recall": 0.9446153846153846,
+  "traceability": {
+    "requirements_without_source_quote": 0,
+    "criteria_with_unknown_requirement": 0,
+    "negative_keyframe_indexes": 0
+  },
+  "writing": {
+    "requirements_with_warnings": 1,
+    "criteria_with_warnings": 1,
+    "rules_seen": [
+      "absolute",
+      "joined-clauses",
+      "passive-voice"
+    ]
+  }
+}

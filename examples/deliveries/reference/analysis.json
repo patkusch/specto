@@ -1,0 +1,1929 @@
+{
+  "title": "Harbourline Drivers: daily delivery run",
+  "summary": "Harbourline Drivers is the app a delivery driver uses through the working day. The driver signs in to Today's runs, works through the stops in drive order, and records each one as delivered with a photo, recipient name and signature, or as a failed delivery with a reason. A supervisor can move a stop to another driver with a written reason that goes in the audit trail. At the end of the day the driver checks the delivered, failed and cash figures, types the mileage and submits the day once every stop is closed.",
+  "actors": [
+    "Driver",
+    "Supervisor",
+    "Customer (recipient)",
+    "Depot",
+    "Finance"
+  ],
+  "screens": [
+    {
+      "id": "S01",
+      "name": "Today's runs",
+      "purpose": "Lists the driver's stops for the day in drive order with the status and delivery window of each.",
+      "keyframe_indexes": [
+        0
+      ],
+      "first_seen": 0.0,
+      "field_ids": [
+        "F001",
+        "F002",
+        "F003",
+        "F004",
+        "F005",
+        "F006",
+        "F007"
+      ],
+      "action_ids": [
+        "A001"
+      ]
+    },
+    {
+      "id": "S02",
+      "name": "Stop detail",
+      "purpose": "Shows one stop: address, parcels, customer instructions and phone, with buttons to call, navigate and start proof of delivery.",
+      "keyframe_indexes": [
+        1
+      ],
+      "first_seen": 32.0,
+      "field_ids": [
+        "F008",
+        "F009",
+        "F010",
+        "F011",
+        "F012",
+        "F013",
+        "F014",
+        "F015",
+        "F016",
+        "F017",
+        "F018",
+        "F019"
+      ],
+      "action_ids": [
+        "A002",
+        "A003",
+        "A004"
+      ]
+    },
+    {
+      "id": "S03",
+      "name": "Proof of delivery",
+      "purpose": "Captures the photo, recipient name and signature that mark a stop as delivered.",
+      "keyframe_indexes": [
+        2
+      ],
+      "first_seen": 66.0,
+      "field_ids": [
+        "F020",
+        "F021",
+        "F022",
+        "F023"
+      ],
+      "action_ids": [
+        "A005",
+        "A006",
+        "A007",
+        "A008",
+        "A009"
+      ]
+    },
+    {
+      "id": "S04",
+      "name": "Failed delivery",
+      "purpose": "Records why a stop could not be delivered and marks the attempt as failed.",
+      "keyframe_indexes": [
+        3
+      ],
+      "first_seen": 93.0,
+      "field_ids": [
+        "F024",
+        "F025",
+        "F026",
+        "F027"
+      ],
+      "action_ids": [
+        "A010",
+        "A011",
+        "A012"
+      ]
+    },
+    {
+      "id": "S05",
+      "name": "Reassign stop",
+      "purpose": "Lets a supervisor move a stop from one driver to another with a reason.",
+      "keyframe_indexes": [
+        4
+      ],
+      "first_seen": 120.0,
+      "field_ids": [
+        "F028",
+        "F029",
+        "F030",
+        "F031"
+      ],
+      "action_ids": [
+        "A013",
+        "A014",
+        "A015"
+      ]
+    },
+    {
+      "id": "S06",
+      "name": "End of day summary",
+      "purpose": "Shows the day's delivered, failed and pending counts, cash collected and mileage, and lets the driver submit the day.",
+      "keyframe_indexes": [
+        5
+      ],
+      "first_seen": 140.0,
+      "field_ids": [
+        "F032",
+        "F033",
+        "F034",
+        "F035",
+        "F036",
+        "F037"
+      ],
+      "action_ids": [
+        "A016",
+        "A017"
+      ]
+    }
+  ],
+  "fields": [
+    {
+      "id": "F001",
+      "screen_id": "S01",
+      "label": "Driver, route and date heading",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "Nesha Walmond · Route R-34 · 01/04/2026",
+      "source": "seen on screen",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "notes": null
+    },
+    {
+      "id": "F002",
+      "screen_id": "S01",
+      "label": "Stop counts summary",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "6 stops · 2 delivered · 1 next",
+      "source": "seen on screen",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "notes": null
+    },
+    {
+      "id": "F003",
+      "screen_id": "S01",
+      "label": "Stop number",
+      "field_type": "table column",
+      "required": null,
+      "example_value": "1",
+      "source": "seen on screen",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "notes": null
+    },
+    {
+      "id": "F004",
+      "screen_id": "S01",
+      "label": "Stop address",
+      "field_type": "table column",
+      "required": null,
+      "example_value": "31 Demo Terrace",
+      "source": "seen on screen",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "notes": null
+    },
+    {
+      "id": "F005",
+      "screen_id": "S01",
+      "label": "Recipient name and parcel count",
+      "field_type": "table column",
+      "required": null,
+      "example_value": "Davin Rosford · 1 parcel",
+      "source": "seen on screen",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "notes": null
+    },
+    {
+      "id": "F006",
+      "screen_id": "S01",
+      "label": "Time window",
+      "field_type": "table column",
+      "required": null,
+      "example_value": "09:00 – 11:00",
+      "source": "both",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "notes": "The slot promised to the customer. Shown in red on stops 3 and 5 (11:00 – 13:00 and 13:00 – 15:00); the expert does not know why."
+    },
+    {
+      "id": "F007",
+      "screen_id": "S01",
+      "label": "Status chip",
+      "field_type": "table column",
+      "required": null,
+      "example_value": "DELIVERED",
+      "source": "both",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "notes": "Values seen: DELIVERED, NEXT, PENDING. Expert also names failed."
+    },
+    {
+      "id": "F008",
+      "screen_id": "S02",
+      "label": "Stop position",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "Stop 3 of 6",
+      "source": "seen on screen",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "notes": null
+    },
+    {
+      "id": "F009",
+      "screen_id": "S02",
+      "label": "Stop status chip",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "NEXT",
+      "source": "seen on screen",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "notes": null
+    },
+    {
+      "id": "F010",
+      "screen_id": "S02",
+      "label": "Delivery address",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "80 Sample Avenue, Sampleton",
+      "source": "both",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "notes": null
+    },
+    {
+      "id": "F011",
+      "screen_id": "S02",
+      "label": "Recipient name",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "Masha Harmond",
+      "source": "seen on screen",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "notes": null
+    },
+    {
+      "id": "F012",
+      "screen_id": "S02",
+      "label": "Time window",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "11:00 – 13:00",
+      "source": "seen on screen",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "notes": "Shown in red on this screen."
+    },
+    {
+      "id": "F013",
+      "screen_id": "S02",
+      "label": "Parcel count",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "2 PARCELS",
+      "source": "both",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "notes": null
+    },
+    {
+      "id": "F014",
+      "screen_id": "S02",
+      "label": "Parcel reference",
+      "field_type": "table column",
+      "required": null,
+      "example_value": "HL-387835",
+      "source": "seen on screen",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "notes": null
+    },
+    {
+      "id": "F015",
+      "screen_id": "S02",
+      "label": "Parcel weight",
+      "field_type": "table column",
+      "required": null,
+      "example_value": "2.4 kg",
+      "source": "seen on screen",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "notes": null
+    },
+    {
+      "id": "F016",
+      "screen_id": "S02",
+      "label": "Parcel value",
+      "field_type": "table column",
+      "required": null,
+      "example_value": "£200",
+      "source": "both",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "notes": "Printed next to each parcel; second parcel shows £20."
+    },
+    {
+      "id": "F017",
+      "screen_id": "S02",
+      "label": "Hazardous tag",
+      "field_type": "other",
+      "required": null,
+      "example_value": "HAZARDOUS",
+      "source": "seen on screen",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "notes": "Orange tag on parcel HL-374232. The expert does not mention it."
+    },
+    {
+      "id": "F018",
+      "screen_id": "S02",
+      "label": "Instructions",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "Side gate is open. Leave it in the porch if nobody answers.",
+      "source": "both",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "notes": "Left by the customer."
+    },
+    {
+      "id": "F019",
+      "screen_id": "S02",
+      "label": "Phone",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "No number on file",
+      "source": "both",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "notes": "The expert says every stop has a phone number, but this stop shows none and the Call button is greyed out."
+    },
+    {
+      "id": "F020",
+      "screen_id": "S03",
+      "label": "Stop and parcels heading",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "Stop 3 · HL-387835 and 1 more",
+      "source": "seen on screen",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "notes": null
+    },
+    {
+      "id": "F021",
+      "screen_id": "S03",
+      "label": "Parcel photo",
+      "field_type": "file",
+      "required": null,
+      "example_value": "No photo yet",
+      "source": "both",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "notes": "Taken with the Take photo button. Placeholder text before a photo exists."
+    },
+    {
+      "id": "F022",
+      "screen_id": "S03",
+      "label": "Recipient name",
+      "field_type": "text",
+      "required": true,
+      "example_value": null,
+      "source": "both",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "notes": "Placeholder 'Who took the parcel?'. Marked with a red asterisk."
+    },
+    {
+      "id": "F023",
+      "screen_id": "S03",
+      "label": "Signature",
+      "field_type": "other",
+      "required": null,
+      "example_value": null,
+      "source": "both",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "notes": "Drawn with a finger in the box; no asterisk shown. Hint text 'Sign here with a finger'."
+    },
+    {
+      "id": "F024",
+      "screen_id": "S04",
+      "label": "Attempt counter",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "Stop 3 · Attempt 2 of 3",
+      "source": "seen on screen",
+      "timestamp": 93.0,
+      "keyframe_index": 3,
+      "notes": null
+    },
+    {
+      "id": "F025",
+      "screen_id": "S04",
+      "label": "Reason",
+      "field_type": "radio",
+      "required": true,
+      "example_value": "Nobody home",
+      "source": "both",
+      "timestamp": 93.0,
+      "keyframe_index": 3,
+      "notes": "Options seen: Nobody home, Refused by recipient, Address not found, Access blocked, Parcel damaged. Expert: you have to pick one."
+    },
+    {
+      "id": "F026",
+      "screen_id": "S04",
+      "label": "Anything else the depot should know?",
+      "field_type": "text",
+      "required": null,
+      "example_value": null,
+      "source": "both",
+      "timestamp": 93.0,
+      "keyframe_index": 3,
+      "notes": "Free-text box, placeholder 'Type here'. Expert says most people leave it blank."
+    },
+    {
+      "id": "F027",
+      "screen_id": "S04",
+      "label": "Last attempt",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "01/05/2026 · Nobody home",
+      "source": "seen on screen",
+      "timestamp": 93.0,
+      "keyframe_index": 3,
+      "notes": null
+    },
+    {
+      "id": "F028",
+      "screen_id": "S05",
+      "label": "Supervisor notice",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "Supervisor only. Signed in as Elmi Gracombe (Supervisor).",
+      "source": "both",
+      "timestamp": 120.0,
+      "keyframe_index": 4,
+      "notes": null
+    },
+    {
+      "id": "F029",
+      "screen_id": "S05",
+      "label": "Stop",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "80 Sample Avenue, Sampleton",
+      "source": "seen on screen",
+      "timestamp": 120.0,
+      "keyframe_index": 4,
+      "notes": "Also shows 'Currently with Nesha Walmond'."
+    },
+    {
+      "id": "F030",
+      "screen_id": "S05",
+      "label": "New driver",
+      "field_type": "radio",
+      "required": true,
+      "example_value": "Salia Corbrook",
+      "source": "both",
+      "timestamp": 120.0,
+      "keyframe_index": 4,
+      "notes": "Each option shows how many stops the driver has left: Salia Corbrook 3, Fenel Rosby 5, Sanel Belford 6."
+    },
+    {
+      "id": "F031",
+      "screen_id": "S05",
+      "label": "Reason for reassigning",
+      "field_type": "text",
+      "required": true,
+      "example_value": "Van off the road, moving the rest of the route.",
+      "source": "both",
+      "timestamp": 120.0,
+      "keyframe_index": 4,
+      "notes": "Expert says the reason goes in the audit trail."
+    },
+    {
+      "id": "F032",
+      "screen_id": "S06",
+      "label": "Delivered count",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "4",
+      "source": "both",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "notes": null
+    },
+    {
+      "id": "F033",
+      "screen_id": "S06",
+      "label": "Failed count",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "2",
+      "source": "both",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "notes": null
+    },
+    {
+      "id": "F034",
+      "screen_id": "S06",
+      "label": "Pending count",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "0",
+      "source": "seen on screen",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "notes": null
+    },
+    {
+      "id": "F035",
+      "screen_id": "S06",
+      "label": "Stops",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "6",
+      "source": "seen on screen",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "notes": null
+    },
+    {
+      "id": "F036",
+      "screen_id": "S06",
+      "label": "Cash collected",
+      "field_type": "read-only",
+      "required": null,
+      "example_value": "£360.00",
+      "source": "both",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "notes": "Expert: for cash-on-delivery parcels; the figure comes from finance."
+    },
+    {
+      "id": "F037",
+      "screen_id": "S06",
+      "label": "Mileage",
+      "field_type": "number",
+      "required": null,
+      "example_value": "64 mi",
+      "source": "both",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "notes": "Shown in a boxed input; expert says the driver types it in."
+    }
+  ],
+  "actions": [
+    {
+      "id": "A001",
+      "screen_id": "S01",
+      "description": "Taps a stop in the list to open it",
+      "control": "other",
+      "leads_to_screen_id": "S02",
+      "timestamp": 0.0,
+      "keyframe_index": 0
+    },
+    {
+      "id": "A002",
+      "screen_id": "S02",
+      "description": "Presses Call to ring the customer",
+      "control": "button",
+      "leads_to_screen_id": null,
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "A003",
+      "screen_id": "S02",
+      "description": "Presses Navigate to open the map",
+      "control": "button",
+      "leads_to_screen_id": null,
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "A004",
+      "screen_id": "S02",
+      "description": "Presses Proof of delivery when at the door",
+      "control": "button",
+      "leads_to_screen_id": "S03",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "A005",
+      "screen_id": "S03",
+      "description": "Presses Take photo to photograph the parcel",
+      "control": "button",
+      "leads_to_screen_id": null,
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "A006",
+      "screen_id": "S03",
+      "description": "Types the name of whoever took the parcel",
+      "control": "other",
+      "leads_to_screen_id": null,
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "A007",
+      "screen_id": "S03",
+      "description": "Has the recipient sign in the box with a finger",
+      "control": "other",
+      "leads_to_screen_id": null,
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "A008",
+      "screen_id": "S03",
+      "description": "Presses Delivered once it has turned green",
+      "control": "button",
+      "leads_to_screen_id": null,
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "A009",
+      "screen_id": "S03",
+      "description": "Taps 'Can't deliver? Report a failed delivery' link",
+      "control": "link",
+      "leads_to_screen_id": "S04",
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "A010",
+      "screen_id": "S04",
+      "description": "Picks one reason from the list",
+      "control": "other",
+      "leads_to_screen_id": null,
+      "timestamp": 93.0,
+      "keyframe_index": 3
+    },
+    {
+      "id": "A011",
+      "screen_id": "S04",
+      "description": "Optionally types extra information for the depot",
+      "control": "other",
+      "leads_to_screen_id": null,
+      "timestamp": 93.0,
+      "keyframe_index": 3
+    },
+    {
+      "id": "A012",
+      "screen_id": "S04",
+      "description": "Presses Mark as failed",
+      "control": "button",
+      "leads_to_screen_id": null,
+      "timestamp": 93.0,
+      "keyframe_index": 3
+    },
+    {
+      "id": "A013",
+      "screen_id": "S05",
+      "description": "Picks the new driver from the list",
+      "control": "other",
+      "leads_to_screen_id": null,
+      "timestamp": 120.0,
+      "keyframe_index": 4
+    },
+    {
+      "id": "A014",
+      "screen_id": "S05",
+      "description": "Types the reason for reassigning",
+      "control": "other",
+      "leads_to_screen_id": null,
+      "timestamp": 120.0,
+      "keyframe_index": 4
+    },
+    {
+      "id": "A015",
+      "screen_id": "S05",
+      "description": "Presses Reassign stop",
+      "control": "button",
+      "leads_to_screen_id": null,
+      "timestamp": 120.0,
+      "keyframe_index": 4
+    },
+    {
+      "id": "A016",
+      "screen_id": "S06",
+      "description": "Types the day's mileage",
+      "control": "other",
+      "leads_to_screen_id": null,
+      "timestamp": 140.0,
+      "keyframe_index": 5
+    },
+    {
+      "id": "A017",
+      "screen_id": "S06",
+      "description": "Presses Submit day",
+      "control": "button",
+      "leads_to_screen_id": null,
+      "timestamp": 140.0,
+      "keyframe_index": 5
+    }
+  ],
+  "journey": [
+    {
+      "order": 1,
+      "screen_id": "S01",
+      "description": "After signing in, the driver lands on Today's runs and sees the six stops in drive order with status chips and time windows.",
+      "actor": "Driver",
+      "timestamp": 0.0,
+      "keyframe_index": 0
+    },
+    {
+      "order": 2,
+      "screen_id": "S02",
+      "description": "The driver taps a stop and reviews address, parcels, instructions and phone; can call the customer or open the map.",
+      "actor": "Driver",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "order": 3,
+      "screen_id": "S02",
+      "description": "At the door, the driver presses Proof of delivery.",
+      "actor": "Driver",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "order": 4,
+      "screen_id": "S03",
+      "description": "The driver takes a photo, enters the recipient name and gets a signature, then presses Delivered.",
+      "actor": "Driver",
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "order": 5,
+      "screen_id": "S04",
+      "description": "If nobody can take the parcel, the driver reports a failed delivery instead and picks a reason.",
+      "actor": "Driver",
+      "timestamp": 93.0,
+      "keyframe_index": 3
+    },
+    {
+      "order": 6,
+      "screen_id": "S05",
+      "description": "If a van breaks down, a supervisor reassigns the stop to another driver and records a reason.",
+      "actor": "Supervisor",
+      "timestamp": 120.0,
+      "keyframe_index": 4
+    },
+    {
+      "order": 7,
+      "screen_id": "S06",
+      "description": "At the end of the day the driver checks the totals, types the mileage and submits the day.",
+      "actor": "Driver",
+      "timestamp": 140.0,
+      "keyframe_index": 5
+    }
+  ],
+  "requirements": [
+    {
+      "id": "R001",
+      "statement": "The system must open Today's runs when a driver signs in.",
+      "rationale": null,
+      "source_quote": "When you sign in you land on Today's runs",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "screen_id": "S01",
+      "kind": "functional",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R002",
+      "statement": "The system must list the driver's stops on Today's runs in the order the depot wants them driven.",
+      "rationale": "Who sets the order is not stated (see question on stop order).",
+      "source_quote": "which is your six stops in the order we'd like you to drive them",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "screen_id": "S01",
+      "kind": "functional",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R003",
+      "statement": "The system must show a status chip on each stop on Today's runs with one of the values next, pending, delivered, failed.",
+      "rationale": null,
+      "source_quote": "Each stop has a little chip saying where it's at: next, pending, delivered or failed.",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "screen_id": "S01",
+      "kind": "data",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R004",
+      "statement": "The system must show the time window promised to the customer under each stop's address on Today's runs.",
+      "rationale": null,
+      "source_quote": "Under the address there's a time window, the slot we promised the customer.",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "screen_id": "S01",
+      "kind": "data",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R005",
+      "statement": "The system must open Stop detail for a stop when the driver taps that stop on Today's runs.",
+      "rationale": null,
+      "source_quote": "Tap any stop to open it.",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "screen_id": "S01",
+      "kind": "functional",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R006",
+      "statement": "The system must show the delivery address on Stop detail.",
+      "rationale": null,
+      "source_quote": "You get the address, how many parcels are going there, and any instructions the customer left, like ring twice or leave it round the back.",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "data",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R007",
+      "statement": "The system must show the number of parcels going to the stop on Stop detail.",
+      "rationale": null,
+      "source_quote": "You get the address, how many parcels are going there, and any instructions the customer left, like ring twice or leave it round the back.",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "data",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R008",
+      "statement": "The system must show on Stop detail the instructions the customer left for the stop.",
+      "rationale": null,
+      "source_quote": "You get the address, how many parcels are going there, and any instructions the customer left, like ring twice or leave it round the back.",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "data",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R009",
+      "statement": "The system must show the customer's phone number on Stop detail.",
+      "rationale": "The expert says every stop has a number, but stop 3 shows \"No number on file\" (see question on missing phone number).",
+      "source_quote": "Every stop has a phone number on it, so you can always ring ahead if you're running late.",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "data",
+      "priority": "unknown",
+      "confidence": "medium"
+    },
+    {
+      "id": "R010",
+      "statement": "The system must ring the customer's phone number when the driver presses Call on Stop detail.",
+      "rationale": "The driver can ring ahead when running late.",
+      "source_quote": "Call rings the customer",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "functional",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R011",
+      "statement": "The system must open the map for the stop's address when the driver presses Navigate on Stop detail.",
+      "rationale": null,
+      "source_quote": "Navigate opens the map.",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "functional",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R012",
+      "statement": "The system must show the value next to each parcel on Stop detail.",
+      "rationale": "So the driver can see straight away which parcels need a photo and a signature.",
+      "source_quote": "The value is printed next to each parcel so you can see straight away.",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "data",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R013",
+      "statement": "The system must require a photo before a parcel worth more than £100 is marked delivered.",
+      "rationale": "Whether the limit applies per parcel or per stop, and whether £100 exactly counts, is open (see questions).",
+      "source_quote": "Parcels over one hundred pounds need a photo and a signature, no exceptions.",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "validation",
+      "priority": "must",
+      "confidence": "high"
+    },
+    {
+      "id": "R014",
+      "statement": "The system must require a signature before a parcel worth more than £100 is marked delivered.",
+      "rationale": "The screen does not mark the signature as required and the expert says the photo alone unlocks Delivered (see question on what unlocks Delivered).",
+      "source_quote": "Parcels over one hundred pounds need a photo and a signature, no exceptions.",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "validation",
+      "priority": "must",
+      "confidence": "high"
+    },
+    {
+      "id": "R015",
+      "statement": "The system must open Proof of delivery for the stop when the driver presses Proof of delivery on Stop detail.",
+      "rationale": null,
+      "source_quote": "When you're at the door, hit Proof of delivery.",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "kind": "workflow",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R016",
+      "statement": "The system must let the driver take a photo of the parcel on Proof of delivery.",
+      "rationale": null,
+      "source_quote": "On Proof of delivery you take a photo of the parcel",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "screen_id": "S03",
+      "kind": "functional",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R017",
+      "statement": "The system must let the driver type the name of whoever took the parcel in Recipient name on Proof of delivery.",
+      "rationale": null,
+      "source_quote": "type in the name of whoever took it",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "screen_id": "S03",
+      "kind": "data",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R018",
+      "statement": "The system must require a recipient name before a stop is marked delivered.",
+      "rationale": "Inferred from the red asterisk on Recipient name; the expert does not call it mandatory and says the photo alone unlocks Delivered (see question on what unlocks Delivered).",
+      "source_quote": "type in the name of whoever took it",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "screen_id": "S03",
+      "kind": "validation",
+      "priority": "unknown",
+      "confidence": "low"
+    },
+    {
+      "id": "R019",
+      "statement": "The system must let the recipient sign with a finger in the signature box on Proof of delivery.",
+      "rationale": null,
+      "source_quote": "get them to sign in the box with their finger.",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "screen_id": "S03",
+      "kind": "functional",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R020",
+      "statement": "The system must enable the Delivered button only after the driver has taken the parcel photo.",
+      "rationale": null,
+      "source_quote": "It stays grey until the photo is taken. Once the photo is in, it goes green and you can press it.",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "screen_id": "S03",
+      "kind": "validation",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R021",
+      "statement": "The system must turn the Delivered button from grey to green when the driver takes the parcel photo.",
+      "rationale": null,
+      "source_quote": "It stays grey until the photo is taken. Once the photo is in, it goes green and you can press it.",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "screen_id": "S03",
+      "kind": "functional",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R022",
+      "statement": "The system must mark a stop as delivered only when the driver presses Delivered on Proof of delivery.",
+      "rationale": null,
+      "source_quote": "That's the only way a stop ever becomes delivered.",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "screen_id": "S03",
+      "kind": "workflow",
+      "priority": "must",
+      "confidence": "high"
+    },
+    {
+      "id": "R023",
+      "statement": "The system must offer a link at the bottom of Proof of delivery that opens Failed delivery for the stop.",
+      "rationale": "So that a driver reports a stop nobody answers instead of leaving the parcel on the step.",
+      "source_quote": "And if nobody's in, don't just leave it on the step. Tap the link at the bottom to report a failed delivery instead.",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "screen_id": "S03",
+      "kind": "functional",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R024",
+      "statement": "The system must require the driver to choose a reason on Failed delivery before continuing.",
+      "rationale": null,
+      "source_quote": "You have to pick one, it won't let you carry on without.",
+      "timestamp": 93.0,
+      "keyframe_index": 3,
+      "screen_id": "S04",
+      "kind": "validation",
+      "priority": "must",
+      "confidence": "high"
+    },
+    {
+      "id": "R025",
+      "statement": "The system must offer the reasons Nobody home, Refused by recipient, Address not found, Access blocked and Parcel damaged in Reason on Failed delivery.",
+      "rationale": "The expert names them as nobody home, refused, address not found, access blocked, damaged; the screen shows the longer labels.",
+      "source_quote": "You pick a reason from the list: nobody home, refused, address not found, access blocked, or damaged.",
+      "timestamp": 93.0,
+      "keyframe_index": 3,
+      "screen_id": "S04",
+      "kind": "data",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R026",
+      "statement": "The system must provide an optional free-text box for anything else the depot should know on Failed delivery.",
+      "rationale": null,
+      "source_quote": "There's a free-text box underneath for anything else, but honestly most people leave it blank.",
+      "timestamp": 93.0,
+      "keyframe_index": 3,
+      "screen_id": "S04",
+      "kind": "data",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R027",
+      "statement": "The system must return a stop to the depot after its third failed delivery attempt, without any action from the driver.",
+      "rationale": null,
+      "source_quote": "Three failed attempts and it goes back to the depot automatically.",
+      "timestamp": 93.0,
+      "keyframe_index": 3,
+      "screen_id": "S04",
+      "kind": "workflow",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R028",
+      "statement": "The system must remove a stop from the driver's list after its third failed delivery attempt.",
+      "rationale": null,
+      "source_quote": "You don't do anything, the stop just drops off your list.",
+      "timestamp": 93.0,
+      "keyframe_index": 3,
+      "screen_id": "S04",
+      "kind": "workflow",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R029",
+      "statement": "The system must allow only supervisors to reassign a stop.",
+      "rationale": null,
+      "source_quote": "Only supervisors can reassign a stop.",
+      "timestamp": 120.0,
+      "keyframe_index": 4,
+      "screen_id": "S05",
+      "kind": "functional",
+      "priority": "must",
+      "confidence": "high"
+    },
+    {
+      "id": "R030",
+      "statement": "The system must let the supervisor choose the new driver from a list on Reassign stop.",
+      "rationale": "Covers a stranded route, for example when a van breaks down.",
+      "source_quote": "You pick the new driver from the list",
+      "timestamp": 120.0,
+      "keyframe_index": 4,
+      "screen_id": "S05",
+      "kind": "functional",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R031",
+      "statement": "The system must require the supervisor to write a reason before reassigning a stop.",
+      "rationale": null,
+      "source_quote": "you have to write a reason",
+      "timestamp": 120.0,
+      "keyframe_index": 4,
+      "screen_id": "S05",
+      "kind": "validation",
+      "priority": "must",
+      "confidence": "high"
+    },
+    {
+      "id": "R032",
+      "statement": "The system must record the reassignment reason in the audit trail.",
+      "rationale": null,
+      "source_quote": "because it goes in the audit trail.",
+      "timestamp": 120.0,
+      "keyframe_index": 4,
+      "screen_id": "S05",
+      "kind": "non-functional",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R033",
+      "statement": "The system must show on End of day summary the number of stops the driver delivered.",
+      "rationale": null,
+      "source_quote": "It shows how many you delivered",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "screen_id": "S06",
+      "kind": "reporting",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R034",
+      "statement": "The system must show on End of day summary the number of stops that failed.",
+      "rationale": null,
+      "source_quote": "how many failed",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "screen_id": "S06",
+      "kind": "reporting",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R035",
+      "statement": "The system must show on End of day summary the cash collected on cash-on-delivery parcels.",
+      "rationale": null,
+      "source_quote": "and the cash collected, that's for the cash-on-delivery parcels.",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "screen_id": "S06",
+      "kind": "reporting",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R036",
+      "statement": "The system must show the cash collected figure exactly as it is supplied by finance.",
+      "rationale": "The expert does not know where in finance the figure comes from (see question on the finance source).",
+      "source_quote": "The cash figure comes from somewhere in finance, I just take whatever it shows.",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "screen_id": "S06",
+      "kind": "data",
+      "priority": "unknown",
+      "confidence": "medium"
+    },
+    {
+      "id": "R037",
+      "statement": "The system must let the driver type the day's mileage on End of day summary.",
+      "rationale": null,
+      "source_quote": "You type your mileage in and press Submit day.",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "screen_id": "S06",
+      "kind": "data",
+      "priority": "unknown",
+      "confidence": "high"
+    },
+    {
+      "id": "R038",
+      "statement": "The system must allow the driver to submit the day only when every stop is delivered or failed.",
+      "rationale": null,
+      "source_quote": "You can't submit until every stop is either delivered or failed, so check nothing's still pending.",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "screen_id": "S06",
+      "kind": "validation",
+      "priority": "must",
+      "confidence": "high"
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC001",
+      "requirement_id": "R001",
+      "given": "A driver with a run for the day is on the sign-in page.",
+      "when": "The driver signs in.",
+      "then": "The system shows Today's runs.",
+      "timestamp": 0.0,
+      "keyframe_index": 0
+    },
+    {
+      "id": "AC002",
+      "requirement_id": "R002",
+      "given": "The depot has set a drive order for the driver's six stops.",
+      "when": "The driver opens Today's runs.",
+      "then": "The system lists the six stops in that order, starting with stop 1.",
+      "timestamp": 0.0,
+      "keyframe_index": 0
+    },
+    {
+      "id": "AC003",
+      "requirement_id": "R003",
+      "given": "A driver has one delivered stop, one next stop and one pending stop.",
+      "when": "The driver opens Today's runs.",
+      "then": "The delivered stop shows DELIVERED, the next stop shows NEXT and the pending stop shows PENDING.",
+      "timestamp": 0.0,
+      "keyframe_index": 0
+    },
+    {
+      "id": "AC004",
+      "requirement_id": "R003",
+      "given": "A stop whose delivery has failed.",
+      "when": "The driver opens Today's runs.",
+      "then": "The stop shows a failed status chip.",
+      "timestamp": 0.0,
+      "keyframe_index": 0
+    },
+    {
+      "id": "AC005",
+      "requirement_id": "R004",
+      "given": "A stop is promised to the customer between 09:00 and 11:00.",
+      "when": "The driver opens Today's runs.",
+      "then": "The stop shows the window 09:00 – 11:00 under its address.",
+      "timestamp": 0.0,
+      "keyframe_index": 0
+    },
+    {
+      "id": "AC006",
+      "requirement_id": "R005",
+      "given": "The driver is on Today's runs.",
+      "when": "The driver taps a stop.",
+      "then": "The system opens Stop detail for that stop.",
+      "timestamp": 0.0,
+      "keyframe_index": 0
+    },
+    {
+      "id": "AC007",
+      "requirement_id": "R006",
+      "given": "A stop has the address 80 Sample Avenue, Sampleton.",
+      "when": "The driver opens Stop detail for that stop.",
+      "then": "The system shows 80 Sample Avenue, Sampleton.",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC008",
+      "requirement_id": "R007",
+      "given": "A stop has two parcels.",
+      "when": "The driver opens Stop detail for that stop.",
+      "then": "The system shows 2 PARCELS.",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC009",
+      "requirement_id": "R008",
+      "given": "The customer left the instruction \"Side gate is open. Leave it in the porch if nobody answers.\"",
+      "when": "The driver opens Stop detail for that stop.",
+      "then": "The system shows that instruction in Instructions.",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC010",
+      "requirement_id": "R009",
+      "given": "A stop has a phone number on file.",
+      "when": "The driver opens Stop detail for that stop.",
+      "then": "The system shows that number in Phone.",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC011",
+      "requirement_id": "R010",
+      "given": "A stop has a phone number on file and Stop detail is open.",
+      "when": "The driver presses Call.",
+      "then": "The system places a call to that number.",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC012",
+      "requirement_id": "R011",
+      "given": "Stop detail is open for a stop with an address.",
+      "when": "The driver presses Navigate.",
+      "then": "The system opens the map at that address.",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC013",
+      "requirement_id": "R012",
+      "given": "A stop has one parcel worth £200 and one parcel worth £20.",
+      "when": "The driver opens Stop detail for that stop.",
+      "then": "The system shows £200 next to the first parcel and £20 next to the second parcel.",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC014",
+      "requirement_id": "R013",
+      "given": "A stop contains a parcel worth £200 and no photo has been taken.",
+      "when": "The driver tries to mark the stop delivered.",
+      "then": "The system does not mark the stop delivered.",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC015",
+      "requirement_id": "R014",
+      "given": "A stop contains a parcel worth £200 and no signature has been captured.",
+      "when": "The driver tries to mark the stop delivered.",
+      "then": "The system does not mark the stop delivered.",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC016",
+      "requirement_id": "R015",
+      "given": "Stop detail is open for a stop.",
+      "when": "The driver presses Proof of delivery.",
+      "then": "The system opens Proof of delivery for that stop.",
+      "timestamp": 32.0,
+      "keyframe_index": 1
+    },
+    {
+      "id": "AC017",
+      "requirement_id": "R016",
+      "given": "Proof of delivery is open and the photo area reads \"No photo yet\".",
+      "when": "The driver presses Take photo and photographs the parcel.",
+      "then": "The system shows the photo in place of \"No photo yet\".",
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "AC018",
+      "requirement_id": "R017",
+      "given": "Proof of delivery is open.",
+      "when": "The driver types a name into Recipient name.",
+      "then": "The system shows the typed name in Recipient name.",
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "AC019",
+      "requirement_id": "R018",
+      "given": "The photo has been taken and Recipient name is empty.",
+      "when": "The driver tries to mark the stop delivered.",
+      "then": "The system does not mark the stop delivered.",
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "AC020",
+      "requirement_id": "R019",
+      "given": "Proof of delivery is open and the signature box shows \"Sign here with a finger\".",
+      "when": "The recipient draws in the box with a finger.",
+      "then": "The system shows the drawn signature in the box.",
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "AC021",
+      "requirement_id": "R020",
+      "given": "Proof of delivery is open and no photo has been taken.",
+      "when": "The driver looks at the Delivered button.",
+      "then": "The Delivered button is disabled.",
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "AC022",
+      "requirement_id": "R020",
+      "given": "Proof of delivery is open and the photo has been taken.",
+      "when": "The driver looks at the Delivered button.",
+      "then": "The Delivered button is enabled.",
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "AC023",
+      "requirement_id": "R021",
+      "given": "The Delivered button is grey because no photo has been taken.",
+      "when": "The driver takes the parcel photo.",
+      "then": "The Delivered button turns green.",
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "AC024",
+      "requirement_id": "R022",
+      "given": "A stop has the status next and Proof of delivery is complete.",
+      "when": "The driver presses Delivered.",
+      "then": "The stop's status becomes delivered.",
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "AC025",
+      "requirement_id": "R022",
+      "given": "A stop has the status next.",
+      "when": "The driver leaves Proof of delivery without pressing Delivered.",
+      "then": "The stop's status stays unchanged.",
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "AC026",
+      "requirement_id": "R023",
+      "given": "Proof of delivery is open.",
+      "when": "The driver taps \"Can't deliver? Report a failed delivery\".",
+      "then": "The system opens Failed delivery for that stop.",
+      "timestamp": 66.0,
+      "keyframe_index": 2
+    },
+    {
+      "id": "AC027",
+      "requirement_id": "R024",
+      "given": "Failed delivery is open and no reason is chosen.",
+      "when": "The driver tries to continue.",
+      "then": "The system does not continue and tells the driver to choose a reason.",
+      "timestamp": 93.0,
+      "keyframe_index": 3
+    },
+    {
+      "id": "AC028",
+      "requirement_id": "R025",
+      "given": "Failed delivery is open.",
+      "when": "The driver views Reason.",
+      "then": "The system lists exactly these five reasons: Nobody home, Refused by recipient, Address not found, Access blocked, Parcel damaged.",
+      "timestamp": 93.0,
+      "keyframe_index": 3
+    },
+    {
+      "id": "AC029",
+      "requirement_id": "R026",
+      "given": "Failed delivery is open, a reason is chosen and the free-text box is empty.",
+      "when": "The driver presses Mark as failed.",
+      "then": "The system records the failed attempt.",
+      "timestamp": 93.0,
+      "keyframe_index": 3
+    },
+    {
+      "id": "AC030",
+      "requirement_id": "R027",
+      "given": "A stop has two failed attempts.",
+      "when": "The driver records a third failed attempt for the stop.",
+      "then": "The system returns the stop to the depot without further action from the driver.",
+      "timestamp": 93.0,
+      "keyframe_index": 3
+    },
+    {
+      "id": "AC031",
+      "requirement_id": "R028",
+      "given": "A stop has been returned to the depot after a third failed attempt.",
+      "when": "The driver opens Today's runs.",
+      "then": "The system does not list that stop.",
+      "timestamp": 93.0,
+      "keyframe_index": 3
+    },
+    {
+      "id": "AC032",
+      "requirement_id": "R029",
+      "given": "A supervisor is signed in.",
+      "when": "The supervisor opens Reassign stop.",
+      "then": "The system lets the supervisor reassign the stop.",
+      "timestamp": 120.0,
+      "keyframe_index": 4
+    },
+    {
+      "id": "AC033",
+      "requirement_id": "R029",
+      "given": "A driver who is not a supervisor is signed in.",
+      "when": "The driver tries to reassign a stop.",
+      "then": "The system does not reassign the stop.",
+      "timestamp": 120.0,
+      "keyframe_index": 4
+    },
+    {
+      "id": "AC034",
+      "requirement_id": "R030",
+      "given": "Reassign stop is open for a stop.",
+      "when": "The supervisor views New driver.",
+      "then": "The system lists drivers, each with the number of stops that driver has left.",
+      "timestamp": 120.0,
+      "keyframe_index": 4
+    },
+    {
+      "id": "AC035",
+      "requirement_id": "R030",
+      "given": "Reassign stop is open, Salia Corbrook is chosen as New driver and a reason is entered.",
+      "when": "The supervisor presses Reassign stop.",
+      "then": "The system assigns the stop to Salia Corbrook.",
+      "timestamp": 120.0,
+      "keyframe_index": 4
+    },
+    {
+      "id": "AC036",
+      "requirement_id": "R031",
+      "given": "Reassign stop is open, a new driver is chosen and Reason for reassigning is empty.",
+      "when": "The supervisor presses Reassign stop.",
+      "then": "The system does not reassign the stop.",
+      "timestamp": 120.0,
+      "keyframe_index": 4
+    },
+    {
+      "id": "AC037",
+      "requirement_id": "R032",
+      "given": "A supervisor entered a reason and reassigned a stop.",
+      "when": "The reassignment completes.",
+      "then": "The audit trail holds an entry that contains the reason text.",
+      "timestamp": 120.0,
+      "keyframe_index": 4
+    },
+    {
+      "id": "AC038",
+      "requirement_id": "R033",
+      "given": "The driver delivered 4 stops.",
+      "when": "The driver opens End of day summary.",
+      "then": "The system shows 4 as the delivered count.",
+      "timestamp": 140.0,
+      "keyframe_index": 5
+    },
+    {
+      "id": "AC039",
+      "requirement_id": "R034",
+      "given": "2 of the driver's stops failed.",
+      "when": "The driver opens End of day summary.",
+      "then": "The system shows 2 as the failed count.",
+      "timestamp": 140.0,
+      "keyframe_index": 5
+    },
+    {
+      "id": "AC040",
+      "requirement_id": "R035",
+      "given": "The driver collected £360.00 on cash-on-delivery parcels.",
+      "when": "The driver opens End of day summary.",
+      "then": "The system shows £360.00 as cash collected.",
+      "timestamp": 140.0,
+      "keyframe_index": 5
+    },
+    {
+      "id": "AC041",
+      "requirement_id": "R036",
+      "given": "Finance has supplied a cash collected figure for the driver's day.",
+      "when": "The driver opens End of day summary.",
+      "then": "The system shows a cash collected figure equal to the figure supplied by finance.",
+      "timestamp": 140.0,
+      "keyframe_index": 5
+    },
+    {
+      "id": "AC042",
+      "requirement_id": "R037",
+      "given": "End of day summary is open.",
+      "when": "The driver types 64 into the mileage box.",
+      "then": "The system shows 64 mi in the mileage box.",
+      "timestamp": 140.0,
+      "keyframe_index": 5
+    },
+    {
+      "id": "AC043",
+      "requirement_id": "R038",
+      "given": "Every stop is delivered or failed.",
+      "when": "The driver presses Submit day.",
+      "then": "The system accepts the submission.",
+      "timestamp": 140.0,
+      "keyframe_index": 5
+    },
+    {
+      "id": "AC044",
+      "requirement_id": "R038",
+      "given": "One stop is still pending.",
+      "when": "The driver presses Submit day.",
+      "then": "The system does not submit the day.",
+      "timestamp": 140.0,
+      "keyframe_index": 5
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q001",
+      "question": "What makes a time window turn red on Today's runs and Stop detail (stops 3 and 5 are red in the recording), and what should the driver do when it is red?",
+      "why_it_matters": "A developer cannot build the colour rule, and the expert says he does not know it.",
+      "context_quote": "The window shows red sometimes and I never worked out why, so I don't know what to tell you, just try to be there.",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "screen_id": "S01",
+      "category": "ambiguity",
+      "blocks_requirement_ids": [
+        "R004"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q002",
+      "question": "Who or what decides the order of the stops and which stop is Next, and can the driver change the order?",
+      "why_it_matters": "Decides whether the order is fixed by the depot or controlled by the driver.",
+      "context_quote": "your six stops in the order we'd like you to drive them",
+      "timestamp": 0.0,
+      "keyframe_index": 0,
+      "screen_id": "S01",
+      "category": "ambiguity",
+      "blocks_requirement_ids": [
+        "R002"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q003",
+      "question": "What should the Call button do when a stop has no phone number? Stop 3 shows 'No number on file' with Call greyed out, yet the expert says every stop has a number.",
+      "why_it_matters": "The expert's statement and the screen disagree, so the rule for a missing number is unknown.",
+      "context_quote": "Every stop has a phone number on it, so you can always ring ahead if you're running late.",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "category": "edge case",
+      "blocks_requirement_ids": [
+        "R009",
+        "R010"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q004",
+      "question": "Is the one-hundred-pound threshold measured per parcel or on the stop total, and does a parcel worth exactly one hundred pounds need a photo and signature?",
+      "why_it_matters": "Stop 3 has parcels worth £200 and £20, so the two readings give different results; the boundary value is also unclear.",
+      "context_quote": "Parcels over one hundred pounds need a photo and a signature, no exceptions.",
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "category": "validation rule",
+      "blocks_requirement_ids": [
+        "R013",
+        "R014"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q005",
+      "question": "What does the HAZARDOUS tag on a parcel mean for the driver, and does it change how the parcel is delivered or reassigned?",
+      "why_it_matters": "The tag is on screen (parcel HL-374232) but the expert does not mention it, so any handling rule attached to it is unknown.",
+      "context_quote": null,
+      "timestamp": 32.0,
+      "keyframe_index": 1,
+      "screen_id": "S02",
+      "category": "missing information",
+      "blocks_requirement_ids": [],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q006",
+      "question": "What must be complete before Delivered turns green: only the photo, or also the recipient name and, for parcels over one hundred pounds, the signature? The screen marks only Recipient name as required and says 'Take a photo to continue'.",
+      "why_it_matters": "The expert says the photo alone unlocks the button, yet also says parcels over £100 need a signature; the screen adds a required Recipient name. The rules conflict.",
+      "context_quote": "It stays grey until the photo is taken. Once the photo is in, it goes green and you can press it.",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "screen_id": "S03",
+      "category": "validation rule",
+      "blocks_requirement_ids": [
+        "R014",
+        "R018",
+        "R020"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q007",
+      "question": "Is one photo and one signature taken for the whole stop or one per parcel? The screen header reads 'HL-387835 and 1 more'.",
+      "why_it_matters": "Decides how many proofs are stored when a stop has several parcels.",
+      "context_quote": "you take a photo of the parcel, type in the name of whoever took it, and get them to sign in the box with their finger.",
+      "timestamp": 66.0,
+      "keyframe_index": 2,
+      "screen_id": "S03",
+      "category": "data",
+      "blocks_requirement_ids": [
+        "R016",
+        "R017",
+        "R019"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q008",
+      "question": "Is the list of five failed-delivery reasons the complete list, and does any reason trigger different handling by the depot?",
+      "why_it_matters": "The expert lists five reasons without saying it is the whole list.",
+      "context_quote": "You pick a reason from the list: nobody home, refused, address not found, access blocked, or damaged.",
+      "timestamp": 93.0,
+      "keyframe_index": 3,
+      "screen_id": "S04",
+      "category": "data",
+      "blocks_requirement_ids": [
+        "R025"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q009",
+      "question": "In 'Last attempt: 01/05/2026', which date format is used, and why does it fall after the route date 01/04/2026 shown on Today's runs?",
+      "why_it_matters": "The attempt history date appears to be later than the day being worked, so the format or the data source is unclear.",
+      "context_quote": null,
+      "timestamp": 93.0,
+      "keyframe_index": 3,
+      "screen_id": "S04",
+      "category": "ambiguity",
+      "blocks_requirement_ids": [],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q010",
+      "question": "After a first or second failed attempt, what status does the stop show and does it stay on the driver's list to retry? After the third, is it counted as failed on End of day summary?",
+      "why_it_matters": "The stop drops off the list on the third failure, yet Submit day needs every stop delivered or failed; the counts need a defined meaning.",
+      "context_quote": "Three failed attempts and it goes back to the depot automatically. You don't do anything, the stop just drops off your list.",
+      "timestamp": 93.0,
+      "keyframe_index": 3,
+      "screen_id": "S04",
+      "category": "edge case",
+      "blocks_requirement_ids": [
+        "R027",
+        "R028",
+        "R038"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q011",
+      "question": "How does a supervisor reach Reassign stop, and what happens if a non-supervisor tries to open it?",
+      "why_it_matters": "The expert only says drivers 'won't normally see it', which does not define the access rule.",
+      "context_quote": "Reassign stop is a supervisor screen, so you won't normally see it.",
+      "timestamp": 120.0,
+      "keyframe_index": 4,
+      "screen_id": "S05",
+      "category": "permissions",
+      "blocks_requirement_ids": [
+        "R029"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q012",
+      "question": "Does Reassign stop move one stop or a whole route? The screen works on Stop 3 only, but the expert talks about moving 'your stops'.",
+      "why_it_matters": "Decides whether a bulk reassignment is needed.",
+      "context_quote": "it's me or one of the other supervisors who moves your stops across to someone else.",
+      "timestamp": 120.0,
+      "keyframe_index": 4,
+      "screen_id": "S05",
+      "category": "ambiguity",
+      "blocks_requirement_ids": [
+        "R030"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q013",
+      "question": "Which drivers appear in the New driver list, is there any limit on how many stops a driver can take, and are the original and new drivers told of the move?",
+      "why_it_matters": "The list shows 'stops left' for each driver but no rule is given for who qualifies or how many is too many.",
+      "context_quote": "You pick the new driver from the list",
+      "timestamp": 120.0,
+      "keyframe_index": 4,
+      "screen_id": "S05",
+      "category": "validation rule",
+      "blocks_requirement_ids": [
+        "R030"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q014",
+      "question": "What exactly is stored in the audit trail for a reassignment (who, when, old and new driver, reason), who can read it, and for how long is it kept?",
+      "why_it_matters": "The expert names the audit trail but not its content or use.",
+      "context_quote": "because it goes in the audit trail.",
+      "timestamp": 120.0,
+      "keyframe_index": 4,
+      "screen_id": "S05",
+      "category": "data",
+      "blocks_requirement_ids": [
+        "R032"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q015",
+      "question": "When does finance supply the cash collected figure, how does the system receive it, and what should the driver do if it does not match the cash actually held?",
+      "why_it_matters": "The expert does not know the source, so the integration and the handling of a mismatch are undefined.",
+      "context_quote": "The cash figure comes from somewhere in finance, I just take whatever it shows.",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "screen_id": "S06",
+      "category": "integration",
+      "blocks_requirement_ids": [
+        "R036"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q016",
+      "question": "Is mileage required, in miles only, and what limits apply (minimum, maximum, decimals)? Is it trip distance or an odometer reading?",
+      "why_it_matters": "No validation rule for the mileage field was given.",
+      "context_quote": "You type your mileage in and press Submit day.",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "screen_id": "S06",
+      "category": "validation rule",
+      "blocks_requirement_ids": [
+        "R037"
+      ],
+      "answer": null,
+      "status": "open"
+    },
+    {
+      "id": "Q017",
+      "question": "What happens when the day is submitted: is it locked, who receives it, and what message does the driver get if a stop is still pending?",
+      "why_it_matters": "The expert stops at the button and gives no result or error behaviour.",
+      "context_quote": "You can't submit until every stop is either delivered or failed, so check nothing's still pending.",
+      "timestamp": 140.0,
+      "keyframe_index": 5,
+      "screen_id": "S06",
+      "category": "edge case",
+      "blocks_requirement_ids": [
+        "R038"
+      ],
+      "answer": null,
+      "status": "open"
+    }
+  ],
+  "usage": {
+    "model": "bring-your-own",
+    "calls": 2,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation_input_tokens": 0
+  }
+}

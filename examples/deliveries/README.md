@@ -7,3 +7,25 @@ The narration states seven rules, leaves two things vague (why the time window t
 `walkthrough.mp4` (about 1.7 MB, 168 seconds) is the recording, `walkthrough.vtt` is the transcript with the same timing (17 lines), and `expected.json` is the hand-written answer key. Every sample value comes from `sample_data()` in `make_example.py`, seeded with `random.Random(20260918)`.
 To rebuild: `.venv/bin/pip install playwright && .venv/bin/playwright install chromium`, then `.venv/bin/python examples/deliveries/make_example.py` from the repo root. It rewrites `app/`, prints the timeline and overwrites the mp4, vtt and `frames/`. Do not add `--crop auto`: the recording has no border, and the detector would still trim the static margins and clip the clock.
 Do not use `--crop auto` on it: the recording has no border, and the detector still trims the static margins and clips the clock (see the ingest notes in the integration report).
+
+## Reference result (held-out)
+
+`reference/` holds the first reading of this recording, made blind: the
+reading agents were told not to open the answer key, the script that built
+the recording, or any other example's reference. No prompt was tuned against
+this example. Overall recall against `expected.json` was **0.94**: screens
+6 of 6, actions 4 of 4, requirements 7 of 7, fields 12 of 13, questions 4 of
+5. Both questions that can only come from looking at the screen were found
+(the stop with no phone number, the unmentioned HAZARDOUS badge).
+
+The two misses, described honestly:
+
+- **Field:** the free-text box on the failed-delivery screen was found, under
+  its on-screen label "Anything else the depot should know?". The key looks
+  for the words note, free text, comment or detail, so it counts as missed.
+  That is a wording limit of the key, and the key was not changed after the
+  reading.
+- **Question:** the key wanted "do parcels of £100 or under need a
+  signature?". The reading asked about the boundary instead ("does a parcel
+  worth exactly £100 need a photo and signature?"), which is close but does
+  not match.
