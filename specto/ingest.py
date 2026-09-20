@@ -34,6 +34,11 @@ CHANGE_THRESHOLD = 24
 STRIP_FRACTION = 0.02
 SHARE_MIN = 0.25
 SHARE_MAX = 0.90
+# A side is only trimmed when the never-changing margin on it is at least this
+# share of that dimension (width for left and right, height for top and bottom).
+# A phone app recorded full frame has thin static margins of its own, which are
+# part of the app and not a meeting border.
+TRIM_MIN_MARGIN = 0.05
 
 _DURATION_RE = re.compile(r"Duration:\s*(\d+):(\d\d):(\d\d(?:\.\d+)?)")
 _TIME_RE = re.compile(r"time=\s*(\d+):(\d\d):(\d\d(?:\.\d+)?)")
@@ -321,10 +326,16 @@ def detect_share_region(
     icon, a small participant tile), and the box is the span of the rows and
     columns that do, pushed out to even numbers so the video encoder is happy.
 
+    Each side is then trimmed only when the margin on it is at least
+    TRIM_MIN_MARGIN of that dimension; a thinner margin is left in, so a
+    full-frame app recording keeps its own edges. `log` says which sides were
+    trimmed and by how much.
+
     Returns (x, y, w, h) in source pixels, or None when there is nothing
-    worth cropping: the box covers more than SHARE_MAX of the frame (no
-    border to remove) or less than SHARE_MIN of it (too small to be a shared
-    window, so probably wrong). Both cases are explained through `log`.
+    worth cropping: the changing area covers more than SHARE_MAX of the frame
+    (no border to remove) or less than SHARE_MIN of it (too small to be a
+    shared window, so probably wrong), or every margin is too thin to trim.
+    All of these are explained through `log`.
     """
     video_path = str(video_path)
     duration = probe_duration(video_path)
@@ -358,8 +369,7 @@ def detect_share_region(
     y0, y1 = busy_rows[0], busy_rows[-1] + 1
     x0, y0 = x0 - x0 % 2, y0 - y0 % 2
     x1, y1 = min(width, x1 + x1 % 2), min(height, y1 + y1 % 2)
-    box = (x0, y0, x1 - x0, y1 - y0)
-    share = (box[2] * box[3]) / (width * height)
+    share = ((x1 - x0) * (y1 - y0)) / (width * height)
     if share > SHARE_MAX:
         log(f"ingest: the changing area is {share:.0%} of the {width}x{height} frame, so there is no border to crop")
         return None
@@ -369,7 +379,28 @@ def detect_share_region(
             f"too small for a shared window, so the whole frame is kept"
         )
         return None
-    return box
+    margins = {"left": x0, "top": y0, "right": width - x1, "bottom": height - y1}
+    trimmed = {
+        side: px
+        for side, px in margins.items()
+        if px >= TRIM_MIN_MARGIN * (width if side in ("left", "right") else height)
+    }
+    if not trimmed:
+        log(
+            f"ingest: the margins around the changing area are all under {TRIM_MIN_MARGIN:.0%} of the "
+            f"{width}x{height} frame (widest {max(margins.values())} px), so there is no border to crop"
+        )
+        return None
+    kept = [side for side in margins if side not in trimmed]
+    message = "ingest: trimming " + ", ".join(f"{side} {px} px" for side, px in trimmed.items())
+    if kept:
+        message += f"; kept {', '.join(kept)} (margin under {TRIM_MIN_MARGIN:.0%})"
+    log(message)
+    x0 = x0 if "left" in trimmed else 0
+    y0 = y0 if "top" in trimmed else 0
+    x1 = x1 if "right" in trimmed else width
+    y1 = y1 if "bottom" in trimmed else height
+    return (x0, y0, x1 - x0, y1 - y0)
 
 
 def _thin_by_distance(kept: list[tuple[Path, float]], max_frames: int) -> tuple[list[tuple[Path, float]], int]:

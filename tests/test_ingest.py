@@ -232,6 +232,41 @@ def test_detect_share_region_leaves_a_full_frame_alone(synthetic_video: Path, st
     assert "nothing in the picture changes" in capsys.readouterr().out
 
 
+def test_detect_share_region_leaves_thin_margins_of_a_full_frame_app_alone(phone_video: Path, capsys):
+    """A portrait app with static margins of about 4% is not a meeting frame: nothing is trimmed."""
+    assert detect_share_region(phone_video) is None
+    out = capsys.readouterr().out
+    assert "under 5%" in out and "no border to crop" in out
+
+
+def test_detect_share_region_trims_only_the_sides_with_a_wide_margin(gallery_video: Path, capsys):
+    from conftest import GALLERY_BOX
+
+    box = detect_share_region(gallery_video)
+    assert box is not None
+    x, y, w, h = box
+    assert _close((x, w), (GALLERY_BOX[0], GALLERY_BOX[2]))  # left and right trimmed
+    assert (y, h) == (0, 540)  # top and bottom kept whole
+    out = capsys.readouterr().out
+    assert "trimming left 160 px, right 160 px" in out and "kept top, bottom" in out
+
+
+def test_detect_share_region_states_every_side_it_trims(bordered_video: Path, capsys):
+    detect_share_region(bordered_video)
+    out = capsys.readouterr().out
+    assert "trimming left 160 px, top 60 px, right 160 px, bottom 120 px" in out
+    assert "kept" not in out
+
+
+def test_detect_share_region_on_the_two_example_recordings(capsys):
+    """The Teams-style claims recording is cropped exactly; the phone app keeps its left, top and right edges."""
+    root = Path(__file__).resolve().parent.parent / "examples"
+    assert detect_share_region(root / "claims" / "walkthrough.mp4") == (160, 60, 1280, 720)
+    x, y, w, _ = detect_share_region(root / "deliveries" / "walkthrough.mp4")
+    assert (x, y, w) == (0, 0, 540)  # status bar and side edges intact; only the blank strip under the content goes
+    assert "kept left, top, right" in capsys.readouterr().out
+
+
 def test_crop_auto_keeps_the_shared_window_only(bordered_video: Path, tmp_path: Path, capsys):
     from conftest import SHARE_BOX
 

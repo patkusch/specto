@@ -121,6 +121,40 @@ def bordered_video(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return encode_frames(frame_dir, work / "meeting.mp4")
 
 
+def _framed_video(work: Path, canvas: tuple[int, int], box: tuple[int, int, int, int], name: str) -> Path:
+    """The four SCREENS pasted at `box` (x, y, w, h) into a static dark `canvas`."""
+    frame_dir = work / "png"
+    frame_dir.mkdir()
+    n = 0
+    for title, background, rows in SCREENS:
+        framed = Image.new("RGB", canvas, (28, 28, 32))
+        framed.paste(draw_screen(title, background, rows, size=box[2:]), box[:2])
+        for _ in range(FPS * SECONDS_PER_SCREEN):
+            framed.save(frame_dir / f"img_{n:04d}.png")
+            n += 1
+    return encode_frames(frame_dir, work / name)
+
+
+PHONE_CANVAS = (360, 780)  # a portrait app recorded full frame ...
+PHONE_BOX = (14, 30, 332, 720)  # ... with thin static margins of its own: about 4% on every side
+
+
+@pytest.fixture(scope="session")
+def phone_video(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """The four screens as a full-frame portrait app: static margins of about 4% on each side, no meeting frame."""
+    return _framed_video(tmp_path_factory.mktemp("phone"), PHONE_CANVAS, PHONE_BOX, "phone.mp4")
+
+
+GALLERY_CANVAS = (960, 540)  # wide margins left and right (a gallery on each side), thin ones above and below
+GALLERY_BOX = (160, 10, 640, 520)
+
+
+@pytest.fixture(scope="session")
+def gallery_video(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """The four screens with 16.7% margins left and right and under 2% above and below."""
+    return _framed_video(tmp_path_factory.mktemp("gallery"), GALLERY_CANVAS, GALLERY_BOX, "gallery.mp4")
+
+
 # Twelve screens that all differ in colour, title and row count.
 MANY_SCREENS = [
     ("Customer Search", (40, 70, 140), 1),

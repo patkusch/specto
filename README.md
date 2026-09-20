@@ -238,6 +238,14 @@ that actually changes over the recording and keeps only that, so the model
 reads the shared window and not the meeting around it. If it picks the
 wrong area, pass the box yourself as `--crop x,y,w,h` in pixels.
 
+`--crop auto` trims a side only when the unchanging margin on it is at least
+5% of the frame (of the width for left and right, of the height for top and
+bottom), and it says in the log which sides it trimmed. Thin margins are left
+alone, so an app recorded full frame keeps its own edges, status bar
+included. Text is read best when the frames are at least about 720 px wide;
+at 540 px the OCR drops the spaces between words. So record phone screens at
+full resolution.
+
 A second example recording, `examples/claims/`, is exactly that: a
 complaints-handling tool with table-heavy screens, recorded inside a
 Teams-style frame with participant tiles and a toolbar. `--crop auto` finds
