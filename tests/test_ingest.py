@@ -259,12 +259,23 @@ def test_detect_share_region_states_every_side_it_trims(bordered_video: Path, ca
 
 
 def test_detect_share_region_on_the_two_example_recordings(capsys):
-    """The Teams-style claims recording is cropped exactly; the phone app keeps its left, top and right edges."""
+    """The Teams-style claims recording is cropped exactly; the full-frame phone app is left whole."""
     root = Path(__file__).resolve().parent.parent / "examples"
     assert detect_share_region(root / "claims" / "walkthrough.mp4") == (160, 60, 1280, 720)
-    x, y, w, _ = detect_share_region(root / "deliveries" / "walkthrough.mp4")
-    assert (x, y, w) == (0, 0, 540)  # status bar and side edges intact; only the blank strip under the content goes
-    assert "kept left, top, right" in capsys.readouterr().out
+    capsys.readouterr()
+    # Its screens stop 210 px short of the bottom: blank space on one side only, not a meeting border.
+    assert detect_share_region(root / "deliveries" / "walkthrough.mp4") is None
+    out = capsys.readouterr().out
+    assert "only the bottom margin" in out and "a border on both sides" in out
+
+
+def test_one_wide_margin_alone_is_not_a_border(tmp_path: Path, capsys):
+    """Wide left and top margins with thin right and bottom ones: no opposite pair qualifies."""
+    from conftest import _framed_video
+
+    video = _framed_video(tmp_path, (960, 540), (160, 60, 790, 470), "one_sided.mp4")
+    assert detect_share_region(video) is None
+    assert "only the left, top margin" in capsys.readouterr().out
 
 
 def test_crop_auto_keeps_the_shared_window_only(bordered_video: Path, tmp_path: Path, capsys):

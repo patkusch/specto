@@ -328,13 +328,16 @@ def detect_share_region(
 
     Each side is then trimmed only when the margin on it is at least
     TRIM_MIN_MARGIN of that dimension; a thinner margin is left in, so a
-    full-frame app recording keeps its own edges. `log` says which sides were
-    trimmed and by how much.
+    full-frame app recording keeps its own edges. And nothing is cropped
+    unless two opposite sides qualify (left and right, or top and bottom): a
+    shared window has a border on both sides of it, while an app whose screens
+    stop short of the frame has blank space on one side only. `log` says which
+    sides were trimmed and by how much.
 
     Returns (x, y, w, h) in source pixels, or None when there is nothing
     worth cropping: the changing area covers more than SHARE_MAX of the frame
     (no border to remove) or less than SHARE_MIN of it (too small to be a
-    shared window, so probably wrong), or every margin is too thin to trim.
+    shared window, so probably wrong), or no two opposite margins are wide enough to trim.
     All of these are explained through `log`.
     """
     video_path = str(video_path)
@@ -389,6 +392,13 @@ def detect_share_region(
         log(
             f"ingest: the margins around the changing area are all under {TRIM_MIN_MARGIN:.0%} of the "
             f"{width}x{height} frame (widest {max(margins.values())} px), so there is no border to crop"
+        )
+        return None
+    if not ({"left", "right"} <= trimmed.keys() or {"top", "bottom"} <= trimmed.keys()):
+        log(
+            f"ingest: only the {', '.join(trimmed)} margin of the {width}x{height} frame is at least "
+            f"{TRIM_MIN_MARGIN:.0%}, and a shared window has a border on both sides of it, "
+            f"so this looks like a full-frame app and the whole frame is kept"
         )
         return None
     kept = [side for side in margins if side not in trimmed]

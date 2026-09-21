@@ -257,9 +257,10 @@ wrong area, pass the box yourself as `--crop x,y,w,h` in pixels.
 
 `--crop auto` trims a side only when the unchanging margin on it is at least
 5% of the frame (of the width for left and right, of the height for top and
-bottom), and it says in the log which sides it trimmed. Thin margins are left
-alone, so an app recorded full frame keeps its own edges, status bar
-included. Text is read best when the frames are at least about 720 px wide;
+bottom), and only when two opposite sides qualify, because a shared window
+has a border on both sides of it; it says in the log which sides it trimmed.
+Thin margins and one-sided blank space are left alone, so an app recorded
+full frame keeps its own edges, status bar included. Text is read best when the frames are at least about 720 px wide;
 at 540 px the OCR drops the spaces between words. So record phone screens at
 full resolution.
 
