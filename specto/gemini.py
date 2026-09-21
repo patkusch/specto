@@ -42,6 +42,14 @@ _KEPT_KEYS = ("type", "description", "properties", "required", "items", "enum", 
 _STRING_FORMATS = ("enum", "date-time")
 
 
+class GeminiAPIError(ExtractionError):
+    """The API said no (`status` is the HTTP code) or could not be reached (`status` is None)."""
+
+    def __init__(self, message: str, status: Optional[int] = None) -> None:
+        super().__init__(message)
+        self.status = status
+
+
 # ------------------------------------------------------------------------ key
 
 
@@ -195,6 +203,7 @@ class GeminiCaller:
         self.api_key = key
         self.max_output_tokens = max_output_tokens
         self.timeout = timeout
+        self.last_request_id: Optional[str] = None  # the reply's responseId for the latest call, if it sent one
 
     def __call__(
         self, system: str, content_blocks: list[dict], output_model: type[BaseModel]
@@ -246,13 +255,16 @@ class GeminiCaller:
             with urllib.request.urlopen(request, timeout=self.timeout) as reply:
                 raw = reply.read()
         except urllib.error.HTTPError as error:
-            raise ExtractionError(_http_error_message(error, self.model)) from error
+            raise GeminiAPIError(_http_error_message(error, self.model), error.code) from error
         except urllib.error.URLError as error:
-            raise ExtractionError(f"Could not reach the Gemini API: {error.reason}") from error
+            raise GeminiAPIError(f"Could not reach the Gemini API: {error.reason}") from error
         try:
-            return json.loads(raw.decode("utf-8"))
+            reply = json.loads(raw.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise ExtractionError(f"The Gemini API sent a reply that is not JSON: {error}") from error
+        if isinstance(reply, dict) and reply.get("responseId"):
+            self.last_request_id = str(reply["responseId"])
+        return reply
 
 
 # -------------------------------------------------------------------- helpers

@@ -148,6 +148,23 @@ export ANTHROPIC_API_KEY=...
 specto run walkthrough.mp4 --transcript walkthrough.vtt
 ```
 
+The first time you use a key, check it before a long run. This makes one
+tiny real call and tells you in plain words if the key, the model or the
+connection is the problem:
+
+```bash
+export ANTHROPIC_API_KEY=...
+specto doctor --ping
+specto run examples/onboarding/walkthrough.mp4 --transcript examples/onboarding/walkthrough.vtt --max-cost 1
+```
+
+`--ping` prints the model, the request id, the tokens used, what the call cost
+(a fraction of a cent) and `ready`. For Gemini add `--provider gemini`; add
+`--model ID` to try another model. It never prints the key. Exit code 0 means
+ready, 1 means the service said no (the sentence says how to fix it), 2 means
+no key was set and nothing was sent. `--max-cost 1` on the run refuses to
+start if the estimate is over one dollar.
+
 Output lands in `out/walkthrough/`: `analysis.xlsx`, `report.md`,
 `report.html`, a `frames/` folder, two ticket import files, two wiki pages,
 and the JSON files the stages hand to each other.
@@ -466,6 +483,7 @@ Ctrl-C) saves what it has read so far and picks up from there next time.
 | `specto score DIR KEY` | compare an output with an answer key |
 | `specto demo [--example onboarding\|claims] [--open]` | run a real example end to end with a saved reading, no key and no model call |
 | `specto doctor` | what is installed and what is missing |
+| `specto doctor --ping` | one tiny real model call: checks the key, the model and the connection, prints cost and `ready` |
 | `specto requests DIR`, `specto load DIR`, `specto status DIR` | write the model requests as files, read the answers back, see what is left; no key needed |
 | `specto merge DIR DIR... --out DIR` | several sessions into one workbook: same screens, requirements and questions folded together, no model call |
 | `specto compare DIR_A DIR_B --out DIR` | two finished analyses of the same journey: what was added, removed and reworded, no model call |

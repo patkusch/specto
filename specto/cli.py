@@ -5,6 +5,7 @@
     specto export out/walkthrough        # rebuild the workbook from analysis.json
     specto score out/walkthrough expected.json   # compare with an answer key
     specto doctor                        # what is installed, what is missing
+    specto doctor --ping                 # one tiny real model call: is the key, the model and the connection good?
     specto init                          # write a commented starter specto.toml for the team
     specto merge out/day1 out/day2 --out out/all   # several sessions, one workbook
     specto compare out/before out/after --out out/diff   # what changed between two analyses
@@ -42,8 +43,9 @@ def _load(path: Path, model):
     return model.model_validate_json(path.read_text(encoding="utf-8"))
 
 
-def make_caller(args: argparse.Namespace, model: str | None = None):
-    """The model caller for the chosen provider, or None (with a message) when no key is set."""
+def make_caller(args: argparse.Namespace, model: str | None = None, max_tokens: int | None = None):
+    """The model caller for the chosen provider, or None (with a message) when no key is set.
+    `max_tokens` caps the answer; leave it out for the caller's own default."""
     model = model or args.model
     if getattr(args, "provider", "claude") == "gemini":
         from .gemini import GeminiCaller, gemini_available
@@ -54,14 +56,16 @@ def make_caller(args: argparse.Namespace, model: str | None = None):
             return None
         if model.startswith("claude-"):
             model = "gemini-2.5-pro"
-        return GeminiCaller(model=model)
+        return GeminiCaller(model=model) if max_tokens is None else GeminiCaller(model=model, max_output_tokens=max_tokens)
     from .extract import ClaudeCaller
 
     if not os.environ.get("ANTHROPIC_API_KEY"):
         print("ANTHROPIC_API_KEY is not set. Export it, pass --provider gemini with a Gemini key, "
               "or pass --fake to try without the model.", file=sys.stderr)
         return None
-    return ClaudeCaller(model=model, effort=args.effort)
+    if max_tokens is None:
+        return ClaudeCaller(model=model, effort=args.effort)
+    return ClaudeCaller(model=model, effort=args.effort, max_tokens=max_tokens)
 
 
 def run_pipeline(source: Path, out_dir: Path, args: argparse.Namespace) -> int:
@@ -590,8 +594,37 @@ def cmd_demo(args: argparse.Namespace) -> int:
     return 0
 
 
+def _ping(args: argparse.Namespace) -> int:
+    """`specto doctor --ping`: provider and model from the flags, else specto.toml, else the defaults."""
+    from .extract import DEFAULT_MODEL
+    from .ping import PING_EFFORT, run_ping
+
+    try:
+        config = project_config.load_config(getattr(args, "config", None))
+    except project_config.ConfigError as error:
+        print(error, file=sys.stderr)
+        return 2
+    settings = config.values if config is not None else {}
+    chosen = {name: getattr(args, name) or settings.get(name) for name in ("provider", "model")}
+    from_file = [name for name in chosen if not getattr(args, name) and name in settings]
+    if from_file:
+        print(f"config: {config.path} sets {', '.join(from_file)}")
+    provider = chosen["provider"] or "claude"
+    model = chosen["model"] or DEFAULT_MODEL
+    if provider == "gemini" and model.startswith("claude-"):
+        model = "gemini-2.5-pro"  # the same swap make_caller does
+    call_args = argparse.Namespace(provider=provider, model=model, effort=PING_EFFORT)
+    return run_ping(provider, model, lambda max_tokens: make_caller(call_args, max_tokens=max_tokens))
+
+
 def cmd_doctor(args: argparse.Namespace) -> int:
     from .doctor import Check, main as doctor_main
+
+    if args.ping:
+        return _ping(args)
+    if args.provider or args.model:
+        print("doctor: --provider and --model only apply together with --ping", file=sys.stderr)
+        return 2
 
     try:
         config = project_config.load_config(getattr(args, "config", None))
@@ -749,6 +782,10 @@ def build_parser() -> argparse.ArgumentParser:
     ini.set_defaults(func=cmd_init)
 
     doc = sub.add_parser("doctor", parents=[cfg], help="check what is installed and what is missing")
+    doc.add_argument("--ping", action="store_true",
+                     help="make one tiny real model call to check the key, the model and the connection")
+    doc.add_argument("--provider", choices=["claude", "gemini"], help="with --ping: which service to call (default claude, or specto.toml)")
+    doc.add_argument("--model", help="with --ping: the model id to call (default claude-opus-5, or specto.toml)")
     doc.set_defaults(func=cmd_doctor)
 
     sc = sub.add_parser("score", help="compare an output folder with a hand-written answer key")

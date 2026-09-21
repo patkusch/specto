@@ -134,6 +134,7 @@ class ClaudeCaller:
         self.effort = effort
         self.max_tokens = max_tokens
         self.client = anthropic.Anthropic()
+        self.last_request_id: Optional[str] = None  # the API's id for the latest call, for support and `doctor --ping`
 
     def __call__(
         self, system: str, content_blocks: list[dict], output_model: type[BaseModel]
@@ -152,6 +153,7 @@ class ClaudeCaller:
             output_format=output_model,
             output_config={"effort": self.effort},
         )
+        self.last_request_id = getattr(response, "_request_id", None)
         if response.stop_reason == "refusal":
             details = getattr(response, "stop_details", None)
             raise ExtractionError(f"The model refused the request: {details}")
