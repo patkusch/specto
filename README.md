@@ -5,7 +5,7 @@
 ### Requirements from a screen walkthrough
 
 **An expert talks through the system for two minutes.**
-**specto writes the requirements, the acceptance criteria, and the seventeen questions nobody asked.**
+**specto writes the requirements, the acceptance criteria, and the questions nobody asked.**
 
 <br/>
 
@@ -18,8 +18,8 @@
 
 [![Model](https://img.shields.io/badge/Claude_Opus_5_or_Gemini-1A1A1A?style=for-the-badge)](#using-gemini-instead-of-claude)
 [![License](https://img.shields.io/badge/License-MIT-1A1A1A?style=for-the-badge)](./LICENSE)
-[![Recall](https://img.shields.io/badge/answer--key_recall-0.97_to_1.00-2ea043?style=for-the-badge)](#does-it-work)
-[![Tests](https://img.shields.io/badge/offline_tests-581-2ea043?style=for-the-badge)](#development)
+[![Recall](https://img.shields.io/badge/held--out_recall-0.94_(one_recording)-0B5C8F?style=for-the-badge)](#does-it-work)
+[![Tests](https://img.shields.io/badge/offline_tests-688-2ea043?style=for-the-badge)](#development)
 [![CI](https://github.com/patkusch/specto/actions/workflows/ci.yml/badge.svg)](https://github.com/patkusch/specto/actions/workflows/ci.yml)
 
 </div>
@@ -77,34 +77,63 @@ Plus a single web page with the frames inside it, a Markdown report, a screen-fl
 
 </div>
 
-581 offline tests. Runs without an API key. Nothing leaves your machine except the frames and words you choose to send to a model service.
+688 offline tests. Runs without an API key. Nothing leaves your machine except the frames and words you choose to send to a model service.
 
 ---
 
 ## Does it work?
 
-The example recording has been read twice by Claude through the
-bring-your-own-model path (the agents in a Claude Code session acting as
-the model, so no API key was involved), once before and once after the
-sample customer's details were changed. Against the hand-written answer
-key:
+On the one recording no prompt was tuned against, specto found **0.94** of
+what a hand-written answer key asks for. That is one recording, a small
+sample, so read it as a first honest data point and not as a rate. The
+other two examples score 1.00, but the first of them was used to tune the
+prompt and the second was only used to check that the tuning broke nothing.
 
-| What the key asks for | First reading | Second reading |
-|---|---|---|
-| Screens | 6 of 6 | 6 of 6 |
-| Fields | 14 of 14 | 14 of 14 |
-| Actions | 4 of 4 | 4 of 4 |
-| Requirements | 6 of 7 | 7 of 7 |
-| Questions | 5 of 5 | 5 of 5 |
-| Overall recall | 0.97 | 1.00 |
+| Example | What it is | Screens | Fields | Actions | Requirements | Questions | Overall recall |
+|---|---|---|---|---|---|---|---|
+| `examples/deliveries/` | portrait phone app, no meeting frame. **Held out:** no prompt was tuned against it | 6 of 6 | 12 of 13 | 4 of 4 | 7 of 7 | 4 of 5 | **0.94** |
+| `examples/claims/` | complaints tool inside a meeting frame. Not tuned against | 6 of 6 | 14 of 14 | 4 of 4 | 7 of 7 | 4 of 4 | 1.00 |
+| `examples/onboarding/` | customer onboarding tool. **Tuned against** | 6 of 6 | 14 of 14 | 4 of 4 | 7 of 7 | 5 of 5 | 1.00 |
 
-The second reading found 6 screens, 44 fields, 25 requirements, 33
-acceptance criteria and 20 questions, matching every item in the answer
-key. In both readings the model noticed things the narration never said:
-the Approve button is visible on screen while the expert says only team
-leads see it, and a record can be submitted while its ID document is still
-"Pending check". Both became questions, each naming the requirements it
-holds up. The current reference result is in `examples/onboarding/reference/`.
+Overall recall is the mean of the five category recalls. The figures are
+copied from `examples/*/reference/score.json`; each answer key is
+`examples/*/expected.json`. No reading used an API key: they were made
+through the bring-your-own-model path, with agents in a Claude Code session
+acting as the model.
+
+**The held-out reading.** It was made blind: the reading agents were told
+not to open the answer key, the script that built the recording, or any
+other example's reference, and `expected.json` was written before any
+reading. Both questions that can only come from looking at the screen were
+found: the stop with no phone number, though the narration says every stop
+has one, and the orange HAZARDOUS badge nobody mentioned. The two misses
+are a free-text box on the failed-delivery screen, found under its on-screen
+label but not under the words the key looks for, and a question about
+whether parcels of 100 pounds or under need a signature, which the reading
+asked about differently. The key was not changed after the reading. Details
+are in `examples/deliveries/README.md`.
+
+**Why the onboarding 1.00 is not evidence.** An earlier reading of the
+onboarding recording scored 0.93: it missed the requirement "date of birth
+is mandatory", which the reading had folded into one statement with four
+other fields, and the question about which document types are accepted. On
+2026-09-16 the reading prompt was changed (commit `f0f9cb0`, one
+requirement per independently mandatory item, and a follow-up question when
+the expert names only a few examples), and the recording was read again.
+That reading scored 1.00. The prompt was changed after looking at what that
+recording's answer key said was missing, so the 1.00 shows the prompt fits
+that recording, not that it will fit the next one.
+
+**Why the claims 1.00 counts for less than it looks.** The complaints
+recording scored 1.00 before and after the same prompt change. It was read
+again only to check that the change had not broken anything, so it is a
+regression check. It is not a held-out result either.
+
+What the readings also found that the narration never said: in the
+onboarding reading, a record that can be submitted while its ID document is
+still "Pending check", and an approval queue labelled "oldest first" whose
+rows are not in date order. Each is a question naming the requirements it
+holds up.
 
 <div align="center">
 
@@ -116,14 +145,9 @@ A one-page scoreboard for a business reader, with every figure marked
 measured or assumed, a savings calculator, a comparison with named
 neighbours and the roadmap: [docs/scoreboard.html](docs/scoreboard.html).
 
-The second example, the complaints tool recorded inside a meeting frame,
-was read once the same way: 6 screens, 42 fields, 47 requirements, 60
-criteria and 23 questions, and every item in its answer key was found
-(recall 1.00). Its result is in `examples/claims/reference/`.
-
 The same stages have not yet been run through the API itself, so the first
 run with a key should be on an example, and the score compared with its
-reference folder.
+reference folder. `specto doctor --ping` checks the key first.
 
 ## Run it yourself
 
