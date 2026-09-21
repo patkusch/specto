@@ -6,11 +6,20 @@ Writes four files under docs/:
   questions.png   the FINDINGS column on its own, top five ranked questions
   scoreboard.png  the footer counters with the found-vs-asked-for bars
 
+The recall figures are read from examples/*/reference/score.json, never typed in here:
+the phone-app example (held out: no prompt was tuned against it) is shown first, then the
+complaints example (not tuned against) and the onboarding example (tuned against).
+
 Every row on the dashboard is a real row from examples/onboarding/reference/analysis.json,
 every frame is a real keyframe from a run of the example, and every transcript line comes
 from examples/onboarding/walkthrough.vtt. Nothing is invented.
 
-Usage: .venv/bin/python docs/make_demo.py [OUT_DIR]   (OUT_DIR holds frames/ of a run of the example)
+Needs, in this order:
+  1. Playwright with chromium:  .venv/bin/pip install playwright && .venv/bin/playwright install chromium
+  2. A run of the onboarding example that holds its frames:
+       .venv/bin/specto demo --example onboarding --out out/demo-onboarding
+  3. Then:  .venv/bin/python docs/make_demo.py out/demo-onboarding
+     (OUT_DIR defaults to out/demo-onboarding; it must hold frames/frame_0000.jpg to frame_0005.jpg)
 """
 from __future__ import annotations
 
@@ -34,12 +43,22 @@ GIF_W, GIF_H = 800, 500
 FPS = 8
 FRAME_MS = 1000 // FPS
 
-# Facts quoted on the footer. Two readings of the onboarding example, one of complaints.
-RECALL_ONBOARDING = (0.93, 0.97)
-RECALL_COMPLAINTS = 1.00
+
+
+def overall_recall(example: str) -> float:
+    """The overall recall in examples/<example>/reference/score.json, to two places."""
+    score = json.loads((ROOT / "examples" / example / "reference" / "score.json").read_text())
+    return round(score["overall_recall"], 2)
+
+
+# Facts quoted on the footer. Recall comes from the score files; the rest are typed here.
+RECALL_HELD_OUT = overall_recall("deliveries")  # the phone app: no prompt was tuned against it
+RECALL_COMPLAINTS = overall_recall("claims")  # not tuned against; a regression check on the prompt change
+RECALL_ONBOARDING = overall_recall("onboarding")  # tuned against: the prompt was changed after an earlier 0.93
 COST_PER_HOUR = (1.15, 1.60)
-TESTS = 563
+TESTS = 688
 MODEL_CALLS = 4
+VERSION = "v0.7.0"
 
 CATEGORY_WEIGHT = {
     "validation rule": 0,
@@ -214,7 +233,7 @@ body{width:1280px;height:800px;overflow:hidden;display:flex;flex-direction:colum
 .ac .sep{height:1px;background:var(--line-soft);margin:6px 0}
 
 /* footer */
-.footer{height:106px;flex:none;border-top:1px solid var(--line);background:var(--panel);display:grid;grid-template-columns:640px 640px}
+.footer{height:118px;flex:none;border-top:1px solid var(--line);background:var(--panel);display:grid;grid-template-columns:640px 640px}
 .counters{display:grid;grid-template-columns:repeat(4,1fr);border-right:1px solid var(--line)}
 .ctr{padding:16px 18px 0;border-right:1px solid var(--line-soft)}
 .ctr:last-child{border-right:0}
@@ -228,9 +247,10 @@ body{width:1280px;height:800px;overflow:hidden;display:flex;flex-direction:colum
 .bars .lb .leg i{display:inline-block;width:9px;height:9px;margin-right:5px;vertical-align:-1px}
 .bars .lb .leg .a{background:var(--accent)}
 .bars .lb .leg .b{background:var(--line)}
-.brow{display:grid;grid-template-columns:86px 1fr 74px;gap:12px;align-items:center;margin-bottom:6px;font-size:11.5px}
-.brow .name{color:var(--ink)}
-.brow .name small{display:block;color:var(--faint);font-size:10px;line-height:1.2}
+.brow{display:grid;grid-template-columns:190px 1fr 46px;gap:12px;align-items:center;margin-bottom:5px;font-size:11.5px}
+.brow .name{color:var(--ink);white-space:nowrap}
+.brow .name small{display:inline;margin-left:7px;color:var(--faint);font-size:10px}
+.brow .name small.ho{color:var(--green)}
 .brow .track{height:10px;background:var(--line);position:relative}
 .brow .fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent)}
 .brow .tick{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.9}
@@ -241,9 +261,9 @@ body.focus-findings .main{grid-template-columns:600px}
 body.focus-findings .col.left,body.focus-findings .col.right,body.focus-findings .top,body.focus-findings .status,body.focus-findings .footer{display:none}
 body.focus-findings .col{border:1px solid var(--line)}
 body.focus-findings .card .txt{-webkit-line-clamp:4}
-body.scoreboard{width:800px;height:200px}
+body.scoreboard{width:800px;height:230px}
 body.scoreboard .top,body.scoreboard .status,body.scoreboard .main{display:none}
-body.scoreboard .footer{height:200px;grid-template-columns:800px;grid-template-rows:92px 108px;border-top:0}
+body.scoreboard .footer{height:230px;grid-template-columns:800px;grid-template-rows:92px 138px;border-top:0}
 body.scoreboard .counters{border-right:0;border-bottom:1px solid var(--line)}
 body.scoreboard .bars{padding-top:14px}
 body.scoreboard .brow{margin-bottom:10px}
@@ -278,7 +298,7 @@ def page_html(analysis: dict, cues: list[dict], frames_b64: list[str]) -> str:
             for q in qs
         ],
         "facts": {
-            "recall_on": RECALL_ONBOARDING, "recall_co": RECALL_COMPLAINTS, "cost": COST_PER_HOUR, "tests": TESTS,
+            "recall_ho": RECALL_HELD_OUT, "recall_co": RECALL_COMPLAINTS, "recall_on": RECALL_ONBOARDING, "cost": COST_PER_HOUR, "tests": TESTS,
             "calls": MODEL_CALLS, "nreq": len(reqs), "nq": len(qs), "duration": mmss(math.ceil(cues[-1]["end"])),
         },
     }
@@ -362,15 +382,16 @@ function setState(s){
   // footer counters, t in 0..1
   const t = s.t01;
   const F = D.facts;
-  $('#c1').innerHTML = `${fmt2(F.recall_on[0]*t)}<small>–${fmt2(F.recall_on[1]*t)}</small>`;
+  $('#c1').textContent = fmt2(F.recall_ho*t);
   $('#c2').textContent = fmt2(F.recall_co*t);
   $('#c3').innerHTML = `$${fmt2(F.cost[0]*t)}<small>–${fmt2(F.cost[1]*t)}</small>`;
   $('#c4').textContent = String(Math.round(F.tests*t));
-  $('#b1').style.width = (100*F.recall_on[1]*t).toFixed(1) + '%';
-  $('#b1t').style.left = (100*F.recall_on[0]*t).toFixed(1) + '%';
-  $('#b1v').textContent = `${fmt2(F.recall_on[0]*t)}–${fmt2(F.recall_on[1]*t)}`;
+  $('#b1').style.width = (100*F.recall_ho*t).toFixed(1) + '%';
+  $('#b1v').textContent = fmt2(F.recall_ho*t);
   $('#b2').style.width = (100*F.recall_co*t).toFixed(1) + '%';
   $('#b2v').textContent = fmt2(F.recall_co*t);
+  $('#b3').style.width = (100*F.recall_on*t).toFixed(1) + '%';
+  $('#b3v').textContent = fmt2(F.recall_on*t);
 }
 window.setState = setState;
 build();
@@ -380,7 +401,7 @@ build();
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>{CSS}</style></head><body>
 <div class="top">
-  <div class="brand">specto <small>v0.6.0</small></div>
+  <div class="brand">specto <small>{VERSION}</small></div>
   <div class="rec"><i></i><b>walkthrough.mp4</b> · <span id="rec-dur"></span></div>
   <div class="stages">
     <div class="stage" id="st-frames"><span class="dot"></span>Frames</div><div class="link" id="lk-1"></div>
@@ -407,15 +428,16 @@ build();
 </div>
 <div class="footer">
   <div class="counters">
-    <div class="ctr"><div class="n" id="c1"></div><div class="l"><b>recall</b> onboarding example, two readings</div></div>
-    <div class="ctr"><div class="n" id="c2"></div><div class="l"><b>recall</b> complaints example</div></div>
+    <div class="ctr"><div class="n" id="c1"></div><div class="l"><b>recall</b> phone app, <b>held out</b> (one recording)</div></div>
+    <div class="ctr"><div class="n" id="c2"></div><div class="l"><b>recall</b> complaints and onboarding, not held out</div></div>
     <div class="ctr"><div class="n" id="c3"></div><div class="l"><b>cost</b> per recorded hour</div></div>
     <div class="ctr"><div class="n" id="c4"></div><div class="l"><b>tests</b> offline, run in CI</div></div>
   </div>
   <div class="bars">
     <div class="lb">Found vs asked-for <span class="leg"><span><i class="a"></i>found by specto</span><span><i class="b"></i>asked for by the reference</span></span></div>
-    <div class="brow"><div class="name">Onboarding<small>6 screens · 01:51</small></div><div class="track"><div class="fill" id="b1"></div><div class="tick" id="b1t"></div></div><div class="v" id="b1v"></div></div>
-    <div class="brow"><div class="name">Complaints<small>second example</small></div><div class="track"><div class="fill" id="b2"></div></div><div class="v" id="b2v"></div></div>
+    <div class="brow"><div class="name">Phone app<small class="ho">held out</small></div><div class="track"><div class="fill" id="b1"></div></div><div class="v" id="b1v"></div></div>
+    <div class="brow"><div class="name">Complaints<small>not tuned against</small></div><div class="track"><div class="fill" id="b2"></div></div><div class="v" id="b2v"></div></div>
+    <div class="brow"><div class="name">Onboarding<small>tuned against</small></div><div class="track"><div class="fill" id="b3"></div></div><div class="v" id="b3v"></div></div>
   </div>
 </div>
 <script>window.DATA = {json.dumps(data)};</script>
@@ -494,6 +516,24 @@ def timeline(analysis: dict, cues: list[dict]) -> list[dict]:
     return [dict(s, tick=i) for i, s in enumerate(states)]
 
 
+def check_inputs(out_dir: Path) -> bool:
+    """Say exactly what is missing and how to get it; True when the script can run."""
+    missing = [f"frames/frame_{i:04d}.jpg" for i in range(6) if not (out_dir / "frames" / f"frame_{i:04d}.jpg").exists()]
+    problems = []
+    if missing:
+        problems.append(
+            f"{out_dir} has no {', '.join(missing[:2])}{' ...' if len(missing) > 2 else ''}. "
+            f"Make them with:  .venv/bin/specto demo --example onboarding --out {out_dir}"
+        )
+    try:
+        import playwright  # noqa: F401
+    except ImportError:
+        problems.append("Playwright is not installed:  .venv/bin/pip install playwright && .venv/bin/playwright install chromium")
+    for problem in problems:
+        print(f"make_demo: {problem}", file=sys.stderr)
+    return not problems
+
+
 def render(out_dir: Path) -> None:
     from playwright.sync_api import sync_playwright
 
@@ -534,7 +574,7 @@ def render(out_dir: Path) -> None:
         # the scoreboard: counters plus the found-vs-asked-for bars
         page.evaluate("document.body.classList.add('scoreboard')")
         page.evaluate("s => window.setState(s)", final)
-        page.screenshot(path=str(DOCS / "scoreboard.png"), clip={"x": 0, "y": 0, "width": 800, "height": 200})
+        page.screenshot(path=str(DOCS / "scoreboard.png"), clip={"x": 0, "y": 0, "width": 800, "height": 230})
         browser.close()
 
     for name in ("demo.gif", "dashboard.png", "questions.png", "scoreboard.png"):
@@ -558,4 +598,7 @@ def write_gif(frames: list[Image.Image], target: Path) -> None:
 
 
 if __name__ == "__main__":
-    render(Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "out" / "real2")
+    target = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "out" / "demo-onboarding"
+    if not check_inputs(target):
+        sys.exit(2)
+    render(target)
