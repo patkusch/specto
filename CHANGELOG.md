@@ -2,6 +2,62 @@
 
 Newest first. Dates are when the change was pushed.
 
+## 0.7.0 (2026-09-20)
+
+**Scores.** The recall figures are now labelled by how fair they are. The
+onboarding 1.00 is a training score: the reading prompt was changed on
+2026-09-16 after an earlier reading scored 0.93, so the figure shows the
+prompt fits that recording. The complaints 1.00 was a regression check
+(1.00 before and after the same change). The new held-out example, a phone
+app whose answer key was written before any reading and which no prompt was
+tuned against, scored **0.94** on a blind reading. That is one recording, a
+small sample. The README, the scoreboard and its pictures say this, and the
+0.6.0 figures below should be read the same way.
+
+- A third example, `examples/deliveries/`: a portrait phone-app recording
+  with no meeting frame, an answer key written first, and a blind reference
+  reading (screens 6 of 6, fields 12 of 13, actions 4 of 4, requirements
+  7 of 7, questions 4 of 5; both screen-only questions found).
+- The reading prompt asks for one requirement per independently mandatory
+  item, and for a follow-up question when the expert names only a few
+  examples of an accepted value. Both onboarding and complaints readings
+  were redone under it. Judge it by the held-out score, not by the
+  onboarding one.
+- `specto doctor --ping` makes one tiny real call through the same code a
+  run uses and says what is wrong in one plain sentence (missing or invalid
+  key, no access to the model, rejected request, rate limit or no credit,
+  Gemini API not switched on, network), or prints the request id, tokens,
+  cost in cents, time and `ready`. Nothing is sent without a key, and no
+  part of a key is ever printed.
+- `--crop auto` no longer trims a full-frame app recording. It crops only
+  when two opposite sides have a static margin of at least 5% of the frame,
+  as a shared window inside a meeting frame does. Phone recordings kept
+  losing their status bar and left edge before; the claims example still
+  crops to the pixel. OCR reads best at 720 px wide or more, so record
+  phone screens at full resolution.
+- `specto demo` runs a real example end to end with no key and no model
+  call, and there is a Dockerfile with a CI job that builds it and runs
+  `doctor` and the demo.
+- `specto watch` processes every recording or screenshot folder dropped
+  into a shared folder, skips what is done, redoes what changed, and keeps
+  going past a bad one.
+- Confluence and SharePoint pages join the Jira and Azure DevOps import
+  files.
+- `specto compare` reports what was added, dropped or reworded between two
+  finished readings of a journey.
+- Answers typed into `report.html` (with a status) survive closing the
+  page, export as a file, and read back into the workbook with
+  `specto answers --from-html`.
+- A `specto.toml` project settings file (`specto init` writes a commented
+  starter): a flag beats the file, the file beats the default, and anything
+  that looks like a key is refused. `doctor` shows what it found.
+- `doctor` reports whether a Gemini key is set (never its value) and which
+  model service a run can use.
+- The README opens on a dark dashboard demo built from the real reading,
+  with the scoreboard page beside it, and both are regenerated from the
+  reference score files.
+- 688 offline tests.
+
 ## 0.6.0 (2026-09-14)
 
 - The example's sample customer is generated from a seed with values that
