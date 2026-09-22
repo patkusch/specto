@@ -105,6 +105,7 @@ def run_pipeline(source: Path, out_dir: Path, args: argparse.Namespace) -> int:
             transcript_path=args.transcript,
             whisper_model=args.whisper_model,
             force=args.force,
+            speakers=getattr(args, "speakers", False),
             max_frames=args.max_frames,
             scene_threshold=args.scene_threshold,
             detect=args.detect,
@@ -683,6 +684,9 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--ocr", action=argparse.BooleanOptionalAction, default=UNSET,
                      help="read the text on each frame and show it to the model (needs pip install 'specto[ocr]')")
     run.add_argument("--whisper-model", default=UNSET, help="faster-whisper model size when transcribing locally")
+    run.add_argument("--speakers", action="store_true",
+                     help="label who said what from the audio (local diarization, needs pip install 'specto[speakers]'); "
+                          "off by default, fills in only segments with no speaker name already")
     run.add_argument("--ingest-only", action="store_true", help="stop after frames and transcript")
     run.add_argument("--estimate", action="store_true", help="print the expected cost for each model and stop before calling one")
     run.add_argument("--max-cost", type=float, metavar="USD", default=UNSET, help="stop before the model if the estimate is above this many dollars")

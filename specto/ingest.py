@@ -573,6 +573,7 @@ def ingest(
     transcript_path: Optional[str | Path] = None,
     whisper_model: Optional[str] = "base",
     force: bool = False,
+    speakers: bool = False,
     **keyframe_kwargs,
 ) -> Recording:
     """Run stage 1 end to end and write `out_dir/recording.json`.
@@ -583,6 +584,12 @@ def ingest(
     `sample_fps`, `hash_distance`, `scene_threshold`, `min_gap`, `max_frames`,
     `max_width`, `fallback_interval`, `crop`). If the
     output already exists it is loaded and returned, unless `force` is set.
+
+    With `speakers=True`, segments that do not already carry a speaker name
+    (whisper never names one; a `<v Name>` VTT tag or meeting export already
+    does) are labelled "Speaker 1", "Speaker 2", ... from the recording's own
+    audio, using local diarization (needs `pip install "specto[speakers]"`;
+    see `specto.diarize` for what this does and does not get right).
     """
     video_path = Path(video_path)
     out_dir = Path(out_dir)
@@ -608,6 +615,11 @@ def ingest(
         segments = []
         transcript_source = "none"
         print("ingest: no transcript, keyframes only")
+
+    if speakers and segments:
+        from specto.diarize import assign_speakers
+
+        segments = assign_speakers(segments, video_path)
 
     moments = build_moments(keyframes, segments, duration)
     recording = Recording(

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "specto"
-version = "0.7.0"
+version = "0.8.0"
 description = "Watch a recorded expert walkthrough of a system and write down what the system must do."
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -22,6 +22,7 @@ whisper = ["faster-whisper>=1.0"]
 whisper-precise = ["faster-whisper>=1.0", "stable-ts>=2.19"]  # word timings ~3x closer; pulls in torch (~600 MB)
 ocr = ["rapidocr-onnxruntime>=1.2"]
 live = ["mss>=9"]  # screen grabs in live mode on macOS, Windows and Linux (X11); the platform tools work without it
+speakers = ["sherpa-onnx>=1.13"]  # --speakers: local, ungated diarization (no Hugging Face account, ~33 MB of models downloaded once)
 dev = ["pytest>=8"]
 
 [project.scripts]

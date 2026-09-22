@@ -420,6 +420,44 @@ def test_ingest_without_transcript(synthetic_video: Path, tmp_path: Path):
     assert all(m.segments == [] for m in recording.moments)
 
 
+def test_ingest_speakers_false_never_touches_diarize(synthetic_video: Path, tmp_path: Path, monkeypatch):
+    """--speakers off (the default) must not import or call specto.diarize at all,
+    so a plain `pip install specto` run never needs the extra."""
+    import specto.diarize as diarize_module
+
+    def boom(*a, **k):
+        raise AssertionError("assign_speakers must not run when speakers=False")
+
+    monkeypatch.setattr(diarize_module, "assign_speakers", boom)
+    vtt = tmp_path / "talk.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    recording = ingest(synthetic_video, tmp_path / "out", transcript_path=vtt, max_width=400, speakers=False)
+    assert len(recording.segments) == 4
+
+
+def test_ingest_speakers_true_labels_segments_with_no_speaker(synthetic_video: Path, tmp_path: Path, monkeypatch):
+    """--speakers on calls specto.diarize.assign_speakers with the video path and
+    the parsed segments, and uses what it returns. The real model is not needed
+    here: this only checks the wiring, not diarization accuracy (see
+    tests/test_diarize.py for the real, measured check)."""
+    import specto.diarize as diarize_module
+
+    calls = []
+
+    def fake_assign_speakers(segments, audio_source, **kwargs):
+        calls.append((segments, Path(audio_source)))
+        return [s.model_copy(update={"speaker": "Speaker 1"}) for s in segments]
+
+    monkeypatch.setattr(diarize_module, "assign_speakers", fake_assign_speakers)
+    vtt = tmp_path / "talk.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    recording = ingest(synthetic_video, tmp_path / "out", transcript_path=vtt, max_width=400, speakers=True)
+    assert len(calls) == 1
+    assert calls[0][1] == Path(synthetic_video)
+    assert all(seg.speaker == "Speaker 1" for seg in recording.segments)
+    assert all(seg.speaker == "Speaker 1" for m in recording.moments for seg in m.segments)
+
+
 # ---------------------------------------------------------- screenshot folders
 
 # Six distinct screens for the folder tests: colour and row count both differ.

@@ -1,0 +1,6 @@
+Daniel|So walk me through the onboarding screen, from the top.
+Samantha|Sure. You start on customer search, put in the postcode and surname, then hit search.
+Fred|And what if they already have an account with us?
+Samantha|Then it lists the existing matches so you don't create a duplicate record.
+Daniel|Got it. And who can approve a new record?
+Samantha|Only team leads can approve, the button doesn't show for anyone else.

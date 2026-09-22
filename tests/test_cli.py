@@ -24,6 +24,40 @@ VTT = """WEBVTT
 """
 
 
+def test_cli_run_speakers_flag_reaches_ingest(synthetic_video: Path, tmp_path: Path, monkeypatch) -> None:
+    """--speakers on the command line must reach ingest() as speakers=True; the
+    real diarization model is not exercised here (see tests/test_diarize.py)."""
+    import specto.diarize as diarize_module
+
+    calls = []
+    monkeypatch.setattr(
+        diarize_module, "assign_speakers",
+        lambda segments, audio_source, **kwargs: (calls.append(1) or segments),
+    )
+    vtt = tmp_path / "walkthrough.vtt"
+    vtt.write_text(VTT.replace("<v Sam>", ""), encoding="utf-8")  # no speaker tags: leaves work for diarize
+    out = tmp_path / "out"
+
+    rc = main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(out), "--fake", "--speakers"])
+    assert rc == 0
+    assert calls == [1]
+
+
+def test_cli_run_without_speakers_flag_never_calls_diarize(synthetic_video: Path, tmp_path: Path, monkeypatch) -> None:
+    import specto.diarize as diarize_module
+
+    def boom(*a, **k):
+        raise AssertionError("assign_speakers must not run without --speakers")
+
+    monkeypatch.setattr(diarize_module, "assign_speakers", boom)
+    vtt = tmp_path / "walkthrough.vtt"
+    vtt.write_text(VTT, encoding="utf-8")
+    out = tmp_path / "out"
+
+    rc = main(["run", str(synthetic_video), "--transcript", str(vtt), "--out", str(out), "--fake"])
+    assert rc == 0
+
+
 def test_cli_run_with_fake_model(synthetic_video: Path, tmp_path: Path) -> None:
     vtt = tmp_path / "walkthrough.vtt"
     vtt.write_text(VTT, encoding="utf-8")

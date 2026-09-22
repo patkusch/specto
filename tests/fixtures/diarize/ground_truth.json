@@ -1,0 +1,38 @@
+[
+  {
+    "speaker": "Daniel",
+    "start": 0.0,
+    "end": 3.158,
+    "text": "So walk me through the onboarding screen, from the top."
+  },
+  {
+    "speaker": "Samantha",
+    "start": 3.758,
+    "end": 9.076,
+    "text": "Sure. You start on customer search, put in the postcode and surname, then hit search."
+  },
+  {
+    "speaker": "Fred",
+    "start": 9.676,
+    "end": 12.347,
+    "text": "And what if they already have an account with us?"
+  },
+  {
+    "speaker": "Samantha",
+    "start": 12.947,
+    "end": 16.963,
+    "text": "Then it lists the existing matches so you don't create a duplicate record."
+  },
+  {
+    "speaker": "Daniel",
+    "start": 17.563,
+    "end": 20.178,
+    "text": "Got it. And who can approve a new record?"
+  },
+  {
+    "speaker": "Samantha",
+    "start": 20.778,
+    "end": 24.649,
+    "text": "Only team leads can approve, the button doesn't show for anyone else."
+  }
+]

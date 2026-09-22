@@ -23,7 +23,7 @@ def healthy(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     monkeypatch.setattr(doctor, "python_version", lambda: (3, 12, 4))
     monkeypatch.setattr(doctor, "ffmpeg_path", lambda: "/venv/lib/imageio_ffmpeg/binaries/ffmpeg")
     monkeypatch.setattr(doctor, "ffmpeg_version", lambda exe: "7.1")
-    monkeypatch.setattr(doctor, "module_installed", _installed("faster_whisper", "stable_whisper", "playwright"))
+    monkeypatch.setattr(doctor, "module_installed", _installed("faster_whisper", "stable_whisper", "playwright", "sherpa_onnx"))
     cache = tmp_path / "hub"
     (cache / "models--Systran--faster-whisper-base").mkdir(parents=True)
     monkeypatch.setattr(doctor, "hf_cache_dir", lambda: cache)
@@ -45,7 +45,7 @@ def test_everything_ok(healthy, capsys) -> None:
     checks = run_checks()
     assert all(c.ok for c in checks)
     names = [c.name for c in checks]
-    assert names == ["Python", "ffmpeg", "faster-whisper", "stable-ts", "OCR",
+    assert names == ["Python", "ffmpeg", "faster-whisper", "stable-ts", "Speaker labels", "OCR",
                      "ANTHROPIC_API_KEY", "Gemini key", "Model access", "Playwright", "Screen capture", "Microphone input", "Disk space"]
     assert main() == 0
     out = capsys.readouterr().out
@@ -145,6 +145,29 @@ def test_stable_ts_both_ways(healthy) -> None:
     assert not stable.ok and not stable.required
     assert "whisper-precise" in stable.fix
     assert main() == 0
+
+
+def test_speakers_both_ways(healthy, monkeypatch) -> None:
+    import specto.diarize as diarize_module
+
+    monkeypatch.setattr(diarize_module, "models_cached", lambda: False)
+    speakers = next(c for c in run_checks() if c.name == "Speaker labels")
+    assert speakers.ok and "not downloaded yet" in speakers.detail
+    assert main() == 0
+
+    monkeypatch.setattr(doctor, "module_installed", _installed("faster_whisper", "stable_whisper", "playwright"))
+    speakers = next(c for c in run_checks() if c.name == "Speaker labels")
+    assert not speakers.ok and not speakers.required
+    assert "specto[speakers]" in speakers.fix
+    assert main() == 0
+
+
+def test_speakers_reports_models_already_cached(healthy, monkeypatch) -> None:
+    import specto.diarize as diarize_module
+
+    monkeypatch.setattr(diarize_module, "models_cached", lambda: True)
+    speakers = next(c for c in run_checks() if c.name == "Speaker labels")
+    assert speakers.ok and "already downloaded" in speakers.detail
 
 
 def test_ocr_both_ways(healthy) -> None:

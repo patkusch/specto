@@ -200,6 +200,19 @@ def check_stable_ts() -> Check:
                  fix='pip install "specto[whisper-precise]" (about 600 MB)')
 
 
+def check_speakers() -> Check:
+    if not module_installed("sherpa_onnx"):
+        return Check(name="Speaker labels", ok=False,
+                     detail="not installed; needed only for --speakers (who said what, from the audio)",
+                     fix='pip install "specto[speakers]"')
+    from specto.diarize import DEFAULT_MODEL_DIR, models_cached
+
+    if models_cached():
+        return Check(name="Speaker labels", ok=True, detail=f"installed, models already downloaded ({DEFAULT_MODEL_DIR})")
+    return Check(name="Speaker labels", ok=True,
+                 detail="installed, models not downloaded yet; --speakers will fetch ~33 MB on first use, no account needed")
+
+
 def check_ocr() -> Check:
     try:
         available = ocr_installed()
@@ -331,6 +344,7 @@ CHECKS: list[Callable[[], Check]] = [
     check_ffmpeg,
     check_whisper,
     check_stable_ts,
+    check_speakers,
     check_ocr,
     check_api_key,
     check_gemini_key,

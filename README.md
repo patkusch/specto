@@ -19,7 +19,7 @@
 [![Model](https://img.shields.io/badge/Claude_Opus_5_or_Gemini-1A1A1A?style=for-the-badge)](#using-gemini-instead-of-claude)
 [![License](https://img.shields.io/badge/License-MIT-1A1A1A?style=for-the-badge)](./LICENSE)
 [![Recall](https://img.shields.io/badge/held--out_recall-0.94_(one_recording)-0B5C8F?style=for-the-badge)](#does-it-work)
-[![Tests](https://img.shields.io/badge/offline_tests-688-2ea043?style=for-the-badge)](#development)
+[![Tests](https://img.shields.io/badge/offline_tests-701-2ea043?style=for-the-badge)](#development)
 [![CI](https://github.com/patkusch/specto/actions/workflows/ci.yml/badge.svg)](https://github.com/patkusch/specto/actions/workflows/ci.yml)
 
 </div>
@@ -77,7 +77,7 @@ Plus a single web page with the frames inside it, a Markdown report, a screen-fl
 
 </div>
 
-688 offline tests. Runs without an API key. Nothing leaves your machine except the frames and words you choose to send to a model service.
+701 offline tests. Runs without an API key. Nothing leaves your machine except the frames and words you choose to send to a model service.
 
 ---
 
@@ -232,6 +232,33 @@ times, so when a sentence runs across a screen change specto spreads its
 words evenly over the sentence's time (a long word gets a little more) and
 cuts it there, which lands within a word or two of the right place. They are
 still the faster and usually more accurate route when you have them.
+
+**Who said what.** A meeting export's `<v Name>` tags already name the
+speaker; a transcript specto makes itself does not, since speech-to-text
+recognises words, not voices. `--speakers` fills that gap by listening to
+the recording's own audio and clustering it into speakers, entirely on your
+machine:
+
+```bash
+pip install -e ".[speakers]"
+specto run walkthrough.mp4 --speakers
+```
+
+It needs no account and no token: unlike pyannote's own diarization models,
+which sit behind a Hugging Face login and a form to accept, this uses the
+same segmentation model (pyannote's `segmentation-3.0`, re-exported to ONNX
+by the sherpa-onnx project) downloaded straight from a public GitHub release,
+plus a small speaker-embedding model from the same place. The first run
+downloads both (about 33 MB total); later runs reuse them. It is off by
+default because it is a new dependency, and it only fills in segments a
+transcript did not already name a speaker for. Measured on a three-voice
+test clip built for this feature (`tests/fixtures/diarize/`, exercised in
+`tests/test_diarize.py`): all 6 turns landed in the right speaker cluster and
+all 5 speaker changes were found within 0.1s of the true boundary. That clip
+has three clearly different voices and clean gaps between turns; two
+similar-sounding people, cross-talk, or a noisy room will all do worse, and
+this has not been measured on a real call. `specto doctor` shows whether the
+models are installed and downloaded.
 
 To check the pipeline without spending anything, `--fake` runs it with a
 stand-in model. There is a ready-made example recording in the repo, a
@@ -554,6 +581,7 @@ A mistake stops the command with one line naming the file, the key and the allow
 | `--sample-fps X` | frames looked at per second in hash mode | 1 |
 | `--scene-threshold X` | brightness change that counts as a new screen, scene mode only | 0.3 |
 | `--ocr / --no-ocr` | read the text on each frame for the model | on |
+| `--speakers` | label who said what from the audio (needs `pip install "specto[speakers]"`); fills in only segments with no speaker name already | off |
 | `--ingest-only` | stop after frames and transcript | |
 | `--estimate` | print the expected cost for each model and stop | |
 | `--max-cost USD` | stop before the model if the estimate is above this | |
@@ -587,7 +615,7 @@ specto run walkthrough.mp4 --transcript walkthrough.vtt --estimate
 dollars, so a long recording cannot run up a bill by accident.
 
 `specto doctor` lists what is installed and what is missing (ffmpeg, the
-speech model, OCR, the API key) and what to do about each.
+speech model, speaker labels, OCR, the API key) and what to do about each.
 
 A one-hour walkthrough typically yields 100 to 130 still images: one per
 screen, plus two or three for every value typed and two for every popup.
@@ -609,7 +637,10 @@ that further.
   the screen. Read the low ones with care.
 - Small text on a high-resolution screen may be unreadable at 1280 pixels
   wide; raise `max_width` in `specto/ingest.py` if fields are being missed.
-- Speaker names appear only when the transcript file carries them.
+- Speaker names come from the transcript file when it has them, or from
+  `--speakers` (see [Who said what](#run-it-yourself) above), which is
+  opt-in, needs a new dependency, and has only been measured on one
+  three-voice test clip, not on a real call.
 - Screen changes are found by taking one still a second and keeping it when
   its layout, text or colour differs from the last one kept by more than
   `--hash-distance` (default 8; lower it to catch smaller changes, raise it

@@ -2,6 +2,37 @@
 
 Newest first. Dates are when the change was pushed.
 
+## 0.8.0 (2026-09-22)
+
+**Who said what.** `--speakers` labels each transcript segment that does not
+already carry a speaker name with a speaker cluster found from the
+recording's own audio, entirely on your machine.
+
+- A previous look at this (`PLAN.md`'s Phase 4 note) found only pyannote's
+  own diarization pipeline, which needs a Hugging Face account and a gated
+  model download. That is no longer the only option: sherpa-onnx runs the
+  same segmentation model (pyannote's `segmentation-3.0`, re-exported to
+  ONNX) plus a speaker-embedding model, both downloaded straight from a
+  public GitHub release with no account, no token, and nothing to accept.
+  New optional extra, `pip install "specto[speakers]"`.
+- `specto/diarize.py`: `assign_speakers` extracts audio with the bundled
+  ffmpeg, runs sherpa-onnx's offline diarization, and fills in `.speaker`
+  by whichever diarized turn overlaps a segment most; a segment already
+  named by a `<v Name>` VTT tag or a meeting export is left alone.
+- `--speakers` on `specto run`; off by default, since it is a new
+  dependency. `specto doctor` reports whether it is installed and whether
+  the two models are downloaded yet.
+- Measured, not assumed: a three-voice test clip was built for this feature
+  (three macOS `say` voices, six turns, `tests/fixtures/diarize/`) with a
+  written-down ground truth. Diarization got all 6 turns onto the right
+  speaker cluster and found all 5 true speaker changes within 0.1s, with no
+  false ones. That is one clip with three clearly different voices and
+  clean gaps between turns; it says nothing yet about two similar-sounding
+  people, cross-talk, or a noisy room. `tests/test_diarize.py` runs this
+  check for real when the extra is installed (skipped otherwise, so the
+  default test matrix does not need the new dependency).
+- 701 offline tests (was 688).
+
 ## 0.7.0 (2026-09-20)
 
 **Scores.** The recall figures are now labelled by how fair they are. The
