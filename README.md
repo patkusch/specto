@@ -657,3 +657,11 @@ python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 
 The tests build a small synthetic video, run every stage with a stand-in model,
 and open the resulting workbook. They need no network and no API key.
+
+That command runs 690 of the 701 tests. The other 11 are OCR and speaker tests
+that need their optional libraries. To run all 701:
+
+```bash
+.venv/bin/pip install -e ".[dev,ocr,live,speakers]"
+.venv/bin/python -m pytest -q
+```
