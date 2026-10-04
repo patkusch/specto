@@ -19,7 +19,7 @@
 [![Model](https://img.shields.io/badge/Claude_Opus_5_or_Gemini-1A1A1A?style=for-the-badge)](#using-gemini-instead-of-claude)
 [![License](https://img.shields.io/badge/License-MIT-1A1A1A?style=for-the-badge)](./LICENSE)
 [![Recall](https://img.shields.io/badge/held--out_recall-0.94_(one_recording)-0B5C8F?style=for-the-badge)](#does-it-work)
-[![Tests](https://img.shields.io/badge/offline_tests-701-2ea043?style=for-the-badge)](#development)
+[![Tests](https://img.shields.io/badge/offline_tests-703-2ea043?style=for-the-badge)](#development)
 [![CI](https://github.com/patkusch/specto/actions/workflows/ci.yml/badge.svg)](https://github.com/patkusch/specto/actions/workflows/ci.yml)
 
 </div>
@@ -77,7 +77,7 @@ Plus a single web page with the frames inside it, a Markdown report, a screen-fl
 
 </div>
 
-701 offline tests. Runs without an API key. Nothing leaves your machine except the frames and words you choose to send to a model service.
+703 offline tests. Runs without an API key. Nothing leaves your machine except the frames and words you choose to send to a model service.
 
 ---
 
@@ -658,8 +658,8 @@ python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 The tests build a small synthetic video, run every stage with a stand-in model,
 and open the resulting workbook. They need no network and no API key.
 
-That command runs 690 of the 701 tests. The other 11 are OCR and speaker tests
-that need their optional libraries. To run all 701:
+That command runs 692 of the 703 tests. The other 11 are OCR and speaker tests
+that need their optional libraries. To run all 703:
 
 ```bash
 .venv/bin/pip install -e ".[dev,ocr,live,speakers]"

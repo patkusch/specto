@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 from typing import Any, Callable
@@ -198,7 +199,9 @@ def score(analysis: Analysis, expected: dict) -> ScoreReport:
         for name, (items, match) in matchers.items()
     }
     scored = [c.recall for c in categories.values() if c.expected > 0]
-    overall = sum(scored) / len(scored) if scored else 0.0
+    # fsum, not sum: from Python 3.12 sum() of floats is compensated, so on 3.11
+    # the same recalls gave 0.8799999999999999 where 3.12 gave 0.88.
+    overall = math.fsum(scored) / len(scored) if scored else 0.0
     return ScoreReport(categories=categories, overall_recall=overall, traceability=check_traceability(analysis),
                        writing=check_writing(analysis))
 
@@ -260,7 +263,8 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     report = score_dir(args.out_dir, args.expected)
     print(format_report(report))
-    if report.overall_recall < args.min:
+    # The tolerance lets a score that is exactly --min pass despite float noise.
+    if report.overall_recall < args.min - 1e-9:
         print(f"FAIL: overall recall {report.overall_recall:.2f} is below --min {args.min:.2f}")
         return 1
     return 0

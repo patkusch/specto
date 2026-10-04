@@ -163,6 +163,27 @@ def test_score_dir_writes_score_json(out_dir):
     assert saved.overall_recall == pytest.approx(0.88)
 
 
+def test_score_exactly_at_min_passes_despite_float_noise(out_dir, monkeypatch, capsys):
+    # Python 3.11's sum() gave 0.8799999999999999 for the fixture, which printed
+    # as 0.88 but failed "--min 0.88". Force that value so the test does not
+    # depend on which Python runs it.
+    real = score_dir(out_dir, FIXTURES / "sample_expected.json")
+    noisy = real.model_copy(update={"overall_recall": 0.8799999999999999})
+    monkeypatch.setattr("specto.score.score_dir", lambda *a, **k: noisy)
+    args = [str(out_dir), str(FIXTURES / "sample_expected.json")]
+    assert main(args + ["--min", "0.88"]) == 0
+    assert main(args + ["--min", "0.9"]) == 1
+    capsys.readouterr()
+
+
+def test_overall_recall_is_the_same_on_every_python(out_dir):
+    # math.fsum is exact, so the mean cannot differ between Python versions.
+    report = score_dir(out_dir, FIXTURES / "sample_expected.json")
+    recalls = [c.recall for c in report.categories.values() if c.expected > 0]
+    import math
+    assert report.overall_recall == math.fsum(recalls) / len(recalls)
+
+
 def test_main_exit_codes(out_dir, capsys):
     args = [str(out_dir), str(FIXTURES / "sample_expected.json")]
     assert main(args) == 0  # default --min 0.7, fixture scores 0.88
