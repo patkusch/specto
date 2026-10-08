@@ -8,6 +8,7 @@ version = "0.8.0"
 description = "Watch a recorded expert walkthrough of a system and write down what the system must do."
 readme = "README.md"
 license = {file = "LICENSE"}
+authors = [{ name = "Patricia Kusch" }]
 requires-python = ">=3.11"
 dependencies = [
   "anthropic>=1.5",
@@ -24,6 +25,11 @@ ocr = ["rapidocr-onnxruntime>=1.2"]
 live = ["mss>=9"]  # screen grabs in live mode on macOS, Windows and Linux (X11); the platform tools work without it
 speakers = ["sherpa-onnx>=1.13"]  # --speakers: local, ungated diarization (no Hugging Face account, ~33 MB of models downloaded once)
 dev = ["pytest>=8"]
+
+[project.urls]
+Homepage = "https://github.com/patkusch/specto"
+Repository = "https://github.com/patkusch/specto"
+Issues = "https://github.com/patkusch/specto/issues"
 
 [project.scripts]
 specto = "specto.cli:main"
