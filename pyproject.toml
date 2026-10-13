@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -11,20 +11,20 @@ license = {file = "LICENSE"}
 authors = [{ name = "Patricia Kusch" }]
 requires-python = ">=3.11"
 dependencies = [
-  "anthropic>=1.5",
-  "openpyxl>=3.1",
-  "pillow>=10",
-  "imageio-ffmpeg>=0.5",
-  "pydantic>=2",
+  "anthropic>=1.13.0",
+  "openpyxl>=3.1.5",
+  "pillow>=12.3.0",
+  "imageio-ffmpeg>=0.6.0",
+  "pydantic>=2.14.0",
 ]
 
 [project.optional-dependencies]
-whisper = ["faster-whisper>=1.0"]
-whisper-precise = ["faster-whisper>=1.0", "stable-ts>=2.19"]  # word timings ~3x closer; pulls in torch (~600 MB)
-ocr = ["rapidocr-onnxruntime>=1.2"]
-live = ["mss>=9"]  # screen grabs in live mode on macOS, Windows and Linux (X11); the platform tools work without it
-speakers = ["sherpa-onnx>=1.13"]  # --speakers: local, ungated diarization (no Hugging Face account, ~33 MB of models downloaded once)
-dev = ["pytest>=8"]
+whisper = ["faster-whisper>=1.2.1"]
+whisper-precise = ["faster-whisper>=1.2.1", "stable-ts>=2.19.1"]  # word timings ~3x closer; pulls in torch (~600 MB)
+ocr = ["rapidocr-onnxruntime>=1.4.4"]
+live = ["mss>=10.2.0"]  # screen grabs in live mode on macOS, Windows and Linux (X11); the platform tools work without it
+speakers = ["sherpa-onnx>=1.13.8"]  # --speakers: local, ungated diarization (no Hugging Face account, ~33 MB of models downloaded once)
+dev = ["pytest>=9.1.1"]
 
 [project.urls]
 Homepage = "https://github.com/patkusch/specto"
