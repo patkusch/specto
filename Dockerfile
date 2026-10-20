@@ -3,7 +3,7 @@
 #   docker build -t specto .
 #   docker run --rm -v "$PWD:/work" specto demo
 #   docker run --rm -v "$PWD:/work" -e ANTHROPIC_API_KEY specto run walkthrough.mp4 --transcript walkthrough.vtt
-FROM python:3.12-slim
+FROM python:3.15-slim
 
 # ffmpeg comes inside the imageio-ffmpeg wheel. These two libraries are what
 # OCR's onnxruntime and opencv load at import time.
