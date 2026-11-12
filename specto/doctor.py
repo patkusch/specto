@@ -260,7 +260,7 @@ def check_playwright() -> Check:
                      fix="pip install playwright && playwright install chromium")
     chromium = playwright_chromium_dir()
     if chromium:
-        return Check(name="Playwright", ok=True, detail=f"installed with chromium (optional, for rebuilding the example)")
+        return Check(name="Playwright", ok=True, detail="installed with chromium (optional, for rebuilding the example)")
     return Check(name="Playwright", ok=False, detail="installed but chromium is missing (optional, for rebuilding the example)",
                  fix="playwright install chromium")
 

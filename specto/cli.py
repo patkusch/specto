@@ -25,6 +25,7 @@ A specto.toml in the current folder (or --config PATH) sets flags once for the
 team; a flag typed on the command line always beats it. Run specto init.
 """
 from __future__ import annotations
+from typing import Optional
 
 import argparse
 import json

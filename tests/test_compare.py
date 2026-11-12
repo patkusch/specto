@@ -9,7 +9,7 @@ import pytest
 
 from specto.cli import main
 from specto.compare import compare_analyses, compare_html, compare_report_markdown
-from specto.model import Analysis, Recording
+from specto.model import Analysis
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

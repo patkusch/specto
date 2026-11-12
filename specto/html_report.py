@@ -26,7 +26,7 @@ from typing import Optional
 from PIL import Image
 
 from specto.export import (
-    blocks_text, criteria_by_requirement, frame_for_segment, frame_path, questions_to_ask_first, screen_names,
+    blocks_text, criteria_by_requirement, frame_for_segment, questions_to_ask_first, screen_names,
     summary_rows,
 )
 from specto.lint import Finding, format_findings, lint_analysis

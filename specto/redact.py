@@ -18,7 +18,7 @@ import shutil
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Literal, Optional
+from typing import Callable, Literal
 
 from PIL import Image, ImageDraw, ImageFilter
 from pydantic import BaseModel, Field
