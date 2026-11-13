@@ -4,7 +4,7 @@ Thanks for helping. Small fixes and clearer wording are both welcome.
 
 ## Run the tests
 
-You need Python 3.10 or newer.
+You need Python 3.11 or newer.
 
 ```bash
 pip install -e ".[dev]"
