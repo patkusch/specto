@@ -665,3 +665,7 @@ that need their optional libraries. To run all 709:
 .venv/bin/pip install -e ".[dev,ocr,live,speakers]"
 .venv/bin/python -m pytest -q
 ```
+
+---
+
+[Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md)
