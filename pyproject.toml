@@ -38,6 +38,7 @@ dev = ["pytest>=8"]
 Homepage = "https://github.com/patkusch/specto"
 Repository = "https://github.com/patkusch/specto"
 Issues = "https://github.com/patkusch/specto/issues"
+Changelog = "https://github.com/patkusch/specto/blob/main/CHANGELOG.md"
 
 [project.scripts]
 specto = "specto.cli:main"
